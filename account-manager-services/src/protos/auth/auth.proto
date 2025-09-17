@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package account.auth;
+
+import "auth/entity_type.proto";
+
+message Auth {
+    message User {
+        string id = 1;
+    }
+    message Entity {
+        EntityType entity_type = 1;
+        string id = 2;
+    }
+    User user = 1;
+    Entity entity = 2;
+}
