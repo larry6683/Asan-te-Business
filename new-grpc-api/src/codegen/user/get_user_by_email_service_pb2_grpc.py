@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from user import get_user_by_email_pb2 as user_dot_get__user__by__email__pb2
+from ..user import get_user_by_email_pb2 as user_dot_get__user__by__email__pb2
 
 GRPC_GENERATED_VERSION = '1.75.0'
 GRPC_VERSION = grpc.__version__

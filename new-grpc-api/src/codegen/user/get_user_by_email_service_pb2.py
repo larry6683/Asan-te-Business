@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from user import get_user_by_email_pb2 as user_dot_get__user__by__email__pb2
+from ..user import get_user_by_email_pb2 as user_dot_get__user__by__email__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$user/get_user_by_email_service.proto\x12\x11user.user_service\x1a\x1cuser/get_user_by_email.proto2~\n\x15GetUserByEmailService\x12\x65\n\x0eGetUserByEmail\x12(.user.user_service.GetUserByEmailRequest\x1a).user.user_service.GetUserByEmailResponseb\x06proto3')

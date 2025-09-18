@@ -1,4 +1,4 @@
-from error import user_error_code_pb2 as _user_error_code_pb2
+import user_error_code_pb2 as _user_error_code_pb2
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union

@@ -19,23 +19,6 @@ services:
       - test
       - user
 
-  create_user:
-    build:
-      context: .
-      dockerfile: ./src/features/user/create_user/Dockerfile
-    image: user_manager_dev/create_user
-    container_name: create_user
-    ports:
-      - "62000:62000"
-    environment:
-      - PYTHONPATH=/app
-    networks:
-      - asante-network
-    profiles:
-      - dev
-      - test
-      - user
-
 networks:
   asante-network:
     external: true

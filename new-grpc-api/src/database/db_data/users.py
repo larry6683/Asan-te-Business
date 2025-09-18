@@ -1,5 +1,4 @@
-import uuid
-from database.models.user import UserDbo, UserTypeCode, CreateUserDbo
+from database.models.user import UserDbo, UserTypeCode
 
 def get_user_by_email(email: str) -> UserDbo:
     """
@@ -10,26 +9,6 @@ def get_user_by_email(email: str) -> UserDbo:
         user for user in users
         if user.email.lower() == email.lower()
     ), None)
-
-def create_user(create_user_data: CreateUserDbo) -> UserDbo:
-    """
-    Create a new user in the mock database.
-    In real implementation, this would be replaced with actual database insert.
-    """
-    # Check if user already exists
-    existing_user = get_user_by_email(create_user_data.email)
-    if existing_user:
-        return None  # User already exists
-    
-    # Create new user
-    new_user = UserDbo(
-        app_user_id=str(uuid.uuid4()),
-        email=create_user_data.email,
-        user_type_code=create_user_data.user_type_code
-    )
-    
-    users.append(new_user)
-    return new_user
 
 # Mock data for testing
 users = [

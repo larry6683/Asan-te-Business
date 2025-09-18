@@ -6,7 +6,7 @@ import "auth/auth.proto";
 import "error/user_error.proto";
 
 message GetUserByEmailRequest {
-    user.auth.Auth auth = 1;
+    auth.Auth auth = 1;
     string email = 2;
 } 
 
@@ -17,5 +17,5 @@ message GetUserByEmailResponse {
         string user_type = 3;
     }
     User user = 1;
-    repeated user.error.UserError errors = 2;
+    repeated error.UserError errors = 2;
 }

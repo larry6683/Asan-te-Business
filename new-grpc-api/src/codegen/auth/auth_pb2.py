@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from auth import entity_type_pb2 as auth_dot_entity__type__pb2
+from ..auth import entity_type_pb2 as auth_dot_entity__type__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x61uth/auth.proto\x12\tuser.auth\x1a\x16\x61uth/entity_type.proto\"\xa8\x01\n\x04\x41uth\x12\"\n\x04user\x18\x01 \x01(\x0b\x32\x14.user.auth.Auth.User\x12&\n\x06\x65ntity\x18\x02 \x01(\x0b\x32\x16.user.auth.Auth.Entity\x1a\x12\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x1a@\n\x06\x45ntity\x12*\n\x0b\x65ntity_type\x18\x01 \x01(\x0e\x32\x15.user.auth.EntityType\x12\n\n\x02id\x18\x02 \x01(\tb\x06proto3')

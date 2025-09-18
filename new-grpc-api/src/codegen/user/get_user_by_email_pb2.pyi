@@ -1,5 +1,5 @@
-from auth import auth_pb2 as _auth_pb2
-from error import user_error_pb2 as _user_error_pb2
+from ..auth import auth_pb2 as _auth_pb2
+from ..error import user_error_pb2 as _user_error_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message

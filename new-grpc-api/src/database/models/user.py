@@ -11,9 +11,3 @@ class UserDbo:
     app_user_id: str
     email: str
     user_type_code: UserTypeCode
-
-@dataclass(slots=True)
-class CreateUserDbo:
-    email: str
-    user_type_code: UserTypeCode
-    mailing_list_signup: bool

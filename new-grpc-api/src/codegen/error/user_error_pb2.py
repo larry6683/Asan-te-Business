@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from error import user_error_code_pb2 as error_dot_user__error__code__pb2
+from ..error import user_error_code_pb2 as error_dot_user__error__code__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x65rror/user_error.proto\x12\nuser.error\x1a\x1b\x65rror/user_error_code.proto\"J\n\tUserError\x12-\n\nerror_code\x18\x01 \x01(\x0e\x32\x19.user.error.UserErrorCode\x12\x0e\n\x06\x64\x65tail\x18\x02 \x01(\tb\x06proto3')

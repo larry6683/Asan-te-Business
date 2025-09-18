@@ -18,8 +18,6 @@ class UserErrorCode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     ERROR_USER_EMAIL_NOT_VERIFIED: _ClassVar[UserErrorCode]
     ERROR_USER_EMAIL_NOT_UNIQUE: _ClassVar[UserErrorCode]
     ERROR_INVALID_USER_ATTRIBUTES: _ClassVar[UserErrorCode]
-    ERROR_INVALID_USER_TYPE: _ClassVar[UserErrorCode]
-    ERROR_EMAIL_IN_USE: _ClassVar[UserErrorCode]
 ERROR_UNSPECIFIED: UserErrorCode
 ERROR_INVALID_PARAMETER: UserErrorCode
 ERROR_USER_NOT_FOUND: UserErrorCode
@@ -32,5 +30,3 @@ ERROR_USER_EMAIL_NOT_FOUND: UserErrorCode
 ERROR_USER_EMAIL_NOT_VERIFIED: UserErrorCode
 ERROR_USER_EMAIL_NOT_UNIQUE: UserErrorCode
 ERROR_INVALID_USER_ATTRIBUTES: UserErrorCode
-ERROR_INVALID_USER_TYPE: UserErrorCode
-ERROR_EMAIL_IN_USE: UserErrorCode
