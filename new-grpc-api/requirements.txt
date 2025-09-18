@@ -1,0 +1,6 @@
+grpcio==1.57.0
+grpcio-tools==1.57.0  
+grpcio-reflection==1.57.0
+protobuf==4.23.4
+psycopg==3.1.13
+python-dotenv==1.0.0

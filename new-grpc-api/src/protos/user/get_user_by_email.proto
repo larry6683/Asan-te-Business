@@ -1,0 +1,21 @@
+syntax = "proto3"; 
+
+package user.user_service; 
+
+import "auth/auth.proto";
+import "error/user_error.proto";
+
+message GetUserByEmailRequest {
+    user.auth.Auth auth = 1;
+    string email = 2;
+} 
+
+message GetUserByEmailResponse { 
+    message User {
+        string id = 1;
+        string email = 2;
+        string user_type = 3;
+    }
+    User user = 1;
+    repeated user.error.UserError errors = 2;
+}
