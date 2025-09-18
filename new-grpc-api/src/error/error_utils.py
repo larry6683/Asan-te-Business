@@ -29,6 +29,20 @@ class ErrorUtils:
         )
 
     @staticmethod
+    def create_email_already_exists_error(email: str):
+        return ErrorUtils.create_error(
+            error_code=ErrorCode.ERROR_EMAIL_ALREADY_REGISTERED,
+            detail=f"Email '{email}' is already registered"
+        )
+
+    @staticmethod
+    def create_invalid_user_type_error(user_type: str):
+        return ErrorUtils.create_error(
+            error_code=ErrorCode.ERROR_INVALID_USER_ATTRIBUTES,
+            detail=f"Invalid user type: '{user_type}'"
+        )
+
+    @staticmethod
     def create_operation_failed_error(method, additional_detail="", exception: Exception=None):
         detail=f"Failed operation: {method.__name__ if callable(method) else method}"
         if detail and Config.get_logging_config()["level"] == "DEBUG":

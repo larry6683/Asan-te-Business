@@ -1,0 +1,26 @@
+syntax = "proto3"; 
+
+package user.user_service; 
+
+import "auth/auth.proto";
+import "error/user_error.proto";
+
+message CreateUserRequest {
+    message User {
+        string email = 1;
+        string user_type = 2;
+        bool mailing_list_signup = 3;
+    }
+    auth.Auth auth = 1;
+    User user = 2;
+} 
+
+message CreateUserResponse { 
+    message User {
+        string id = 1;
+        string email = 2;
+        string user_type = 3;
+    }
+    User user = 1;
+    repeated error.UserError errors = 2;
+}
