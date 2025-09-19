@@ -1,0 +1,10 @@
+syntax="proto3";
+
+package account.resource;
+
+enum ResourceCategory {
+    RESOURCE_CATEGORY_UNSPECIFIED = 0;
+    RESOURCE_CATEGORY_HARDWARE = 1;
+    RESOURCE_CATEGORY_SOFTWARE = 2;
+    RESOURCE_CATEGORY_SERVICE = 3;
+}

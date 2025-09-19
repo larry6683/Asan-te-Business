@@ -1,0 +1,25 @@
+syntax = "proto3"; 
+
+package account.resource; 
+
+import "auth/auth.proto";
+import "error/account_error.proto";
+import "resource/resource_category.proto";
+
+message CreateResourceRequest {
+    message Resource {
+        string name = 1;
+        ResourceCategory category = 2;
+        string description = 3;
+    }
+    auth.Auth auth = 1;
+    Resource resource = 2;
+} 
+
+message CreateResourceResponse { 
+    message Resource {
+        string id = 1;
+    }
+    Resource resource = 1;
+    repeated error.AccountError errors = 2;
+}

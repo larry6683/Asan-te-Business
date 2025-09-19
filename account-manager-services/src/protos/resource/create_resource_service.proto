@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package account.resource;
-
-import "resource/create_resource.proto";
-
-service CreateResourceService { 
-    rpc CreateResource (CreateResourceRequest) returns (CreateResourceResponse);
-}
