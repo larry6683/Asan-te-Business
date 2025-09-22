@@ -26,7 +26,7 @@ from ..auth import auth_pb2 as auth_dot_auth__pb2
 from ..error import user_error_pb2 as error_dot_user__error__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1cuser/get_user_by_email.proto\x12\x11user.user_service\x1a\x0f\x61uth/auth.proto\x1a\x16\x65rror/user_error.proto\"E\n\x15GetUserByEmailRequest\x12\x1d\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0f.user.auth.Auth\x12\r\n\x05\x65mail\x18\x02 \x01(\t\"\xb3\x01\n\x16GetUserByEmailResponse\x12<\n\x04user\x18\x01 \x01(\x0b\x32..user.user_service.GetUserByEmailResponse.User\x12%\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x15.user.error.UserError\x1a\x34\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x11\n\tuser_type\x18\x03 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1cuser/get_user_by_email.proto\x12\x11user.user_service\x1a\x0f\x61uth/auth.proto\x1a\x16\x65rror/user_error.proto\"&\n\x15GetUserByEmailRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\xb3\x01\n\x16GetUserByEmailResponse\x12<\n\x04user\x18\x01 \x01(\x0b\x32..user.user_service.GetUserByEmailResponse.User\x12%\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x15.user.error.UserError\x1a\x34\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x11\n\tuser_type\x18\x03 \x01(\tb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,9 +34,9 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'user.get_user_by_email_pb2'
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_GETUSERBYEMAILREQUEST']._serialized_start=92
-  _globals['_GETUSERBYEMAILREQUEST']._serialized_end=161
-  _globals['_GETUSERBYEMAILRESPONSE']._serialized_start=164
-  _globals['_GETUSERBYEMAILRESPONSE']._serialized_end=343
-  _globals['_GETUSERBYEMAILRESPONSE_USER']._serialized_start=291
-  _globals['_GETUSERBYEMAILRESPONSE_USER']._serialized_end=343
+  _globals['_GETUSERBYEMAILREQUEST']._serialized_end=130
+  _globals['_GETUSERBYEMAILRESPONSE']._serialized_start=133
+  _globals['_GETUSERBYEMAILRESPONSE']._serialized_end=312
+  _globals['_GETUSERBYEMAILRESPONSE_USER']._serialized_start=260
+  _globals['_GETUSERBYEMAILRESPONSE_USER']._serialized_end=312
 # @@protoc_insertion_point(module_scope)

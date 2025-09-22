@@ -9,7 +9,7 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class CreateUserRequest(_message.Message):
-    __slots__ = ("auth", "user")
+    __slots__ = ("user",)
     class User(_message.Message):
         __slots__ = ("email", "user_type", "mailing_list_signup")
         EMAIL_FIELD_NUMBER: _ClassVar[int]
@@ -19,11 +19,9 @@ class CreateUserRequest(_message.Message):
         user_type: str
         mailing_list_signup: bool
         def __init__(self, email: _Optional[str] = ..., user_type: _Optional[str] = ..., mailing_list_signup: bool = ...) -> None: ...
-    AUTH_FIELD_NUMBER: _ClassVar[int]
     USER_FIELD_NUMBER: _ClassVar[int]
-    auth: _auth_pb2.Auth
     user: CreateUserRequest.User
-    def __init__(self, auth: _Optional[_Union[_auth_pb2.Auth, _Mapping]] = ..., user: _Optional[_Union[CreateUserRequest.User, _Mapping]] = ...) -> None: ...
+    def __init__(self, user: _Optional[_Union[CreateUserRequest.User, _Mapping]] = ...) -> None: ...
 
 class CreateUserResponse(_message.Message):
     __slots__ = ("user", "errors")

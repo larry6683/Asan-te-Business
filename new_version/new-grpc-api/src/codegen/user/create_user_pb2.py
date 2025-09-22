@@ -26,7 +26,7 @@ from ..auth import auth_pb2 as auth_dot_auth__pb2
 from ..error import user_error_pb2 as error_dot_user__error__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16user/create_user.proto\x12\x11user.user_service\x1a\x0f\x61uth/auth.proto\x1a\x16\x65rror/user_error.proto\"\xb2\x01\n\x11\x43reateUserRequest\x12\x1d\n\x04\x61uth\x18\x01 \x01(\x0b\x32\x0f.user.auth.Auth\x12\x37\n\x04user\x18\x02 \x01(\x0b\x32).user.user_service.CreateUserRequest.User\x1a\x45\n\x04User\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x11\n\tuser_type\x18\x02 \x01(\t\x12\x1b\n\x13mailing_list_signup\x18\x03 \x01(\x08\"\xab\x01\n\x12\x43reateUserResponse\x12\x38\n\x04user\x18\x01 \x01(\x0b\x32*.user.user_service.CreateUserResponse.User\x12%\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x15.user.error.UserError\x1a\x34\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x11\n\tuser_type\x18\x03 \x01(\tb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16user/create_user.proto\x12\x11user.user_service\x1a\x0f\x61uth/auth.proto\x1a\x16\x65rror/user_error.proto\"\x93\x01\n\x11\x43reateUserRequest\x12\x37\n\x04user\x18\x01 \x01(\x0b\x32).user.user_service.CreateUserRequest.User\x1a\x45\n\x04User\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\x11\n\tuser_type\x18\x02 \x01(\t\x12\x1b\n\x13mailing_list_signup\x18\x03 \x01(\x08\"\xab\x01\n\x12\x43reateUserResponse\x12\x38\n\x04user\x18\x01 \x01(\x0b\x32*.user.user_service.CreateUserResponse.User\x12%\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x15.user.error.UserError\x1a\x34\n\x04User\x12\n\n\x02id\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x11\n\tuser_type\x18\x03 \x01(\tb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,11 +34,11 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'user.create_user_pb2', _glo
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_CREATEUSERREQUEST']._serialized_start=87
-  _globals['_CREATEUSERREQUEST']._serialized_end=265
-  _globals['_CREATEUSERREQUEST_USER']._serialized_start=196
-  _globals['_CREATEUSERREQUEST_USER']._serialized_end=265
-  _globals['_CREATEUSERRESPONSE']._serialized_start=268
-  _globals['_CREATEUSERRESPONSE']._serialized_end=439
-  _globals['_CREATEUSERRESPONSE_USER']._serialized_start=387
-  _globals['_CREATEUSERRESPONSE_USER']._serialized_end=439
+  _globals['_CREATEUSERREQUEST']._serialized_end=234
+  _globals['_CREATEUSERREQUEST_USER']._serialized_start=165
+  _globals['_CREATEUSERREQUEST_USER']._serialized_end=234
+  _globals['_CREATEUSERRESPONSE']._serialized_start=237
+  _globals['_CREATEUSERRESPONSE']._serialized_end=408
+  _globals['_CREATEUSERRESPONSE_USER']._serialized_start=356
+  _globals['_CREATEUSERRESPONSE_USER']._serialized_end=408
 # @@protoc_insertion_point(module_scope)

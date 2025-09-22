@@ -9,12 +9,10 @@ from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class GetUserByEmailRequest(_message.Message):
-    __slots__ = ("auth", "email")
-    AUTH_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("email",)
     EMAIL_FIELD_NUMBER: _ClassVar[int]
-    auth: _auth_pb2.Auth
     email: str
-    def __init__(self, auth: _Optional[_Union[_auth_pb2.Auth, _Mapping]] = ..., email: _Optional[str] = ...) -> None: ...
+    def __init__(self, email: _Optional[str] = ...) -> None: ...
 
 class GetUserByEmailResponse(_message.Message):
     __slots__ = ("user", "errors")
