@@ -1,5 +1,0 @@
-
-CREATE OR REPLACE TRIGGER business_cause_preference_before_update_trigger
-BEFORE UPDATE ON business_cause_preference
-FOR EACH ROW
-EXECUTE FUNCTION business_cause_preference_before_update_triggerfn();

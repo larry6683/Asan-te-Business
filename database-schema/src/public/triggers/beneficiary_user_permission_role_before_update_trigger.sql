@@ -1,5 +1,0 @@
-
-CREATE OR REPLACE TRIGGER beneficiary_user_permission_role_before_update_trigger
-BEFORE UPDATE ON beneficiary_user_permission_role
-FOR EACH ROW
-EXECUTE FUNCTION beneficiary_user_permission_role_before_update_triggerfn();

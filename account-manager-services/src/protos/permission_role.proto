@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package account;
-
-enum PermissionRole {
-    PERMISSION_ROLE_UNSPECIFIED = 0;
-    PERMISSION_ROLE_ADMIN = 1;
-    PERMISSION_ROLE_TEAM_MEMBER = 2;
-}

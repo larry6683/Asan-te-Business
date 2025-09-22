@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package account;
-
-enum ApplicationType {
-    APPLICATION_TYPE_UNSPECIFIED = 0;
-    APPLICATION_TYPE_WEB = 1;
-    APPLICATION_TYPE_MOBILE_APP = 2;
-}

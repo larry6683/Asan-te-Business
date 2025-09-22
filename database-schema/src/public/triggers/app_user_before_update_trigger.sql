@@ -1,5 +1,0 @@
-
-CREATE OR REPLACE TRIGGER app_user_before_update_trigger
-BEFORE UPDATE ON app_user
-FOR EACH ROW
-EXECUTE FUNCTION app_user_before_update_triggerfn();

@@ -1,1 +1,0 @@
-# registration-lambda-function-services

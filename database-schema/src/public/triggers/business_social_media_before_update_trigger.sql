@@ -1,5 +1,0 @@
-
-CREATE OR REPLACE TRIGGER business_social_media_before_update_trigger
-BEFORE UPDATE ON business_social_media
-FOR EACH ROW
-EXECUTE FUNCTION business_social_media_before_update_triggerfn();
