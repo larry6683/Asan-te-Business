@@ -14,6 +14,7 @@ class UserErrorCode(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     ERROR_INVALID_PERMISSION_ROLE: _ClassVar[UserErrorCode]
     ERROR_OPERATION_FAILED: _ClassVar[UserErrorCode]
     ERROR_EMAIL_ALREADY_REGISTERED: _ClassVar[UserErrorCode]
+    ERROR_PARAMETER_MUST_BE_UNIQUE: _ClassVar[UserErrorCode]
     ERROR_USER_EMAIL_NOT_FOUND: _ClassVar[UserErrorCode]
     ERROR_USER_EMAIL_NOT_VERIFIED: _ClassVar[UserErrorCode]
     ERROR_USER_EMAIL_NOT_UNIQUE: _ClassVar[UserErrorCode]
@@ -26,6 +27,7 @@ ERROR_ENTITY_USER_NOT_FOUND: UserErrorCode
 ERROR_INVALID_PERMISSION_ROLE: UserErrorCode
 ERROR_OPERATION_FAILED: UserErrorCode
 ERROR_EMAIL_ALREADY_REGISTERED: UserErrorCode
+ERROR_PARAMETER_MUST_BE_UNIQUE: UserErrorCode
 ERROR_USER_EMAIL_NOT_FOUND: UserErrorCode
 ERROR_USER_EMAIL_NOT_VERIFIED: UserErrorCode
 ERROR_USER_EMAIL_NOT_UNIQUE: UserErrorCode

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1b\x65rror/user_error_code.proto\x12\nuser.error*\x8b\x03\n\rUserErrorCode\x12\x15\n\x11\x45RROR_UNSPECIFIED\x10\x00\x12\x1b\n\x17\x45RROR_INVALID_PARAMETER\x10\x01\x12\x18\n\x14\x45RROR_USER_NOT_FOUND\x10\x02\x12\x1d\n\x19\x45RROR_INVALID_ENTITY_TYPE\x10\x03\x12\x1f\n\x1b\x45RROR_ENTITY_USER_NOT_FOUND\x10\x04\x12!\n\x1d\x45RROR_INVALID_PERMISSION_ROLE\x10\x05\x12\x1a\n\x16\x45RROR_OPERATION_FAILED\x10\x06\x12\"\n\x1e\x45RROR_EMAIL_ALREADY_REGISTERED\x10\n\x12\x1f\n\x1a\x45RROR_USER_EMAIL_NOT_FOUND\x10\xfa\x01\x12\"\n\x1d\x45RROR_USER_EMAIL_NOT_VERIFIED\x10\xfb\x01\x12 \n\x1b\x45RROR_USER_EMAIL_NOT_UNIQUE\x10\xfc\x01\x12\"\n\x1d\x45RROR_INVALID_USER_ATTRIBUTES\x10\xf2\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1b\x65rror/user_error_code.proto\x12\nuser.error*\xaf\x03\n\rUserErrorCode\x12\x15\n\x11\x45RROR_UNSPECIFIED\x10\x00\x12\x1b\n\x17\x45RROR_INVALID_PARAMETER\x10\x01\x12\x18\n\x14\x45RROR_USER_NOT_FOUND\x10\x02\x12\x1d\n\x19\x45RROR_INVALID_ENTITY_TYPE\x10\x03\x12\x1f\n\x1b\x45RROR_ENTITY_USER_NOT_FOUND\x10\x04\x12!\n\x1d\x45RROR_INVALID_PERMISSION_ROLE\x10\x05\x12\x1a\n\x16\x45RROR_OPERATION_FAILED\x10\x06\x12\"\n\x1e\x45RROR_EMAIL_ALREADY_REGISTERED\x10\n\x12\"\n\x1e\x45RROR_PARAMETER_MUST_BE_UNIQUE\x10\x0b\x12\x1f\n\x1a\x45RROR_USER_EMAIL_NOT_FOUND\x10\xfa\x01\x12\"\n\x1d\x45RROR_USER_EMAIL_NOT_VERIFIED\x10\xfb\x01\x12 \n\x1b\x45RROR_USER_EMAIL_NOT_UNIQUE\x10\xfc\x01\x12\"\n\x1d\x45RROR_INVALID_USER_ATTRIBUTES\x10\xf2\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,5 +32,5 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'error.user_error_code_pb2',
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_USERERRORCODE']._serialized_start=44
-  _globals['_USERERRORCODE']._serialized_end=439
+  _globals['_USERERRORCODE']._serialized_end=475
 # @@protoc_insertion_point(module_scope)
