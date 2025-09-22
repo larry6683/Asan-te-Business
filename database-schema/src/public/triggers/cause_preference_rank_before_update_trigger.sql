@@ -1,0 +1,5 @@
+
+CREATE OR REPLACE TRIGGER cause_preference_rank_before_update_trigger
+BEFORE UPDATE ON cause_preference_rank
+FOR EACH ROW
+EXECUTE FUNCTION cause_preference_rank_before_update_triggerfn();
