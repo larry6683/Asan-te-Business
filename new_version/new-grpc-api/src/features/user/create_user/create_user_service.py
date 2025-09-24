@@ -14,15 +14,31 @@ class CreateUserService(CreateUserServiceServicer):
 
     def CreateUser(self, request: CreateUserRequest, context):
         try:
-            if errors := self.validation_handler.handle(request):
-                return CreateUserResponse(errors=errors)
+            print(f"Received create user request: {request}")  # Debug log
             
+            # Validate request
+            validation_errors = self.validation_handler.handle(request)
+            if validation_errors:
+                print(f"Create user validation failed: {validation_errors}")  # Debug log
+                response = CreateUserResponse()
+                response.errors.extend(validation_errors)
+                return response
+            
+            # Process command
             command = Mapper.to_command(request)
             result = self.command_handler.handle(command)
             
-            return Mapper.to_response(result)
+            # Map response
+            response = Mapper.to_response(result)
+            print(f"Sending create user response: {response}")  # Debug log
+            return response
         
         except Exception as e:
-            return CreateUserResponse(
-                errors=[ErrorUtils.create_operation_failed_error(self.CreateUser, str(e), e)]
-            )
+            print(f"Create user service error: {e}")  # Debug log
+            import traceback
+            traceback.print_exc()
+            
+            response = CreateUserResponse()
+            error = ErrorUtils.create_operation_failed_error(self.CreateUser, str(e), e)
+            response.errors.append(error)
+            return response

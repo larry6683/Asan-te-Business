@@ -14,15 +14,28 @@ class GetUserByEmailService(GetUserByEmailServiceServicer):
 
     def GetUserByEmail(self, request: GetUserByEmailRequest, context):
         try:
-            if errors := self.validation_handler.handle(request):
-                return GetUserByEmailResponse(errors=errors)
+            print(f"Received request: {request}")  # Debug log
             
+            # Validate request
+            validation_errors = self.validation_handler.handle(request)
+            if validation_errors:
+                print(f"Validation failed: {validation_errors}")  # Debug log
+                response = GetUserByEmailResponse()
+                response.errors.extend(validation_errors)
+                return response
+            
+            # Process query
             query = Mapper.to_query(request)
             result = self.query_handler.handle(query)
             
-            return Mapper.to_response(result)
+            # Map response
+            response = Mapper.to_response(result)
+            print(f"Sending response: {response}")  # Debug log
+            return response
         
         except Exception as e:
-            return GetUserByEmailResponse(
-                errors=[ErrorUtils.create_operation_failed_error(self.GetUserByEmail, str(e), e)]
-            )
+            print(f"Service error: {e}")  # Debug log
+            response = GetUserByEmailResponse()
+            error = ErrorUtils.create_operation_failed_error(self.GetUserByEmail, str(e), e)
+            response.errors.append(error)
+            return response

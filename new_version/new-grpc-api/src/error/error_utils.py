@@ -7,7 +7,10 @@ from codegen.error.user_error_pb2 import UserError as Error
 class ErrorUtils:
     @staticmethod
     def create_error(error_code, detail=""):
-        return Error(error_code=error_code, detail=detail)
+        error = Error()
+        error.error_code = error_code
+        error.detail = detail
+        return error
     
     @staticmethod
     def get_error_name(error_code):
@@ -44,8 +47,9 @@ class ErrorUtils:
 
     @staticmethod
     def create_operation_failed_error(method, additional_detail="", exception: Exception=None):
-        detail=f"Failed operation: {method.__name__ if callable(method) else method}"
-        if detail and Config.get_logging_config()["level"] == "DEBUG":
+        detail = f"Failed operation: {method.__name__ if callable(method) else method}"
+        if additional_detail and Config.get_logging_config() and Config.get_logging_config().get("level") == "DEBUG":
             detail += f" - {additional_detail}"
-            logging.exception(exception)
+            if exception:
+                logging.exception(exception)
         return ErrorUtils.create_error(ErrorCode.ERROR_OPERATION_FAILED, detail=detail)
