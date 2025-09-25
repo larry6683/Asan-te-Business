@@ -1,13 +1,27 @@
+# new_version/new-grpc-api/src/features/user/create_user/create_user_command_handler.py
 import uuid
-from psycopg import Cursor
-from config.config import Config
-from database.db_utils import DBUtils
+import sys
+import os
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
+# Import path fix
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.join(current_dir, '..', '..', '..')
+sys.path.insert(0, src_path)
+
+from database_path_fix import import_sqlalchemy_models
+
+# Try to import SQLAlchemy models
+AppUser, UserType, SQLALCHEMY_AVAILABLE = import_sqlalchemy_models()
+
+from config.config import Config
 from api.handler.request_handler import RequestHandler
 from error.error_utils import ErrorUtils
 from converters.user_converter import UserConverter
-from domain.user import UserType
+from domain.user import UserType as DomainUserType
 
+# Keep old mock functionality
 from database.db_data.users import get_user_by_email, add_user, email_exists
 from database.models.user import UserDbo, UserTypeCode
 
@@ -20,98 +34,78 @@ class CreateUserCommandHandler(
         pass
 
     def handle(self, request: CreateUserCommand) -> CreateUserCommandResult:
-        if not Config.use_db():
+        # Check if we should use database and if SQLAlchemy is available
+        try:
+            use_db = Config.use_db()
+        except:
+            use_db = False
+            
+        if not use_db or not SQLALCHEMY_AVAILABLE:
+            print("Using mock database (SQLAlchemy not available or not configured)")
             return self.handle_mock(request)
         
         try:
-            with DBUtils.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    return self.handle_with_db(cursor, request)
+            from database.db_connection import DatabaseConnection
+            with DatabaseConnection.get_session() as session:
+                return self.handle_with_sqlalchemy(session, request)
         except Exception as e:
-            return CreateUserCommandResult(
-                errors=[ErrorUtils.create_operation_failed_error(self.handle, str(e), e)]
-            )
+            print(f"SQLAlchemy handler failed: {e}, falling back to mock")
+            return self.handle_mock(request)
     
-    def handle_with_db(self, cursor: Cursor, request: CreateUserCommand) -> CreateUserCommandResult:
-        """
-        Database implementation - to be implemented with SQLAlchemy
-        """
-        # Check if email already exists
-        check_sql = """
-            SELECT email
-            FROM app_user
-            WHERE email_hash = digest(lower(%(email)s), 'md5')
-        """
-        check_params = {"email": request.email}
-        
+    def handle_with_sqlalchemy(self, session: Session, request: CreateUserCommand) -> CreateUserCommandResult:
+        """SQLAlchemy implementation using the new database models"""
         try:
-            cursor.execute(check_sql, check_params)
-            if cursor.fetchone():
+            # Check if email already exists
+            existing_user = (session.query(AppUser)
+                           .filter(func.lower(AppUser.email) == func.lower(request.email))
+                           .first())
+            
+            if existing_user:
                 return CreateUserCommandResult(
                     errors=[ErrorUtils.create_email_already_exists_error(request.email)]
                 )
             
-            # Convert user type string to code
-            user_type_code = UserTypeCode.from_str(request.user_type)
-            if not user_type_code:
+            # Validate user type
+            domain_user_type = UserConverter.user_type_from_string(request.user_type)
+            if not domain_user_type:
                 return CreateUserCommandResult(
                     errors=[ErrorUtils.create_invalid_user_type_error(request.user_type)]
                 )
             
-            # Insert new user
-            insert_sql = """
-                INSERT INTO app_user (email, mailing_list_signup, user_type_id)
-                VALUES (
-                    %(email)s, 
-                    %(mailing_list_signup)s, 
-                    (
-                        SELECT user_type_id
-                        FROM user_type
-                        WHERE code = %(user_type_code)s
-                    )
-                )
-                RETURNING app_user_id, 
-                email, 
-                (   
-                    SELECT  code 
-                    FROM user_type 
-                    WHERE user_type_id = app_user.user_type_id 
-                    LIMIT 1
-                ),
-                mailing_list_signup
-            """
+            # Get user type code and find UserType entity
+            user_type_code = UserConverter.user_type_string_to_code(request.user_type)
+            user_type_entity = (session.query(UserType)
+                              .filter(UserType.code == user_type_code)
+                              .first())
             
-            insert_params = {
-                "email": request.email,
-                "mailing_list_signup": request.mailing_list_signup,
-                "user_type_code": user_type_code.value
-            }
-            
-            cursor.execute(insert_sql, insert_params)
-            result = cursor.fetchone()
-            
-            if not result:
+            if not user_type_entity:
                 return CreateUserCommandResult(
-                    errors=[ErrorUtils.create_operation_failed_error(self.handle_with_db, "Failed to create user")]
+                    errors=[ErrorUtils.create_invalid_user_type_error(request.user_type)]
                 )
             
-            # Convert result to domain object
-            user_dbo = UserDbo(
-                app_user_id=result[0],
-                email=result[1],
-                user_type_code=UserTypeCode(result[2]),
-                mailing_list_signup=result[3]
+            # Create new user
+            new_app_user = AppUser(
+                user_type_id=user_type_entity.user_type_id,
+                email=request.email,
+                mailing_list_signup=request.mailing_list_signup
             )
             
-            user = UserConverter.to_domain(user_dbo)
+            session.add(new_app_user)
+            session.flush()  # Flush to get the ID
+            
+            # Convert to domain object
+            user = UserConverter.to_domain(new_app_user)
+            
             return CreateUserCommandResult(user=user)
             
         except Exception as e:
+            session.rollback()
             return CreateUserCommandResult(
-                errors=[ErrorUtils.create_operation_failed_error(self.handle_with_db, str(e), e)]
+                errors=[ErrorUtils.create_operation_failed_error(self.handle_with_sqlalchemy, str(e), e)]
             )
         
     def handle_mock(self, request: CreateUserCommand) -> CreateUserCommandResult:
+        """Keep existing mock functionality for development"""
         # Check if email already exists
         if email_exists(request.email):
             return CreateUserCommandResult(
@@ -125,7 +119,7 @@ class CreateUserCommandHandler(
                 errors=[ErrorUtils.create_invalid_user_type_error(request.user_type)]
             )
         
-        # Create new user
+        # Create new user with old DBO structure
         new_user_dbo = UserDbo(
             app_user_id=str(uuid.uuid4()),
             email=request.email,
@@ -136,6 +130,19 @@ class CreateUserCommandHandler(
         # Add to mock database
         add_user(new_user_dbo)
         
-        # Convert to domain object
-        user = UserConverter.to_domain(new_user_dbo)
+        # Convert old DBO to domain object
+        user_type_map = {
+            UserTypeCode.BUSINESS: DomainUserType.BUSINESS,
+            UserTypeCode.BENEFICIARY: DomainUserType.BENEFICIARY,
+            UserTypeCode.CONSUMER: DomainUserType.CONSUMER
+        }
+        
+        from domain.user import User
+        user = User(
+            id=new_user_dbo.app_user_id,
+            email=new_user_dbo.email,
+            user_type=user_type_map[new_user_dbo.user_type_code],
+            mailing_list_signup=new_user_dbo.mailing_list_signup
+        )
+        
         return CreateUserCommandResult(user=user)

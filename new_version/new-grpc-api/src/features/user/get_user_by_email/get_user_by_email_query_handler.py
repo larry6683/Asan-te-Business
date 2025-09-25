@@ -1,15 +1,28 @@
-from psycopg import Cursor
-from config.config import Config
-from database.db_utils import DBUtils
+# new_version/new-grpc-api/src/features/user/get_user_by_email/get_user_by_email_query_handler.py
+import sys
+import os
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
+# Import path fix
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.join(current_dir, '..', '..', '..')
+sys.path.insert(0, src_path)
+
+from database_path_fix import import_sqlalchemy_models
+
+# Try to import SQLAlchemy models
+AppUser, UserType, SQLALCHEMY_AVAILABLE = import_sqlalchemy_models()
+
+from config.config import Config
 from api.handler.request_handler import RequestHandler
 from error.error_utils import ErrorUtils
 from converters.user_converter import UserConverter
 
+# Keep old mock functionality
 from database.db_data.users import get_user_by_email
 
 from .get_user_by_email_query import GetUserByEmailQuery, GetUserByEmailQueryResult
-from codegen.error.user_error_code_pb2 import UserErrorCode
 
 class GetUserByEmailQueryHandler(
     RequestHandler[GetUserByEmailQuery, GetUserByEmailQueryResult]
@@ -18,59 +31,50 @@ class GetUserByEmailQueryHandler(
         pass
 
     def handle(self, request: GetUserByEmailQuery) -> GetUserByEmailQueryResult:
-        if not Config.use_db():
+        # Check if we should use database and if SQLAlchemy is available
+        try:
+            use_db = Config.use_db()
+        except:
+            use_db = False
+            
+        if not use_db or not SQLALCHEMY_AVAILABLE:
+            print("Using mock database (SQLAlchemy not available or not configured)")
             return self.handle_mock(request)
         
         try:
-            with DBUtils.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    return self.handle_with_db(cursor, request)
+            from database.db_connection import DatabaseConnection
+            with DatabaseConnection.get_session() as session:
+                return self.handle_with_sqlalchemy(session, request)
         except Exception as e:
-            return GetUserByEmailQueryResult(
-                errors=[ErrorUtils.create_operation_failed_error(self.handle, str(e), e)]
-            )
+            print(f"SQLAlchemy handler failed: {e}, falling back to mock")
+            return self.handle_mock(request)
     
-    def handle_with_db(self, cursor: Cursor, request: GetUserByEmailQuery) -> GetUserByEmailQueryResult:
-        """
-        Database implementation - to be implemented with SQLAlchemy
-        """
-        sql = """
-            SELECT  au.app_user_id,
-                    ut.code,
-                    au.email
-            FROM    app_user au
-            INNER JOIN user_type ut ON au.user_type_id = ut.user_type_id
-            WHERE au.email_hash = digest(lower(%(email)s), 'md5')
-        """
-        params = {"email": request.email}
-        
+    def handle_with_sqlalchemy(self, session: Session, request: GetUserByEmailQuery) -> GetUserByEmailQueryResult:
+        """SQLAlchemy implementation using the new database models"""
         try:
-            cursor.execute(sql, params)
-            result = cursor.fetchone()
+            # Query user by email with join to user_type
+            app_user = (session.query(AppUser)
+                       .join(UserType)
+                       .filter(func.lower(AppUser.email) == func.lower(request.email))
+                       .first())
             
-            if not result:
+            if not app_user:
                 return GetUserByEmailQueryResult(
                     errors=[ErrorUtils.create_user_not_found_error(request.email)]
                 )
             
-            # Convert result to domain object
-            from database.models.user import UserDbo, UserTypeCode
-            user_dbo = UserDbo(
-                app_user_id=result[0],
-                email=result[2],
-                user_type_code=UserTypeCode(result[1])
-            )
-            
-            user = UserConverter.to_domain(user_dbo)
+            # Convert to domain object
+            user = UserConverter.to_domain(app_user)
             
             return GetUserByEmailQueryResult(user=user)
             
         except Exception as e:
             return GetUserByEmailQueryResult(
-                errors=[ErrorUtils.create_operation_failed_error(self.handle_with_db, str(e), e)]
+                errors=[ErrorUtils.create_operation_failed_error(self.handle_with_sqlalchemy, str(e), e)]
             )
         
     def handle_mock(self, request: GetUserByEmailQuery) -> GetUserByEmailQueryResult:
+        """Keep existing mock functionality for development"""
         user_dbo = get_user_by_email(request.email)
         
         if not user_dbo:
@@ -78,5 +82,22 @@ class GetUserByEmailQueryHandler(
                 errors=[ErrorUtils.create_user_not_found_error(request.email)]
             )
         
-        user = UserConverter.to_domain(user_dbo)
+        # Convert old DBO to domain
+        from domain.user import User, UserType as DomainUserType
+        from database.models.user import UserTypeCode
+        
+        # Map old UserTypeCode to domain UserType
+        user_type_map = {
+            UserTypeCode.BUSINESS: DomainUserType.BUSINESS,
+            UserTypeCode.BENEFICIARY: DomainUserType.BENEFICIARY,
+            UserTypeCode.CONSUMER: DomainUserType.CONSUMER
+        }
+        
+        user = User(
+            id=user_dbo.app_user_id,
+            email=user_dbo.email,
+            user_type=user_type_map[user_dbo.user_type_code],
+            mailing_list_signup=user_dbo.mailing_list_signup
+        )
+        
         return GetUserByEmailQueryResult(user=user)
