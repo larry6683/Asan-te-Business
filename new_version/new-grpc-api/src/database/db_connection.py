@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 # Add the database schema path
 current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-db_schema_path = os.path.join(os.path.dirname(current_dir), '/new_version/database_schema_sqlalchemy')
+db_schema_path = os.path.join(os.path.dirname(current_dir), '/database_schema_sqlalchemy')
 if os.path.exists(db_schema_path):
     sys.path.insert(0, db_schema_path)
 

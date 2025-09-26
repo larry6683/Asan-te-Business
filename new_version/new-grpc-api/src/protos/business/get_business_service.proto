@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package business.business_service;
+
+import "business/get_business.proto";
+
+service GetBusinessService { 
+    rpc GetBusiness (GetBusinessRequest) returns (GetBusinessResponse);
+}
