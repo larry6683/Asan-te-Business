@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "Asante gRPC API",
+    "description": "Complete gRPC API for User, Business, and Beneficiary management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "User Service",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"user_type\": \"BUSINESS\",\n  \"mailing_list_signup\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50051/user.UserService/CreateUser",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50051",
+              "path": ["user.UserService", "CreateUser"]
+            },
+            "description": "Create a new user with email and user type"
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50051/user.UserService/GetUser",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50051",
+              "path": ["user.UserService", "GetUser"]
+            },
+            "description": "Get user by email address"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Business Service",
+      "item": [
+        {
+          "name": "Create Business",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_name\": \"Acme Corporation\",\n  \"email\": \"info@acme.com\",\n  \"website_url\": \"https://acme.com\",\n  \"phone_number\": \"555-0123\",\n  \"location_city\": \"Denver\",\n  \"location_state\": \"CO\",\n  \"ein\": \"12-3456789\",\n  \"business_description\": \"Leading technology solutions provider\",\n  \"business_size\": \"MEDIUM\",\n  \"user_email\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50052/business.BusinessService/CreateBusiness",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50052",
+              "path": ["business.BusinessService", "CreateBusiness"]
+            },
+            "description": "Create a new business with details"
+          }
+        },
+        {
+          "name": "Get Business",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_id\": \"REPLACE_WITH_BUSINESS_ID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50052/business.BusinessService/GetBusiness",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50052",
+              "path": ["business.BusinessService", "GetBusiness"]
+            },
+            "description": "Get business by ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beneficiary Service",
+      "item": [
+        {
+          "name": "Create Beneficiary",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"beneficiary_name\": \"Green Earth Foundation\",\n  \"email\": \"contact@greenearth.org\",\n  \"website_url\": \"https://greenearth.org\",\n  \"phone_number\": \"555-0456\",\n  \"location_city\": \"Boulder\",\n  \"location_state\": \"CO\",\n  \"ein\": \"98-7654321\",\n  \"beneficiary_description\": \"Environmental conservation organization\",\n  \"beneficiary_size\": \"SMALL\",\n  \"user_email\": \"john.doe@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50053/beneficiary.BeneficiaryService/CreateBeneficiary",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50053",
+              "path": ["beneficiary.BeneficiaryService", "CreateBeneficiary"]
+            },
+            "description": "Create a new beneficiary organization"
+          }
+        },
+        {
+          "name": "Get Beneficiary",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"beneficiary_id\": \"REPLACE_WITH_BENEFICIARY_ID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "grpc://localhost:50053/beneficiary.BeneficiaryService/GetBeneficiary",
+              "protocol": "grpc",
+              "host": ["localhost"],
+              "port": "50053",
+              "path": ["beneficiary.BeneficiaryService", "GetBeneficiary"]
+            },
+            "description": "Get beneficiary by ID"
+          }
+        }
+      ]
+    }
+  ]
+}

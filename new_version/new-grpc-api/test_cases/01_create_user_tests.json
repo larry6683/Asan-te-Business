@@ -1,0 +1,163 @@
+{
+  "service": "UserService",
+  "endpoint": "CreateUser",
+  "port": 50051,
+  "test_cases": [
+    {
+      "name": "Create Business User - Valid",
+      "description": "Create a valid business user with mailing list signup",
+      "request": {
+        "email": "john.doe@business.com",
+        "user_type": "BUSINESS",
+        "mailing_list_signup": true
+      },
+      "expected_response": {
+        "user": {
+          "id": "<generated_uuid>",
+          "email": "john.doe@business.com",
+          "user_type": "BUSINESS",
+          "mailing_list_signup": true
+        },
+        "errors": []
+      },
+      "expected_status": "success"
+    },
+    {
+      "name": "Create Beneficiary User - Valid",
+      "description": "Create a valid beneficiary user without mailing list",
+      "request": {
+        "email": "jane.smith@foundation.org",
+        "user_type": "BENEFICIARY",
+        "mailing_list_signup": false
+      },
+      "expected_response": {
+        "user": {
+          "id": "<generated_uuid>",
+          "email": "jane.smith@foundation.org",
+          "user_type": "BENEFICIARY",
+          "mailing_list_signup": false
+        },
+        "errors": []
+      },
+      "expected_status": "success"
+    },
+    {
+      "name": "Create Consumer User - Valid",
+      "description": "Create a valid consumer user",
+      "request": {
+        "email": "consumer@example.com",
+        "user_type": "CONSUMER",
+        "mailing_list_signup": true
+      },
+      "expected_response": {
+        "user": {
+          "id": "<generated_uuid>",
+          "email": "consumer@example.com",
+          "user_type": "CONSUMER",
+          "mailing_list_signup": true
+        },
+        "errors": []
+      },
+      "expected_status": "success"
+    },
+    {
+      "name": "Create User - Invalid Email",
+      "description": "Attempt to create user with invalid email format",
+      "request": {
+        "email": "invalid-email",
+        "user_type": "BUSINESS",
+        "mailing_list_signup": false
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_INVALID_PARAMETER",
+            "message": "Invalid parameter",
+            "detail": "Parameter \"email\" is invalid or missing"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Create User - Empty Email",
+      "description": "Attempt to create user with empty email",
+      "request": {
+        "email": "",
+        "user_type": "BUSINESS",
+        "mailing_list_signup": false
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_INVALID_PARAMETER",
+            "message": "Invalid parameter"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Create User - Invalid User Type",
+      "description": "Attempt to create user with invalid user type",
+      "request": {
+        "email": "test@example.com",
+        "user_type": "INVALID_TYPE",
+        "mailing_list_signup": false
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_INVALID_PARAMETER",
+            "message": "Invalid parameter",
+            "detail": "Parameter \"user_type\" is invalid or missing"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Create User - Duplicate Email",
+      "description": "Attempt to create user with existing email",
+      "prerequisite": "User with email already exists",
+      "request": {
+        "email": "john.doe@business.com",
+        "user_type": "BUSINESS",
+        "mailing_list_signup": true
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_ALREADY_EXISTS",
+            "message": "User already exists",
+            "detail": "User with email \"john.doe@business.com\" already exists"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Create User - Case Insensitive Email Check",
+      "description": "Verify email uniqueness is case insensitive",
+      "prerequisite": "User with email john.doe@business.com exists",
+      "request": {
+        "email": "JOHN.DOE@BUSINESS.COM",
+        "user_type": "BUSINESS",
+        "mailing_list_signup": false
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_ALREADY_EXISTS"
+          }
+        ]
+      },
+      "expected_status": "error"
+    }
+  ]
+}

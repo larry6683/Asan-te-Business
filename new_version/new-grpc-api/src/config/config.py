@@ -1,41 +1,27 @@
-loaded = False
-try:
-    from config import local_config as config
-    loaded = True
-except ImportError:
-    pass
+import os
+import sys
+
+# Add database schema to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+grpc_api_dir = os.path.dirname(os.path.dirname(current_dir))
+new_version_dir = os.path.dirname(grpc_api_dir)
+db_schema_path = os.path.join(new_version_dir, 'database_schema_sqlalchemy')
+
+if os.path.exists(db_schema_path):
+    if db_schema_path not in sys.path:
+        sys.path.insert(0, db_schema_path)
+    print(f"Added database path: {db_schema_path}")
+else:
+    print(f"Warning: Database path not found: {db_schema_path}")
 
 class Config:
-    @staticmethod
-    def get_database_config():
-        if not loaded:
-            raise ImportError("Configuration not loaded. Ensure local_config.py is available.")
-        
-        config_dict = config.config["database"]
-
-        return {
-            "host": config_dict["host"],
-            "port": config_dict["port"],
-            "dbname": config_dict["dbname"],
-            "user": config_dict["user"],
-            "password": config_dict["password"]
-        }
+    # Database configuration
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = os.getenv('DB_PORT', '5432')
+    DB_NAME = os.getenv('DB_NAME', 'postgres')
+    DB_USER = os.getenv('DB_USER', 'asante_dev')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
     
-    @staticmethod
-    def get_logging_config():
-        if not loaded:
-            return False
-        
-        return config.config["logging"]
-
-    @staticmethod
-    def use_db():
-        if not loaded:
-            raise ImportError("Configuration not loaded. Ensure local_config.py is available.")
-        
-        if config.config["datasource"] == "mock":
-            return False
-        elif config.config["datasource"] == "db":
-            return True
-        else:
-            raise ValueError("Invalid datasource configuration. Expected 'mock' or 'db'.")
+    @classmethod
+    def get_database_url(cls):
+        return f'postgresql://{cls.DB_USER}:{cls.DB_PASSWORD}@{cls.DB_HOST}:{cls.DB_PORT}/{cls.DB_NAME}'
