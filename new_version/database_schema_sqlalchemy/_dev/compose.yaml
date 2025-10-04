@@ -2,8 +2,8 @@ name: postgres_dev
 
 services:
   postgres:
-    image: postgres:latest
-    container_name: postgres
+    image: postgres:17
+    container_name: asante-postgres-dev
     restart: always
     ports:
       - "5432:5432"
@@ -16,6 +16,11 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - asante-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asante_dev -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -29,7 +34,8 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - asante-network
 
@@ -40,5 +46,3 @@ volumes:
 networks:
   asante-network:
     external: true
-    driver: bridge
-    name: asante-network

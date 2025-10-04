@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package business.business_service;
-
-import "business/create_business.proto";
-
-service CreateBusinessService { 
-    rpc CreateBusiness (CreateBusinessRequest) returns (CreateBusinessResponse);
-}

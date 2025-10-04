@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package user.user_service;
-
-import "user/get_user_by_email.proto";
-
-service GetUserByEmailService { 
-    rpc GetUserByEmail (GetUserByEmailRequest) returns (GetUserByEmailResponse);
-}

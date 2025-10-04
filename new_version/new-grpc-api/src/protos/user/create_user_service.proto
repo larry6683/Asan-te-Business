@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package user.user_service;
-
-import "user/create_user.proto";
-
-service CreateUserService { 
-    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
-}
