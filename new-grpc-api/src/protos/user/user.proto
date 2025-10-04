@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package user;
+
+import "error/error.proto";
+
+message User {
+    string id = 1;
+    string email = 2;
+    string user_type = 3;
+    bool mailing_list_signup = 4;
+}
+
+message GetUserRequest {
+    string email = 1;
+}
+
+message GetUserResponse {
+    User user = 1;
+    repeated error.Error errors = 2;
+}
+
+message CreateUserRequest {
+    string email = 1;
+    string user_type = 2;
+    bool mailing_list_signup = 3;
+}
+
+message CreateUserResponse {
+    User user = 1;
+    repeated error.Error errors = 2;
+}
+
+service UserService {
+    rpc GetUser(GetUserRequest) returns (GetUserResponse);
+    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}

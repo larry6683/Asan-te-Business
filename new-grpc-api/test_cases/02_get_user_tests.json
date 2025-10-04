@@ -1,0 +1,93 @@
+{
+  "service": "UserService",
+  "endpoint": "GetUser",
+  "port": 50051,
+  "test_cases": [
+    {
+      "name": "Get User - Valid Email",
+      "description": "Retrieve an existing user by email",
+      "prerequisite": "User with email john.doe@business.com exists",
+      "request": {
+        "email": "john.doe@business.com"
+      },
+      "expected_response": {
+        "user": {
+          "id": "<existing_uuid>",
+          "email": "john.doe@business.com",
+          "user_type": "BUSINESS",
+          "mailing_list_signup": true
+        },
+        "errors": []
+      },
+      "expected_status": "success"
+    },
+    {
+      "name": "Get User - Case Insensitive",
+      "description": "Retrieve user using uppercase email",
+      "prerequisite": "User with email john.doe@business.com exists",
+      "request": {
+        "email": "JOHN.DOE@BUSINESS.COM"
+      },
+      "expected_response": {
+        "user": {
+          "email": "john.doe@business.com",
+          "user_type": "BUSINESS"
+        },
+        "errors": []
+      },
+      "expected_status": "success"
+    },
+    {
+      "name": "Get User - Non-Existent Email",
+      "description": "Attempt to retrieve user that doesn't exist",
+      "request": {
+        "email": "nonexistent@example.com"
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_NOT_FOUND",
+            "message": "User not found",
+            "detail": "User with identifier \"nonexistent@example.com\" does not exist"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Get User - Invalid Email Format",
+      "description": "Attempt to get user with invalid email format",
+      "request": {
+        "email": "invalid-email-format"
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_INVALID_PARAMETER",
+            "message": "Invalid parameter",
+            "detail": "Parameter \"email\" is invalid or missing"
+          }
+        ]
+      },
+      "expected_status": "error"
+    },
+    {
+      "name": "Get User - Empty Email",
+      "description": "Attempt to get user with empty email",
+      "request": {
+        "email": ""
+      },
+      "expected_response": {
+        "user": null,
+        "errors": [
+          {
+            "code": "ERROR_INVALID_PARAMETER"
+          }
+        ]
+      },
+      "expected_status": "error"
+    }
+  ]
+}
