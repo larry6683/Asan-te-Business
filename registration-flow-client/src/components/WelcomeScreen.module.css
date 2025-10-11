@@ -1,0 +1,50 @@
+.body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background: url("../assets/welcome.png") no-repeat;
+  background-size: cover;
+}
+
+.imageContainer {
+  padding: 1px;
+  width: 210px;
+  height: 195px;
+  margin-top: 42px;
+  background: white;
+  background: url("../assets/WelcomePortal.svg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.box {
+  width: 30vw;
+  height: 80vh;
+  background-color: lightgrey;
+  border-radius: 25px;
+  background: var(--barcolor, white);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+}
+
+.textSecondary {
+  /* margin-top: 20px; */
+  text-align: center;
+  color: black;
+  font-family: "Helvetica Neue", sans-serif;
+  font-size: 30px;
+  font-style: normal;
+}
+
+.highlight {
+  color: #6d7cb0;
+}

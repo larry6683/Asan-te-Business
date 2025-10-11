@@ -1,0 +1,185 @@
+erDiagram
+    %% WALLET SCHEMA
+    te_credit_account_status ||--o{ te_credit_account : "status"
+    te_credit_account ||--o{ te_credit_account_status_history : "has history"
+    te_credit_account_status ||--o{ te_credit_account_status_history : "status history"
+    te_credit_account ||--o{ te_credit_transaction : "account"
+    te_credit_transaction_type ||--o{ te_credit_transaction : "type"
+    te_credit_transaction_status ||--o{ te_credit_transaction : "status"
+    app_user ||--o{ te_credit_transaction : "initiator"
+    te_credit_transaction ||--o{ te_credit_transaction_status_history : "has status history"
+    te_credit_transaction_status ||--o{ te_credit_transaction_status_history : "status history"
+    te_credit_transaction ||--o{ te_credit_transaction_transfer_link : "source"
+    te_credit_transaction ||--o{ te_credit_transaction_transfer_link : "destination"
+    business ||--o{ business_te_credit_account : "has credit account"
+    te_credit_account ||--o{ business_te_credit_account : "business account"
+    business ||--o{ business_payment_merchant_provider : "merchant provider"
+    business ||--o{ business_eft_provider : "eft provider"
+    beneficiary ||--o{ beneficiary_te_credit_account : "has credit account"
+    te_credit_account ||--o{ beneficiary_te_credit_account : "beneficiary account"
+
+    %% PUBLIC SCHEMA
+    cause_category ||--o{ cause : "category"
+    
+    te_credit_account_status {
+        UUID te_credit_account_status_id PK
+        INT code
+        TEXT te_credit_account_status_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_account {
+        UUID te_credit_account_id PK
+        UUID te_credit_account_status_id FK
+        DECIMAL current_balance
+        DECIMAL available_balance
+        DECIMAL pending_balance
+        DECIMAL hold_balance
+        VARCHAR api_key
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_account_status_history {
+        UUID te_credit_account_status_history_id PK
+        UUID te_credit_account_id FK
+        UUID te_credit_account_status_id FK
+        TEXT details
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_transaction_type {
+        UUID te_credit_transaction_type_id PK
+        INT code
+        TEXT te_credit_transaction_type_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_transaction_status {
+        UUID te_credit_transaction_status_id PK
+        INT code
+        TEXT te_credit_transaction_status_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_transaction {
+        UUID te_credit_transaction_id PK
+        UUID te_credit_account_id FK
+        UUID te_credit_transaction_type_id FK
+        UUID te_credit_transaction_status_id FK
+        UUID initiating_app_user_id FK
+        DECIMAL amount
+        TEXT external_reference
+        TEXT notes
+        BYTEA external_reference_hash
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_transaction_status_history {
+        UUID te_credit_transaction_status_history_id PK
+        UUID te_credit_transaction_id FK
+        UUID te_credit_transaction_status_id FK
+        TEXT details
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    te_credit_transaction_transfer_link {
+        UUID te_credit_transaction_transfer_link_id PK
+        UUID source_te_credit_transaction_id FK
+        UUID destination_te_credit_transaction_id FK
+        TEXT transfer_reference
+        BYTEA transfer_reference_hash
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    business_te_credit_account {
+        UUID business_te_credit_account_id PK
+        UUID business_id FK
+        UUID te_credit_account_id FK
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    business_payment_merchant_provider {
+        UUID business_payment_merchant_provider_id PK
+        UUID business_id FK
+        VARCHAR provider_name
+        VARCHAR provider_url
+        VARCHAR alert_email
+        VARCHAR api_key
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    business_eft_provider {
+        UUID business_eft_provider_id PK
+        UUID business_id FK
+        VARCHAR provider_name
+        VARCHAR provider_url
+        VARCHAR alert_email
+        VARCHAR api_key
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    beneficiary_te_credit_account {
+        UUID beneficiary_te_credit_account_id PK
+        UUID beneficiary_id FK
+        UUID te_credit_account_id FK
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    %% PUBLIC SCHEMA TABLES
+    user_type {
+        UUID user_type_id PK
+        INT code
+        TEXT user_type_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    social_media_type {
+        UUID social_media_type_id PK
+        INT code
+        TEXT social_media_type_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    shop_type {
+        UUID shop_type_id PK
+        INT code
+        TEXT shop_type_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    registration_type {
+        UUID registration_type_id PK
+        TEXT registration_type_name
+        INT code
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    cause_preference_rank {
+        UUID cause_preference_rank_id PK
+        INT code
+        TEXT cause_preference_rank_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    cause_category {
+        UUID cause_category_id PK
+        INT code
+        TEXT cause_category_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    cause {
+        UUID cause_id PK
+        INT code
+        TEXT cause_name
+        UUID cause_category_id FK
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+    business_user_permission_role {
+        UUID business_user_permission_role_id PK
+        INT code
+        TEXT business_user_permission_role_name
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }

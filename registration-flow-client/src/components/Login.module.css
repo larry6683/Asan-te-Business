@@ -1,0 +1,180 @@
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  .box {
+    width: 580px;
+    height: 770px;
+    background-color: lightgrey;
+    border-radius: 25px;
+    background: var(--barcolor, white);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  
+  .imageContainer {
+    width: 210px;
+    height: 195px;
+    margin-top: 42px;
+    background: white url("../assets/business.png") no-repeat center;
+    background-size: cover;
+  }
+  
+  .textSecondary {
+    margin-top: 20px;
+    text-align: center;
+    color: black;
+    font-family: "Helvetica Neue", sans-serif;
+    font-size: 30px;
+    font-style: normal;
+  }
+  
+  .highlight {
+    color: #6d7cb0;
+  }
+  
+  .formContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 450px;
+    margin-top: 20px;
+  }
+  
+  .inputWrapper {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  .inputLabel {
+    display: block;
+    margin-bottom: 5px;
+    color: #000;
+    font-family: "Helvetica Neue";
+    font-size: 25px;
+    font-weight: 400;
+  }
+  
+  .errorText {
+    color: #FF5151;
+    font-size: 16px;
+    font-weight: 380;
+  }
+  
+  .inputField {
+    width: 100% !important;
+  }
+  
+  .inputRoot {
+    border-radius: 21px !important;
+  }
+  
+  .input {
+    height: 49px;
+    font-family: "Helvetica Neue";
+    font-size: 22px;
+  }
+  
+  .input::placeholder {
+    color: #000;
+    opacity: 0.1148;
+    font-family: "Helvetica Neue";
+    font-size: 22px;
+  }
+  
+  .loginButton {
+    width: 100%;
+    height: 71px;
+    border-radius: 56px;
+    background: linear-gradient(to right, #6271AE, #9ACDDA);
+    color: var(--barcolor, #FFF);
+    text-transform: none;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 25px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .loginButton:hover {
+    background: linear-gradient(90deg, #5B6BB0 0%, #8ACDDB 100%);
+  }
+  
+  .signupText {
+    color: #A0A0A0;
+    font-family: "Helvetica Neue";
+    font-size: 22px;
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .signupLink {
+    color: #7182B3;
+    font-weight: 500;
+    text-decoration: underline;
+  }
+  
+  .forgotPasswordLink {
+    color: #A0A0A0;
+    font-family: "Helvetica Neue";
+    font-size: 22px;
+    text-decoration: underline;
+    margin-top: 17px;
+  }
+  
+  @media (max-width: 600px) {
+    .box {
+      width: 100%;
+      height: auto;
+      min-height: 100vh;
+      border-radius: 0;
+    }
+  
+    .imageContainer {
+      width: 150px;
+      height: 140px;
+    }
+  
+    .textSecondary {
+      font-size: 24px;
+    }
+  
+    .inputLabel {
+      font-size: 20px;
+    }
+  
+    .input {
+      font-size: 18px;
+    }
+  
+    .loginButton {
+      height: 60px;
+      font-size: 22px;
+    }
+  
+    .signupText, .forgotPasswordLink {
+      font-size: 18px;
+    }
+  }
+  
+  @media (min-width: 601px) and (max-width: 1024px) {
+    .box {
+      width: 90%;
+      max-width: 580px;
+      height: auto;
+      min-height: 770px;
+    }
+  }  
