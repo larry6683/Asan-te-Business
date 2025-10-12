@@ -118,20 +118,28 @@ const Login = () => {
             // or belongs to one.
             let entityType = ""
             let entityId = ""
-            if (relationships.businesses) {
+            if (relationships.businesses&& relationships.businesses.data && relationships.businesses.data.length > 0) {
               const entity = relationships.businesses.data[0];
               entityType = "business"
               entityId = entity.id;
-            } else if (relationships.beneficiaries) {
+            } else if (relationships.beneficiaries && relationships.beneficiaries.data && relationships.beneficiaries.data.length > 0) {
               const entity = relationships.beneficiaries.data[0];
-              entityType = "business"
+              entityType = "beneficiary"
               entityId = entity.id;
             }
-            CookieFactory.createAppCookieFromDataOrStorage(
-              user, { entityType: entityType, entityId: entityId }
-            )
-            // navigate to profile.
-            window.location.href = `${redirectUrls.portal}/profile`;
+            if (entityId) {
+              CookieFactory.createAppCookieFromDataOrStorage(
+                user, { entityType: entityType, entityId: entityId }
+              )
+              // navigate to profile.
+              window.location.href = `${redirectUrls.portal}/profile`;
+            } else {
+              // No entity found, continue registration
+              dispatch(setUser(user));
+              sessionStorage.setItem("asante:user", JSON.stringify(user));
+              navigate(`/register/causes`);
+            }
+
           } else {
             dispatch(setUser(user));
           

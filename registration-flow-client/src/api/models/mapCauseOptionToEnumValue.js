@@ -37,7 +37,7 @@ export const mapCauseOptionToEnumValue = (value) => {
       return "SOCIAL_ENTREPRENEURSHIP";
     // environment
     case "Droughts & Fire Management":
-      return "DROUGHT_FIRE_MANAGEMENT";
+      return "DROUGHTS_FIRE_MANAGEMENT";
     case "Climate Advocacy":
       return "CLIMATE_ADVOCACY";
     case "Water Sustainability":
