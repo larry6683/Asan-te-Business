@@ -1,6 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./database_schema_sqlalchemy/scripts/seed_data",
-        "./database_schema_sqlalchemy"
-    ]
-}
