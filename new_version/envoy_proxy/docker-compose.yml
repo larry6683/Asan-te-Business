@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: envoy-grpc-proxy
+    ports:
+      - "8080:8080"
+      - "9901:9901"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+    networks:
+      - asante-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+networks:
+  asante-network:
+    driver: bridge
