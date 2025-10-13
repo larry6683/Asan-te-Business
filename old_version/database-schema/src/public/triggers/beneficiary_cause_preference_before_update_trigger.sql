@@ -1,0 +1,5 @@
+
+CREATE OR REPLACE TRIGGER beneficiary_cause_preference_before_update_trigger
+BEFORE UPDATE ON beneficiary_cause_preference
+FOR EACH ROW
+EXECUTE FUNCTION beneficiary_cause_preference_before_update_triggerfn();

@@ -1,0 +1,11 @@
+syntax="proto3";
+
+package account.auth;
+
+// entity types for Te system
+enum EntityType{
+    ENTITY_UNSPECIFIED=0;
+    ENTITY_BUSINESS=1;
+    ENTITY_BENEFICIARY=2;
+    ENTITY_CONSUMER=3;
+}

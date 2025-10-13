@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: An AWS lambda function to create a user
+
+Globals:
+  Function:
+    Environment:
+      Variables:
+        DB_HOST:
+        DB_NAME:
+        DB_USER:
+        DB_PASSWORD:
+        USER_POOL:
+    Timeout: 3
+
+
+Resources:
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: create_user/.
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Description: python code to create user
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            Path: /user
+            Method: post

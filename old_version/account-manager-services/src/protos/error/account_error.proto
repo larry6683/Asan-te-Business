@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package account.error;
+
+import "error/account_error_code.proto";
+
+message AccountError {
+    AccountErrorCode error_code = 1;
+    string detail = 2;
+}
