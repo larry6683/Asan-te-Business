@@ -1,0 +1,9 @@
+{
+    "python.analysis.extraPaths": [
+        "./database_schema_sqlalchemy",
+        "./new-grpc-api/src"
+    ],
+    "cSpell.words": [
+        "codegen"
+    ]
+}

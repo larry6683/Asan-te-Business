@@ -61,7 +61,31 @@ services:
     depends_on:
       - postgres
 
+  analytics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics-service
+    ports:
+      - '50054:50054'
+    environment:
+      - PYTHONPATH=/app/src
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=asante_dev
+      - DB_PASSWORD=password
+    command: python src/services/analytics/server.py
+    networks:
+      - asante-network
+    depends_on:
+      - postgres
+
 networks:
   asante-network:
     external: true
+<<<<<<< Updated upstream:new_version/new-grpc-api/docker-compose.yml
     name: asante-network
+=======
+    name: asante-network
+>>>>>>> Stashed changes:new-grpc-api/docker-compose.yml

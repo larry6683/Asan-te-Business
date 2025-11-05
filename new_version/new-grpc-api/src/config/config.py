@@ -29,9 +29,9 @@ class Config:
     # Database configuration from environment variables
     DB_HOST = os.getenv('DB_HOST', 'localhost')
     DB_PORT = os.getenv('DB_PORT', '5432')
-    DB_NAME = os.getenv('DB_NAME', 'asante_production')
-    DB_USER = os.getenv('DB_USER', 'asante_user')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'SecurePass123!')
+    DB_NAME = os.getenv('DB_NAME', 'postgres')
+    DB_USER = os.getenv('DB_USER', 'asante_dev')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
     
     @classmethod
     def get_database_url(cls):

@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package analytics;
+
+import "error/error.proto";
+
+// Registration Step (reference data)
+message RegistrationStep {
+    string id = 1;
+    int32 code = 2;
+    string step_name = 3;
+    int32 step_order = 4;
+    string description = 5;
+    string created_at = 6;
+    string updated_at = 7;
+}
+
+// Registration Interaction (main tracking data)
+message RegistrationInteraction {
+    string id = 1;
+    string app_user_id = 2;
+    string session_id = 3;
+    string registration_step_id = 4;
+    string previous_step_id = 5;
+    string next_step_id = 6;
+    string step_began_at = 7;
+    string step_completed_at = 8;
+    string created_at = 9;
+    string updated_at = 10;
+}
+
+// Track registration step interaction
+message TrackStepRequest {
+    string session_id = 1;
+    string app_user_id = 2;  // Optional - can be null for anonymous
+    int32 step_code = 3;      // 1-6 based on registration steps
+    int32 previous_step_code = 4;  // Optional
+    int32 next_step_code = 5;      // Optional
+}
+
+message TrackStepResponse {
+    RegistrationInteraction interaction = 1;
+    repeated error.Error errors = 2;
+}
+
+// Complete a registration step
+message CompleteStepRequest {
+    string interaction_id = 1;
+    int32 next_step_code = 2;  // Optional - where user is going next
+}
+
+message CompleteStepResponse {
+    RegistrationInteraction interaction = 1;
+    repeated error.Error errors = 2;
+}
+
+// Get registration steps (reference data)
+message GetRegistrationStepsRequest {
+    // Empty - returns all steps
+}
+
+message GetRegistrationStepsResponse {
+    repeated RegistrationStep steps = 1;
+    repeated error.Error errors = 2;
+}
+
+// Get user's registration journey
+message GetUserJourneyRequest {
+    string app_user_id = 1;
+}
+
+message GetUserJourneyResponse {
+    repeated RegistrationInteraction interactions = 1;
+    repeated error.Error errors = 2;
+}
+
+// Get session's registration journey
+message GetSessionJourneyRequest {
+    string session_id = 1;
+}
+
+message GetSessionJourneyResponse {
+    repeated RegistrationInteraction interactions = 1;
+    repeated error.Error errors = 2;
+}
+
+// Analytics statistics
+message RegistrationStats {
+    int32 total_sessions = 1;
+    int32 completed_registrations = 2;
+    int32 incomplete_registrations = 3;
+    float completion_rate = 4;
+    map<string, int32> dropoff_by_step = 5;
+    float average_duration_seconds = 6;
+}
+
+message GetRegistrationStatsRequest {
+    string start_date = 1;  // ISO format
+    string end_date = 2;    // ISO format
+}
+
+message GetRegistrationStatsResponse {
+    RegistrationStats stats = 1;
+    repeated error.Error errors = 2;
+}
+
+service AnalyticsService {
+    // Track a registration step interaction
+    rpc TrackStep(TrackStepRequest) returns (TrackStepResponse);
+    
+    // Mark a step as completed
+    rpc CompleteStep(CompleteStepRequest) returns (CompleteStepResponse);
+    
+    // Get all registration steps (reference data)
+    rpc GetRegistrationSteps(GetRegistrationStepsRequest) returns (GetRegistrationStepsResponse);
+    
+    // Get user's registration journey
+    rpc GetUserJourney(GetUserJourneyRequest) returns (GetUserJourneyResponse);
+    
+    // Get session's registration journey
+    rpc GetSessionJourney(GetSessionJourneyRequest) returns (GetSessionJourneyResponse);
+    
+    // Get registration statistics
+    rpc GetRegistrationStats(GetRegistrationStatsRequest) returns (GetRegistrationStatsResponse);
+}
