@@ -1,4 +1,4 @@
-from src.public.tables import Beneficiary, BeneficiarySize
+from src.public.tables import Beneficiary, BeneficiarySize # type: ignore
 from domain.beneficiary import Beneficiary as DomainBeneficiary, BeneficiarySize as DomainBeneficiarySize
 
 class BeneficiaryConverter:

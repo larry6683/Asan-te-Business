@@ -4,7 +4,7 @@ from config.config import Config
 import uuid
 from datetime import datetime, timedelta
 from sqlalchemy import func, and_
-from src.analytics.tables import (
+from src.analytics.tables import ( # type: ignore
     RegistrationStep as DBRegistrationStep,
     RegistrationInteraction as DBRegistrationInteraction
 )

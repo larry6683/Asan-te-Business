@@ -1,8 +1,8 @@
 # Import config first to set up database path
 from config.config import Config
 
-from src.analytics.tables import RegistrationStep as DBRegistrationStep
-from src.analytics.tables import RegistrationInteraction as DBRegistrationInteraction
+from src.analytics.tables import RegistrationStep as DBRegistrationStep # type: ignore
+from src.analytics.tables import RegistrationInteraction as DBRegistrationInteraction # type: ignore
 from domain.analytics import (
     RegistrationStep, RegistrationInteraction, RegistrationStepCode, RegistrationStats
 )
