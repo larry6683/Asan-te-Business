@@ -3,12 +3,12 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_business_cause_prefe
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.business_size import BusinessSize
-from src.public.tables.business import Business
-from src.public.tables.cause_category import CauseCategory
-from src.public.tables.cause import Cause
-from src.public.tables.cause_preference_rank import CausePreferenceRank
-from src.public.tables.business_cause_preference import BusinessCausePreference
+from database_schema_sqlalchemy.src.public.tables.business_size import BusinessSize
+from database_schema_sqlalchemy.src.public.tables.business import Business
+from database_schema_sqlalchemy.src.public.tables.cause_category import CauseCategory
+from database_schema_sqlalchemy.src.public.tables.cause import Cause
+from database_schema_sqlalchemy.src.public.tables.cause_preference_rank import CausePreferenceRank
+from database_schema_sqlalchemy.src.public.tables.business_cause_preference import BusinessCausePreference
 from .test_utils import create_test_session
 
 def test_business_cause_preference_junction():

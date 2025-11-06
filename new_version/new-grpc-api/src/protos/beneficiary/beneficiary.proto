@@ -1,6 +1,3 @@
-// new-grpc-api/src/protos/beneficiary/beneficiary.proto
-// UPDATED VERSION - Add cause_codes field
-
 syntax = "proto3";
 
 package beneficiary;
@@ -40,7 +37,6 @@ message CreateBeneficiaryRequest {
     string beneficiary_description = 8;
     string beneficiary_size = 9;
     string user_email = 10;
-    repeated string cause_codes = 11;  // 🆕 ADD THIS LINE
 }
 
 message CreateBeneficiaryResponse {

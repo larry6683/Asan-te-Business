@@ -3,12 +3,12 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary_cause_pr
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.beneficiary_size import BeneficiarySize
-from src.public.tables.beneficiary import Beneficiary
-from src.public.tables.cause_category import CauseCategory
-from src.public.tables.cause import Cause
-from src.public.tables.cause_preference_rank import CausePreferenceRank
-from src.public.tables.beneficiary_cause_preference import BeneficiaryCausePreference
+from database_schema_sqlalchemy.src.public.tables.beneficiary_size import BeneficiarySize
+from database_schema_sqlalchemy.src.public.tables.beneficiary import Beneficiary
+from database_schema_sqlalchemy.src.public.tables.cause_category import CauseCategory
+from database_schema_sqlalchemy.src.public.tables.cause import Cause
+from database_schema_sqlalchemy.src.public.tables.cause_preference_rank import CausePreferenceRank
+from database_schema_sqlalchemy.src.public.tables.beneficiary_cause_preference import BeneficiaryCausePreference
 from .test_utils import create_test_session
 
 def test_beneficiary_cause_preference_junction():

@@ -1,17 +1,14 @@
-# new-grpc-api/src/services/beneficiary/beneficiary_service.py
-# UPDATED VERSION - Replace the CreateBeneficiary method
-
+# Import config first to set up database path
 from config.config import Config
+
 from sqlalchemy import func
 from src.public.tables import (
-    Beneficiary, BeneficiarySize, AppUser, BeneficiaryUser, BeneficiaryUserPermissionRole,
-    Cause, BeneficiaryCausePreference, CausePreferenceRank  # 🆕 ADD THESE
+    Beneficiary, BeneficiarySize, AppUser, BeneficiaryUser, BeneficiaryUserPermissionRole
 )
 from database.db_manager import DatabaseManager
 from converters.beneficiary_converter import BeneficiaryConverter
 from utils.error_handler import ErrorHandler
 from utils.validator import Validator
-from utils.cause_mapper import CauseMapper  # 🆕 ADD THIS IMPORT
 from codegen.beneficiary.beneficiary_pb2 import (
     GetBeneficiaryRequest, GetBeneficiaryResponse,
     CreateBeneficiaryRequest, CreateBeneficiaryResponse,
@@ -148,59 +145,6 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                             )
                             session.add(beneficiary_user)
                 
-                # 🆕 CREATE CAUSE PREFERENCES FOR BENEFICIARY
-                # Note: Beneficiaries can have PRIMARY, SUPPORTING causes
-                # The cause_codes should come from frontend with rank information
-                # For now, we'll treat all as primary mission-aligned causes
-                if hasattr(request, 'cause_codes') and request.cause_codes:
-                    print(f"📥 Received {len(request.cause_codes)} cause codes for beneficiary")
-                    
-                    # Get primary rank for beneficiaries
-                    primary_rank = session.query(CausePreferenceRank).filter(
-                        CausePreferenceRank.code == 2  # PRIMARY rank
-                    ).first()
-                    
-                    if not primary_rank:
-                        print("❌ ERROR: No primary cause preference rank found")
-                        response.errors.append(
-                            ErrorHandler.internal_error("No primary cause preference rank found")
-                        )
-                        session.rollback()
-                        return response
-                    
-                    print(f"✅ Using rank: {primary_rank.cause_preference_rank_name} (code={primary_rank.code})")
-                    
-                    # Process each cause code
-                    causes_saved = 0
-                    causes_failed = []
-                    
-                    for enum_value in request.cause_codes:
-                        # Convert enum to database name
-                        db_cause_name = CauseMapper.enum_to_db_name(enum_value)
-                        print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
-                        
-                        # Look up cause
-                        cause = session.query(Cause).filter(
-                            Cause.cause_name == db_cause_name
-                        ).first()
-                        
-                        if cause:
-                            print(f"✅ Found cause: '{cause.cause_name}' (ID={cause.cause_id})")
-                            
-                            # Create preference
-                            cause_pref = BeneficiaryCausePreference(
-                                beneficiary_id=new_beneficiary.beneficiary_id,
-                                cause_id=cause.cause_id,
-                                cause_preference_rank_id=primary_rank.cause_preference_rank_id
-                            )
-                            session.add(cause_pref)
-                            causes_saved += 1
-                        else:
-                            print(f"⚠️ Cause not found: '{db_cause_name}'")
-                            causes_failed.append(db_cause_name)
-                    
-                    print(f"📊 Summary: {causes_saved} causes saved, {len(causes_failed)} failed")
-                
                 # Convert to response
                 domain_beneficiary = BeneficiaryConverter.to_domain(new_beneficiary)
                 response.beneficiary.CopyFrom(ProtoBeneficiary(
@@ -216,11 +160,9 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                     beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size)
                 ))
                 
-                print(f"✅ Beneficiary created successfully with ID: {new_beneficiary.beneficiary_id}")
-                
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
-            print(f"❌ Error in CreateBeneficiary: {e}")
+            print(f"Error in CreateBeneficiary: {e}")
             import traceback
             traceback.print_exc()
         

@@ -1,7 +1,7 @@
 # database_schema_sqlalchemy/tests/test_utils.py
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
-from src.public.tables import Base
+from database_schema_sqlalchemy.src.public.tables import Base
 import sys
 import os
 

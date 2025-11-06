@@ -2,8 +2,8 @@
 Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary
 """
 import uuid
-from src.public.tables.beneficiary_size import BeneficiarySize
-from src.public.tables.beneficiary import Beneficiary
+from database_schema_sqlalchemy.src.public.tables.beneficiary_size import BeneficiarySize
+from database_schema_sqlalchemy.src.public.tables.beneficiary import Beneficiary
 from .test_utils import create_test_session
 
 def test_beneficiary_with_foreign_keys():

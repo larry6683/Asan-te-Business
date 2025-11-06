@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Import from the package structure
-from src.public.tables import Base, UserType
+from database_schema_sqlalchemy.src.public.tables import Base, UserType
 
 def test_user_type_conversion():
     print("=== Testing UserType Model Conversion ===")

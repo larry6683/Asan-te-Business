@@ -3,12 +3,12 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary_user
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.user_type import UserType
-from src.public.tables.app_user import AppUser
-from src.public.tables.beneficiary_size import BeneficiarySize
-from src.public.tables.beneficiary import Beneficiary
-from src.public.tables.beneficiary_user_permission_role import BeneficiaryUserPermissionRole
-from src.public.tables.beneficiary_user import BeneficiaryUser
+from database_schema_sqlalchemy.src.public.tables.user_type import UserType
+from database_schema_sqlalchemy.src.public.tables.app_user import AppUser
+from database_schema_sqlalchemy.src.public.tables.beneficiary_size import BeneficiarySize
+from database_schema_sqlalchemy.src.public.tables.beneficiary import Beneficiary
+from database_schema_sqlalchemy.src.public.tables.beneficiary_user_permission_role import BeneficiaryUserPermissionRole
+from database_schema_sqlalchemy.src.public.tables.beneficiary_user import BeneficiaryUser
 from .test_utils import create_test_session
 
 def test_beneficiary_user_junction():

@@ -3,10 +3,10 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_app_user_registratio
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.user_type import UserType
-from src.public.tables.app_user import AppUser
-from src.public.tables.registration_type import RegistrationType
-from src.public.tables.app_user_registration_type import AppUserRegistrationType
+from database_schema_sqlalchemy.src.public.tables.user_type import UserType
+from database_schema_sqlalchemy.src.public.tables.app_user import AppUser
+from database_schema_sqlalchemy.src.public.tables.registration_type import RegistrationType
+from database_schema_sqlalchemy.src.public.tables.app_user_registration_type import AppUserRegistrationType
 from .test_utils import create_test_session
 
 

@@ -4,8 +4,8 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_business_size
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.public.tables import Base
-from src.public.tables.business_size import BusinessSize
+from database_schema_sqlalchemy.src.public.tables import Base
+from database_schema_sqlalchemy.src.public.tables.business_size import BusinessSize
 
 def test_business_size_conversion():
     print("=== Testing BusinessSize Model Conversion ===")

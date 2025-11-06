@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary_user_permission
 """
-from src.public.tables.beneficiary_user_permission_role import BeneficiaryUserPermissionRole
+from database_schema_sqlalchemy.src.public.tables.beneficiary_user_permission_role import BeneficiaryUserPermissionRole
 from .test_utils import create_test_session
 
 def test_beneficiary_user_permission_role_model():

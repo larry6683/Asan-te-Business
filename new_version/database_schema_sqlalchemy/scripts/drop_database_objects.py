@@ -15,7 +15,7 @@ sys.path.insert(0, project_root)
 
 from sqlalchemy import create_engine, text, MetaData
 from sqlalchemy.orm import sessionmaker
-from src.public.tables import Base
+from database_schema_sqlalchemy.src.public.tables import Base
 
 def create_session(database_url="postgresql://asante_dev:password@localhost:5432/postgres"):
     """Create database session"""

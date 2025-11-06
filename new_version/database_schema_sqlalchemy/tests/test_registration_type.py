@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_registration_type
 """
-from src.public.tables.registration_type import RegistrationType
+from database_schema_sqlalchemy.src.public.tables.registration_type import RegistrationType
 from .test_utils import create_test_session
 
 def test_registration_type_model():

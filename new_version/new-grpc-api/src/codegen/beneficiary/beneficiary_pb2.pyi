@@ -2,8 +2,7 @@ from error import error_pb2 as _error_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
-from collections.abc import Iterable as _Iterable, Mapping as _Mapping
-from typing import ClassVar as _ClassVar, Optional as _Optional, Union as _Union
+from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
@@ -46,7 +45,7 @@ class GetBeneficiaryResponse(_message.Message):
     def __init__(self, beneficiary: _Optional[_Union[Beneficiary, _Mapping]] = ..., errors: _Optional[_Iterable[_Union[_error_pb2.Error, _Mapping]]] = ...) -> None: ...
 
 class CreateBeneficiaryRequest(_message.Message):
-    __slots__ = ("beneficiary_name", "email", "website_url", "phone_number", "location_city", "location_state", "ein", "beneficiary_description", "beneficiary_size", "user_email", "cause_codes")
+    __slots__ = ("beneficiary_name", "email", "website_url", "phone_number", "location_city", "location_state", "ein", "beneficiary_description", "beneficiary_size", "user_email")
     BENEFICIARY_NAME_FIELD_NUMBER: _ClassVar[int]
     EMAIL_FIELD_NUMBER: _ClassVar[int]
     WEBSITE_URL_FIELD_NUMBER: _ClassVar[int]
@@ -57,7 +56,6 @@ class CreateBeneficiaryRequest(_message.Message):
     BENEFICIARY_DESCRIPTION_FIELD_NUMBER: _ClassVar[int]
     BENEFICIARY_SIZE_FIELD_NUMBER: _ClassVar[int]
     USER_EMAIL_FIELD_NUMBER: _ClassVar[int]
-    CAUSE_CODES_FIELD_NUMBER: _ClassVar[int]
     beneficiary_name: str
     email: str
     website_url: str
@@ -68,8 +66,7 @@ class CreateBeneficiaryRequest(_message.Message):
     beneficiary_description: str
     beneficiary_size: str
     user_email: str
-    cause_codes: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, beneficiary_name: _Optional[str] = ..., email: _Optional[str] = ..., website_url: _Optional[str] = ..., phone_number: _Optional[str] = ..., location_city: _Optional[str] = ..., location_state: _Optional[str] = ..., ein: _Optional[str] = ..., beneficiary_description: _Optional[str] = ..., beneficiary_size: _Optional[str] = ..., user_email: _Optional[str] = ..., cause_codes: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(self, beneficiary_name: _Optional[str] = ..., email: _Optional[str] = ..., website_url: _Optional[str] = ..., phone_number: _Optional[str] = ..., location_city: _Optional[str] = ..., location_state: _Optional[str] = ..., ein: _Optional[str] = ..., beneficiary_description: _Optional[str] = ..., beneficiary_size: _Optional[str] = ..., user_email: _Optional[str] = ...) -> None: ...
 
 class CreateBeneficiaryResponse(_message.Message):
     __slots__ = ("beneficiary", "errors")

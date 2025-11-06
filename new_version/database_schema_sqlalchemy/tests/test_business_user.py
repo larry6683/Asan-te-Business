@@ -3,12 +3,12 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_business_user
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.user_type import UserType
-from src.public.tables.app_user import AppUser
-from src.public.tables.business_size import BusinessSize
-from src.public.tables.business import Business
-from src.public.tables.business_user_permission_role import BusinessUserPermissionRole
-from src.public.tables.business_user import BusinessUser
+from database_schema_sqlalchemy.src.public.tables.user_type import UserType
+from database_schema_sqlalchemy.src.public.tables.app_user import AppUser
+from database_schema_sqlalchemy.src.public.tables.business_size import BusinessSize
+from database_schema_sqlalchemy.src.public.tables.business import Business
+from database_schema_sqlalchemy.src.public.tables.business_user_permission_role import BusinessUserPermissionRole
+from database_schema_sqlalchemy.src.public.tables.business_user import BusinessUser
 from .test_utils import create_test_session
 
 def test_business_user_junction():

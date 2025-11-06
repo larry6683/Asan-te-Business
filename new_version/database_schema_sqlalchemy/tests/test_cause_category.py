@@ -4,8 +4,8 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_cause_category
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.public.tables import Base
-from src.public.tables.cause_category import CauseCategory
+from database_schema_sqlalchemy.src.public.tables import Base
+from database_schema_sqlalchemy.src.public.tables.cause_category import CauseCategory
 
 def test_cause_category_conversion():
     print("=== Testing CauseCategory Model Conversion ===")

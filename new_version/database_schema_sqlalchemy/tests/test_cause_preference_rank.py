@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_cause_preference_rank
 """
-from src.public.tables.cause_preference_rank import CausePreferenceRank
+from database_schema_sqlalchemy.src.public.tables.cause_preference_rank import CausePreferenceRank
 from .test_utils import create_test_session
 
 def test_cause_preference_rank_model():

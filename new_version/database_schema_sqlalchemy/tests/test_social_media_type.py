@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_social_media_type
 """
-from src.public.tables.social_media_type import SocialMediaType
+from database_schema_sqlalchemy.src.public.tables.social_media_type import SocialMediaType
 from .test_utils import create_test_session
 
 def test_social_media_type_model():

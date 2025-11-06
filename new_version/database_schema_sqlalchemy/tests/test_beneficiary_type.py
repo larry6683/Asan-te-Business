@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary_type
 """
-from src.public.tables.beneficiary_type import BeneficiaryType
+from database_schema_sqlalchemy.src.public.tables.beneficiary_type import BeneficiaryType
 from .test_utils import create_test_session
 
 def test_beneficiary_type_creation():

@@ -2,8 +2,8 @@
 Usage: bash python -m database_schema_sqlalchemy.tests.test_cause
 """
 import uuid
-from src.public.tables.cause_category import CauseCategory
-from src.public.tables.cause import Cause
+from database_schema_sqlalchemy.src.public.tables.cause_category import CauseCategory
+from database_schema_sqlalchemy.src.public.tables.cause import Cause
 from .test_utils import create_test_session
 
 def test_cause_with_foreign_keys():

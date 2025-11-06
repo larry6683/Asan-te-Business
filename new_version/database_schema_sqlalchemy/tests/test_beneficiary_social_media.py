@@ -3,10 +3,10 @@ Usage: bash python -m database_schema_sqlalchemy.tests.test_beneficiary_social_m
 """
 import uuid
 from sqlalchemy.sql import func
-from src.public.tables.beneficiary_size import BeneficiarySize
-from src.public.tables.beneficiary import Beneficiary
-from src.public.tables.social_media_type import SocialMediaType
-from src.public.tables.beneficiary_social_media import BeneficiarySocialMedia
+from database_schema_sqlalchemy.src.public.tables.beneficiary_size import BeneficiarySize
+from database_schema_sqlalchemy.src.public.tables.beneficiary import Beneficiary
+from database_schema_sqlalchemy.src.public.tables.social_media_type import SocialMediaType
+from database_schema_sqlalchemy.src.public.tables.beneficiary_social_media import BeneficiarySocialMedia
 from .test_utils import create_test_session
 
 def test_beneficiary_social_media_junction():

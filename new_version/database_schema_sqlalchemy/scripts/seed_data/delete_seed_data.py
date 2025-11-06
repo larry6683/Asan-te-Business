@@ -16,7 +16,7 @@ sys.path.insert(0, project_root)
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.public.tables import (
+from database_schema_sqlalchemy.src.public.tables import (
     Base, Business, AppUser, BusinessUser, BusinessSocialMedia,
     BusinessCausePreference, BusinessShop, BusinessImpactLink
 )

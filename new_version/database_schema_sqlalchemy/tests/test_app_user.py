@@ -2,8 +2,8 @@
 Usage: bash python -m database_schema_sqlalchemy.tests.test_app_user
 """
 import uuid
-from src.public.tables.user_type import UserType
-from src.public.tables.app_user import AppUser
+from database_schema_sqlalchemy.src.public.tables.user_type import UserType
+from database_schema_sqlalchemy.src.public.tables.app_user import AppUser
 from .test_utils import create_test_session
 
 def test_app_user_with_foreign_keys():

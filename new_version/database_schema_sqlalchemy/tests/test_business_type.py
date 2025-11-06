@@ -1,7 +1,7 @@
 """
 Usage: bash python -m database_schema_sqlalchemy.tests.test_business_type
 """
-from src.public.tables.business_type import BusinessType
+from database_schema_sqlalchemy.src.public.tables.business_type import BusinessType
 from .test_utils import create_test_session
 
 def test_business_type_creation():

@@ -45,6 +45,12 @@ BENEFICIARY_PID=$!
 
 sleep 2
 
+echo "Starting Analytics Service (port 50054)..."
+python src/services/analytics/server.py &
+ANALYTICS_PID=$!
+
+sleep 2
+
 echo ""
 echo "========================================"
 echo "✓ All services started!"
@@ -54,6 +60,7 @@ echo "Services running on:"
 echo "  User Service:        localhost:50051"
 echo "  Business Service:    localhost:50052"
 echo "  Beneficiary Service: localhost:50053"
+echo "  Analytics Service: localhost:50054"
 echo ""
 echo "Database:"
 echo "  Host: $DB_HOST"
