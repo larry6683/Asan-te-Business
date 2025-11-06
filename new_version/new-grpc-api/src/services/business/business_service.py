@@ -1,6 +1,7 @@
-# Import config first to set up database path
-from config.config import Config
+# new-grpc-api/src/services/business/business_service.py
+# UPDATED VERSION - Replace the existing CreateBusiness method
 
+from config.config import Config
 from sqlalchemy import func
 from src.public.tables import (
     Business, BusinessSize, AppUser, BusinessUser, BusinessUserPermissionRole,
@@ -10,6 +11,7 @@ from database.db_manager import DatabaseManager
 from converters.business_converter import BusinessConverter
 from utils.error_handler import ErrorHandler
 from utils.validator import Validator
+from utils.cause_mapper import CauseMapper  # 🆕 ADD THIS IMPORT
 from codegen.business.business_pb2 import (
     GetBusinessRequest, GetBusinessResponse,
     CreateBusinessRequest, CreateBusinessResponse,
@@ -146,70 +148,60 @@ class BusinessService(BusinessServiceServicer):
                             )
                             session.add(business_user)
                 
-             
-                # Create cause preferences
-                # Create cause preferences
+                # 🆕 CREATE CAUSE PREFERENCES - UPDATED LOGIC
                 if request.cause_codes:
-                    print(f"DEBUG: Received {len(request.cause_codes)} cause codes: {list(request.cause_codes)}")
+                    print(f"📥 Received {len(request.cause_codes)} cause codes from frontend")
                     
-                    # Get default rank for businesses (unranked)
+                    # Get default rank (unranked for businesses)
                     default_rank = session.query(CausePreferenceRank).filter(
                         CausePreferenceRank.code == 1
                     ).first()
                     
-                    print(f"DEBUG: Default rank found: {default_rank}")
-                    
                     if not default_rank:
+                        print("❌ ERROR: No unranked cause preference rank found")
                         response.errors.append(
                             ErrorHandler.internal_error("No unranked cause preference rank found")
                         )
                         session.rollback()
                         return response
                     
-                    # First, let's see what causes exist in the database
-                    all_causes = session.query(Cause).all()
-                    print(f"DEBUG: All causes in database:")
-                    for c in all_causes:
-                        print(f"  - code={c.code}, name='{c.cause_name}'")
+                    print(f"✅ Using rank: {default_rank.cause_preference_rank_name} (code={default_rank.code})")
                     
-                    for cause_code_str in request.cause_codes:
-                        print(f"\nDEBUG: Processing cause code: '{cause_code_str}'")
+                    # Process each cause code from frontend
+                    causes_saved = 0
+                    causes_failed = []
+                    
+                    for enum_value in request.cause_codes:
+                        # 🆕 Convert enum to database name
+                        db_cause_name = CauseMapper.enum_to_db_name(enum_value)
+                        print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
                         
-                        # Normalize
-                        words = cause_code_str.split('_')
-                        normalized_name = ' '.join(word.capitalize() for word in words)
-                        print(f"DEBUG: Normalized to: '{normalized_name}'")
-                        
-                        # Special cases
-                        ampersand_replacements = {
-                            "Events Advocacy": "Events & Advocacy",
-                            "Schools Teachers": "Schools & Teachers",
-                            "Health Wellbeing": "Health & Wellbeing",
-                            "Droughts Fire Management": "Droughts & Fire Management"
-                        }
-                        
-                        if normalized_name in ampersand_replacements:
-                            normalized_name = ampersand_replacements[normalized_name]
-                            print(f"DEBUG: Applied ampersand replacement: '{normalized_name}'")
-                        
-                        # Look up cause
+                        # Look up cause by database name
                         cause = session.query(Cause).filter(
-                            Cause.cause_name == normalized_name
+                            Cause.cause_name == db_cause_name
                         ).first()
                         
                         if cause:
-                            print(f"DEBUG: Found cause! ID={cause.cause_id}, name='{cause.cause_name}'")
+                            print(f"✅ Found cause in DB: '{cause.cause_name}' (ID={cause.cause_id})")
+                            
+                            # Create preference record
                             cause_pref = BusinessCausePreference(
                                 business_id=new_business.business_id,
                                 cause_id=cause.cause_id,
                                 cause_preference_rank_id=default_rank.cause_preference_rank_id
                             )
                             session.add(cause_pref)
-                            print(f"DEBUG: Added cause preference")
+                            causes_saved += 1
+                            print(f"💾 Saved preference for '{cause.cause_name}'")
                         else:
-                            print(f"DEBUG: NO MATCH FOUND for '{normalized_name}'")
-                                
-                # Convert to response (existing code continues here)
+                            print(f"⚠️ Cause not found in database: '{db_cause_name}'")
+                            causes_failed.append(db_cause_name)
+                    
+                    print(f"\n📊 Summary: {causes_saved} causes saved, {len(causes_failed)} failed")
+                    if causes_failed:
+                        print(f"❌ Failed causes: {', '.join(causes_failed)}")
+                
+                # Convert to response
                 domain_business = BusinessConverter.to_domain(new_business)
                 response.business.CopyFrom(ProtoBusiness(
                     id=domain_business.id,
@@ -224,9 +216,11 @@ class BusinessService(BusinessServiceServicer):
                     business_size=BusinessConverter.size_to_string(domain_business.business_size)
                 ))
                 
+                print(f"✅ Business created successfully with ID: {new_business.business_id}")
+                
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
-            print(f"Error in CreateBusiness: {e}")
+            print(f"❌ Error in CreateBusiness: {e}")
             import traceback
             traceback.print_exc()
         

@@ -103,26 +103,11 @@ class UserService(UserServiceServicer):
                     user_type=UserConverter.user_type_to_string(domain_user.user_type),
                     mailing_list_signup=domain_user.mailing_list_signup
                 ))
+                
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
             print(f"Error in CreateUser: {e}")
             import traceback
             traceback.print_exc()
-
-        # Integrate with Analytics Service to link session to user
-        try:
-            # Link session to user if session_id provided
-            if hasattr(request, 'session_id') and request.session_id:
-                analytics_channel = grpc.insecure_channel('localhost:50054') # type: ignore
-            analytics_stub = analytics_pb2_grpc.AnalyticsServiceStub(analytics_channel) # type: ignore
-        
-            analytics_stub.LinkSessionToUser(analytics_pb2.LinkSessionToUserRequest( # type: ignore
-            session_id=request.session_id,
-            user_email=request.email
-            ))
-            print(f"✓ Linked session {request.session_id} to user {request.email}")
-        except Exception as e:
-            print(f"Warning: Failed to link session: {e}")
-
         
         return response

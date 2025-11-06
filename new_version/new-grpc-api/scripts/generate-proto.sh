@@ -18,7 +18,6 @@ python -m grpc_tools.protoc \
   $PROTO_DIR/user/user.proto \
   $PROTO_DIR/business/business.proto \
   $PROTO_DIR/beneficiary/beneficiary.proto
-  $PROTO_DIR/analytics/analytics.proto
 
 echo "✅ Protobuf files generated"
 echo "🔧 Fixing import paths..."

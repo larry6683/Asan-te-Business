@@ -29,29 +29,20 @@ def test_connection():
             print(f"\nPostgreSQL Version:")
             print(f"  {version[:80]}...")
             
-            # Count tables in public schema
+            # Count tables
             result = conn.execute(text("""
                 SELECT COUNT(*) 
                 FROM information_schema.tables 
                 WHERE table_schema = 'public'
             """))
             table_count = result.fetchone()[0]
-            print(f"\n✓ Found {table_count} tables in public database")
+            print(f"\n✓ Found {table_count} tables in database")
             
             # Test a simple query on user_type table
             result = conn.execute(text("SELECT COUNT(*) FROM user_type"))
             user_type_count = result.fetchone()[0]
             print(f"✓ user_type table has {user_type_count} records")
             
-            # Count tables in analytics schema
-            result = conn.execute(text("""
-                SELECT COUNT(*) 
-                FROM information_schema.tables 
-                WHERE table_schema = 'analytics'
-            """))
-            table_count = result.fetchone()[0]
-            print(f"\n✓ Found {table_count} tables in analytics database")
-
             return True
             
     except Exception as e:
