@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, and_
 from src.analytics.tables import ( # type: ignore
     RegistrationStep as DBRegistrationStep,
-    RegistrationInteraction as DBRegistrationInteraction
+    RegistrationInteraction as DBRegistrationInteraction,
+    VerificationTracking as DBVerificationTracking
 )
 from database.db_manager import DatabaseManager
 from converters.analytics_converter import AnalyticsConverter
@@ -21,7 +22,11 @@ from codegen.analytics.analytics_pb2 import (
     GetRegistrationStatsRequest, GetRegistrationStatsResponse,
     RegistrationStep as ProtoRegistrationStep,
     RegistrationInteraction as ProtoRegistrationInteraction,
-    RegistrationStats as ProtoRegistrationStats
+    RegistrationStats as ProtoRegistrationStats,
+    TrackVerificationRequestRequest, TrackVerificationRequestResponse,
+    MarkVerificationCompleteRequest, MarkVerificationCompleteResponse,
+    GetVerificationStatusRequest, GetVerificationStatusResponse,
+    VerificationTracking as ProtoVerificationTracking
 )
 from codegen.analytics.analytics_pb2_grpc import AnalyticsServiceServicer
 
@@ -371,5 +376,162 @@ class AnalyticsService(AnalyticsServiceServicer):
             step_began_at=AnalyticsConverter.datetime_to_string(domain_interaction.step_began_at),
             step_completed_at=AnalyticsConverter.datetime_to_string(domain_interaction.step_completed_at),
             created_at=AnalyticsConverter.datetime_to_string(domain_interaction.created_at),
-            updated_at=AnalyticsConverter.datetime_to_string(domain_interaction.updated_at)
-        )
+            updated_at=AnalyticsConverter.datetime_to_string(domain_interaction.updated_at))
+
+    
+    def TrackVerificationRequest(self, request: TrackVerificationRequestRequest, context):
+        """Track verification code request (initial or resend)"""
+        response = TrackVerificationRequestResponse()
+        
+        try:
+            # Validate
+            if not Validator.is_not_empty(request.app_user_id):
+                response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
+                return response
+            if not Validator.is_not_empty(request.session_id):
+                response.errors.append(ErrorHandler.invalid_parameter('session_id'))
+                return response
+            
+            # Parse UUIDs
+            try:
+                app_user_uuid = uuid.UUID(request.app_user_id)
+                session_uuid = uuid.UUID(request.session_id)
+            except ValueError:
+                response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
+                return response
+            
+            with DatabaseManager.get_session() as session:
+                # Check if record exists
+                vt = session.query(DBVerificationTracking).filter(
+                    DBVerificationTracking.app_user_id == app_user_uuid
+                ).first()
+                
+                if vt:
+                    # Existing record - increment count
+                    vt.verification_codes_requested += 1
+                    vt.last_code_requested_at = datetime.utcnow()
+                    print(f"📧 Verification resend #{vt.verification_codes_requested} for user {request.app_user_id}")
+                else:
+                    # New record - first request
+                    vt = DBVerificationTracking(
+                        app_user_id=app_user_uuid,
+                        session_id=session_uuid,
+                        verification_codes_requested=1,
+                        email_verified=False
+                    )
+                    session.add(vt)
+                    print(f"📧 Initial verification request for user {request.app_user_id}")
+                
+                session.flush()
+                
+                # Convert to proto
+                response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"Error in TrackVerificationRequest: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        return response
+    
+        def MarkVerificationComplete(self, request: MarkVerificationCompleteRequest, context):
+            """Mark email verification as complete"""
+            response = MarkVerificationCompleteResponse()
+            
+            try:
+                # Validate
+                if not Validator.is_not_empty(request.app_user_id):
+                    response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
+                    return response
+                
+                # Parse UUID
+                try:
+                    app_user_uuid = uuid.UUID(request.app_user_id)
+                except ValueError:
+                    response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
+                    return response
+                
+                with DatabaseManager.get_session() as session:
+                    vt = session.query(DBVerificationTracking).filter(
+                        DBVerificationTracking.app_user_id == app_user_uuid
+                    ).first()
+                    
+                    if vt:
+                        vt.email_verified = True
+                        vt.verification_completed_at = datetime.utcnow()
+                        session.flush()
+                        print(f"✅ Verification completed for user {request.app_user_id}")
+                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                    else:
+                        # Create record if doesn't exist
+                        session_uuid = uuid.UUID(request.session_id) if request.session_id else None
+                        vt = DBVerificationTracking(
+                            app_user_id=app_user_uuid,
+                            session_id=session_uuid,
+                            verification_codes_requested=1,
+                            email_verified=True,
+                            verification_completed_at=datetime.utcnow()
+                        )
+                        session.add(vt)
+                        session.flush()
+                        print(f"✅ Verification completed (created record) for user {request.app_user_id}")
+                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                    
+            except Exception as e:
+                response.errors.append(ErrorHandler.internal_error(str(e)))
+                print(f"Error in MarkVerificationComplete: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            return response
+        
+        def GetVerificationStatus(self, request: GetVerificationStatusRequest, context):
+            """Get verification status for a user"""
+            response = GetVerificationStatusResponse()
+            
+            try:
+                if not Validator.is_not_empty(request.app_user_id):
+                    response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
+                    return response
+                
+                try:
+                    app_user_uuid = uuid.UUID(request.app_user_id)
+                except ValueError:
+                    response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
+                    return response
+                
+                with DatabaseManager.get_session() as session:
+                    vt = session.query(DBVerificationTracking).filter(
+                        DBVerificationTracking.app_user_id == app_user_uuid
+                    ).first()
+                    
+                    if vt:
+                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                    else:
+                        response.errors.append(
+                            ErrorHandler.not_found('VerificationTracking', request.app_user_id)
+                        )
+                    
+            except Exception as e:
+                response.errors.append(ErrorHandler.internal_error(str(e)))
+                print(f"Error in GetVerificationStatus: {e}")
+                import traceback
+                traceback.print_exc()
+            
+            return response
+        
+        def _verification_to_proto(self, db_verification) -> ProtoVerificationTracking:
+            """Convert DB verification to proto"""
+            return ProtoVerificationTracking(
+                id=str(db_verification.verification_tracking_id),
+                app_user_id=str(db_verification.app_user_id),
+                session_id=str(db_verification.session_id),
+                email_verified=db_verification.email_verified,
+                verification_completed_at=AnalyticsConverter.datetime_to_string(db_verification.verification_completed_at),
+                verification_codes_requested=db_verification.verification_codes_requested,
+                first_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.first_code_requested_at),
+                last_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.last_code_requested_at),
+                created_at=AnalyticsConverter.datetime_to_string(db_verification.created_at),
+                updated_at=AnalyticsConverter.datetime_to_string(db_verification.updated_at)
+            )

@@ -63,47 +63,69 @@ class GrpcService {
     });
   }
 
-// Business Service Methods
-createBusiness(businessData, token) {
-  const { CreateBusinessRequest } = require('../proto/business/business_pb');
-  const request = new CreateBusinessRequest();
-  
-  request.setBusinessName(businessData.businessName || '');
-  request.setEmail(businessData.email || '');
-  request.setWebsiteUrl(businessData.website || '');
-  request.setPhoneNumber(businessData.phoneNumber || '');
-  request.setLocationCity(businessData.locationCity || '');
-  request.setLocationState(businessData.locationState || '');
-  request.setEin(businessData.ein || '');
-  request.setBusinessDescription(businessData.businessDescription || '');
-  request.setBusinessSize(businessData.businessSize || '');
-  request.setUserEmail(businessData.userEmail || '');
-  
-  // 🆕 Set cause preferences (grouped by rank)
-  if (businessData.causePreferences) {
-    const allCauses = [
-      ...(businessData.causePreferences.primary || []),
-      ...(businessData.causePreferences.supporting || []),
-      ...(businessData.causePreferences.unranked || [])
-    ];
-    request.setCauseCodesList(allCauses);
+  // Business Service Methods
+  createBusiness(businessData, token) {
+    const { CreateBusinessRequest } = require('../proto/business/business_pb');
+    const request = new CreateBusinessRequest();
+    
+    request.setBusinessName(businessData.businessName || '');
+    request.setEmail(businessData.email || '');
+    request.setWebsiteUrl(businessData.website || '');
+    request.setPhoneNumber(businessData.phoneNumber || '');
+    request.setLocationCity(businessData.locationCity || '');
+    request.setLocationState(businessData.locationState || '');
+    request.setEin(businessData.ein || '');
+    request.setBusinessDescription(businessData.businessDescription || '');
+    request.setBusinessSize(businessData.businessSize || '');
+    request.setUserEmail(businessData.userEmail || '');
+    
+    // Set cause preferences (grouped by rank)
+    if (businessData.causePreferences) {
+      const allCauses = [
+        ...(businessData.causePreferences.primary || []),
+        ...(businessData.causePreferences.supporting || []),
+        ...(businessData.causePreferences.unranked || [])
+      ];
+      request.setCauseCodesList(allCauses);
+    }
+
+    return new Promise((resolve, reject) => {
+      this.businessClient.createBusiness(request, this.getMetadata(token), (err, response) => {
+        if (err) {
+          reject(err);
+        } else {
+          const errors = response.getErrorsList();
+          if (errors && errors.length > 0) {
+            reject(new Error(errors.map(e => e.getMessage()).join(', ')));
+          } else {
+            resolve(response);
+          }
+        }
+      });
+    });
   }
 
-  return new Promise((resolve, reject) => {
-    this.businessClient.createBusiness(request, this.getMetadata(token), (err, response) => {
-      if (err) {
-        reject(err);
-      } else {
-        const errors = response.getErrorsList();
-        if (errors && errors.length > 0) {
-          reject(new Error(errors.map(e => e.getMessage()).join(', ')));
+  // NEW: Get business by user email
+  getBusinessByUserEmail(userEmail, token) {
+    const { GetBusinessByUserEmailRequest } = require('../proto/business/business_pb');
+    const request = new GetBusinessByUserEmailRequest();
+    request.setUserEmail(userEmail);
+
+    return new Promise((resolve, reject) => {
+      this.businessClient.getBusinessByUserEmail(request, this.getMetadata(token), (err, response) => {
+        if (err) {
+          reject(err);
         } else {
-          resolve(response);
+          const errors = response.getErrorsList();
+          if (errors && errors.length > 0) {
+            reject(new Error(errors.map(e => e.getMessage()).join(', ')));
+          } else {
+            resolve(response);
+          }
         }
-      }
+      });
     });
-  });
-}
+  }
 
   // Beneficiary Service Methods
   createBeneficiary(beneficiaryData, token) {

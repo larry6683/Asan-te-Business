@@ -1,5 +1,7 @@
 syntax = "proto3";
+
 package business;
+
 import "error/error.proto";
 
 message Business {
@@ -22,6 +24,18 @@ message GetBusinessRequest {
 message GetBusinessResponse {
     Business business = 1;
     repeated error.Error errors = 2;
+}
+
+// NEW: Request to get business by user email
+message GetBusinessByUserEmailRequest {
+    string user_email = 1;
+}
+
+// NEW: Response for getting business by user email
+message GetBusinessByUserEmailResponse {
+    Business business = 1;
+    bool has_business = 2;  // true if business exists, false if not found
+    repeated error.Error errors = 3;
 }
 
 message Cause {
@@ -50,5 +64,6 @@ message CreateBusinessResponse {
 
 service BusinessService {
     rpc GetBusiness(GetBusinessRequest) returns (GetBusinessResponse);
+    rpc GetBusinessByUserEmail(GetBusinessByUserEmailRequest) returns (GetBusinessByUserEmailResponse);  // NEW METHOD
     rpc CreateBusiness(CreateBusinessRequest) returns (CreateBusinessResponse);
 }

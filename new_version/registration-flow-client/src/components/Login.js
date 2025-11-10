@@ -13,6 +13,7 @@ import { clearStore } from "../redux/store";
 import { setSelectedOption } from "../redux/selectedOptionSlice";
 import { USER_TYPE } from "../types/userType";
 import { UserApiService } from "../api/userApiService";
+import { grpcService } from "../api/grpcService";
 
 import BusinessImage from "../assets/business.png";
 import ConsumerImage from "../assets/consumer.png";
@@ -56,8 +57,6 @@ const Login = () => {
       email,
       password,
       // success callback
-      // the auth token has already been saved
-      // big future TODO is to separate out all of this tangled code. :(
       (result) => {
         registrationOption = getRegistrationOptionFromUserData(result);
         getUserIdAndContinue(registrationOption);
@@ -89,78 +88,97 @@ const Login = () => {
     return { registeringAs: option, registeringAsImage: image };
   };
 
-  const getUserIdAndContinue = (registrationOption) => {
+  const getUserIdAndContinue = async (registrationOption) => {
     if (registrationOption) {
       dispatch(setSelectedOption({
         selected: registrationOption.registeringAs,
         image: registrationOption.registeringAsImage,
       }));
       dispatch(setEmailID(email));
+      
       const userApiService = new UserApiService();
-      userApiService.getUserByEmail(email)
-        .then((response) => {
-
-            // 🔍 ADD ALL THIS LOGGING:
-          console.log('🔍 Full response:', response);
-          console.log('🔍 response.data:', response.data);
-          console.log('🔍 response.data.relationships:', response.data.relationships);
-          console.log('🔍 Session businessId:', sessionStorage.getItem("asante:businessId"));
-          console.log('🔍 Session beneficiaryId:', sessionStorage.getItem("asante:beneficiaryId"));
-          const user = {
-            id: response.data.id,
-            email: response.data.attributes.email,
-            userType: response.data.attributes.userType,
-          };
-          if (response.data.relationships) {
-            const relationships = response.data.relationships;
-
-            // this indicates a user has already registered a business
-            // or belongs to one.
-            let entityType = ""
-            let entityId = ""
-            if (relationships.businesses&& relationships.businesses.data && relationships.businesses.data.length > 0) {
-              const entity = relationships.businesses.data[0];
-              entityType = "business"
-              entityId = entity.id;
-            } else if (relationships.beneficiaries && relationships.beneficiaries.data && relationships.beneficiaries.data.length > 0) {
-              const entity = relationships.beneficiaries.data[0];
-              entityType = "beneficiary"
-              entityId = entity.id;
-            }
-            if (entityId) {
-              CookieFactory.createAppCookieFromDataOrStorage(
-                user, { entityType: entityType, entityId: entityId }
-              )
-              // navigate to profile.
-              window.location.href = `${redirectUrls.portal}/profile`;
-            } else {
-              // No entity found, continue registration
-              dispatch(setUser(user));
-              sessionStorage.setItem("asante:user", JSON.stringify(user));
-              navigate(`/register/causes`);
-            }
-
-          } else {
-            dispatch(setUser(user));
+      
+      try {
+        // Get user from database
+        const userResponse = await userApiService.getUserByEmail(email);
+        
+        console.log('📧 User retrieved:', userResponse.data.attributes.email);
+        
+        const user = {
+          id: userResponse.data.id,
+          email: userResponse.data.attributes.email,
+          userType: userResponse.data.attributes.userType,
+        };
+        
+        // NEW: Check if user has a business/beneficiary in the database
+        const token = sessionStorage.getItem("asante:accessJwt");
+        
+        if (registrationOption.registeringAs === "Business") {
+          console.log('🔍 Checking if business exists for:', email);
           
+          const businessResponse = await grpcService.getBusinessByUserEmail(email, token);
+          const hasBusiness = businessResponse.getHasBusiness();
+          
+          console.log('✅ Business check result:', hasBusiness);
+          
+          if (hasBusiness) {
+            // Business exists - redirect to portal
+            const business = businessResponse.getBusiness();
+            const businessId = business.getId();
+            
+            console.log('🏢 Business found:', business.getBusinessName(), 'ID:', businessId);
+            
+            // Save to session storage
+            sessionStorage.setItem("asante:businessId", businessId);
+            
+            // Create cookie
+            CookieFactory.createAppCookieFromDataOrStorage(
+              user, 
+              { entityType: "business", entityId: businessId }
+            );
+            
+            // Redirect to portal
+            window.location.href = `${redirectUrls.portal}/profile`;
+          } else {
+            // No business - continue registration
+            console.log('ℹ️ No business found - continuing registration');
+            dispatch(setUser(user));
             sessionStorage.setItem("asante:user", JSON.stringify(user));
             navigate(`/register/causes`);
           }
-        })
-        .catch((error) => {
-          try {
-            const errorJson = JSON.parse(error.message);
-            if (errorJson.errors) {
-              errorJson.errors.forEach((value) => {
-                if (value.errorCode === 250) {
-                  createUserAndContinue(email);
-                }
-              });
-            }
-          } catch (error2) {
-            setInvalidCredentials(true);
-          } 
-        });
+          
+        } else if (registrationOption.registeringAs === "Non-Profit") {
+          // TODO: Add beneficiary check similar to business
+          // For now, just continue to registration
+          console.log('ℹ️ Beneficiary check not implemented yet - continuing registration');
+          dispatch(setUser(user));
+          sessionStorage.setItem("asante:user", JSON.stringify(user));
+          navigate(`/register/causes`);
+          
+        } else {
+          // Consumer
+          dispatch(setUser(user));
+          sessionStorage.setItem("asante:user", JSON.stringify(user));
+          navigate(`/register/causes`);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error during login flow:', error);
+        
+        try {
+          const errorJson = JSON.parse(error.message);
+          if (errorJson.errors) {
+            errorJson.errors.forEach((value) => {
+              if (value.errorCode === 250) {
+                // User doesn't exist in our database, create them
+                createUserAndContinue(email);
+              }
+            });
+          }
+        } catch (error2) {
+          setInvalidCredentials(true);
+        } 
+      }
     } else {
       setInvalidCredentials(true);
     }

@@ -22,6 +22,7 @@ import { useDispatch } from "react-redux";
 import { setEmailID } from "../redux/emailSlice";
 import { USER_TYPE } from "../types/userType";
 import validator from "validator";
+import { getOrCreateSessionId } from "../utils/sessionManager";
 
 const CustomButton = styled(Button)({
   width: "450px",
@@ -65,6 +66,10 @@ const SignUp = () => {
   const selectedOption = useSelector((state) => state.selectedOption);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  React.useEffect(() => {
+    // Initialize session when user lands on signup page
+    getOrCreateSessionId();
+  }, []);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);

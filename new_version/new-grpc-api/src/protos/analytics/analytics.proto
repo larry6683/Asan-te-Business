@@ -103,6 +103,50 @@ message GetRegistrationStatsResponse {
     RegistrationStats stats = 1;
     repeated error.Error errors = 2;
 }
+// ========== VERIFICATION TRACKING ==========
+
+message VerificationTracking {
+    string id = 1;
+    string app_user_id = 2;
+    string session_id = 3;
+    bool email_verified = 4;
+    string verification_completed_at = 5;
+    int32 verification_codes_requested = 6;
+    string first_code_requested_at = 7;
+    string last_code_requested_at = 8;
+    string created_at = 9;
+    string updated_at = 10;
+}
+
+message TrackVerificationRequestRequest {
+    string app_user_id = 1;
+    string session_id = 2;
+    bool is_resend = 3;  // true if resend, false if initial
+}
+
+message TrackVerificationRequestResponse {
+    VerificationTracking verification_tracking = 1;
+    repeated error.Error errors = 2;
+}
+
+message MarkVerificationCompleteRequest {
+    string app_user_id = 1;
+    string session_id = 2;
+}
+
+message MarkVerificationCompleteResponse {
+    VerificationTracking verification_tracking = 1;
+    repeated error.Error errors = 2;
+}
+
+message GetVerificationStatusRequest {
+    string app_user_id = 1;
+}
+
+message GetVerificationStatusResponse {
+    VerificationTracking verification_tracking = 1;
+    repeated error.Error errors = 2;
+}
 
 service AnalyticsService {
     // Track a registration step interaction
@@ -122,4 +166,9 @@ service AnalyticsService {
     
     // Get registration statistics
     rpc GetRegistrationStats(GetRegistrationStatsRequest) returns (GetRegistrationStatsResponse);
+
+    // Verification tracking
+    rpc TrackVerificationRequest(TrackVerificationRequestRequest) returns (TrackVerificationRequestResponse);
+    rpc MarkVerificationComplete(MarkVerificationCompleteRequest) returns (MarkVerificationCompleteResponse);
+    rpc GetVerificationStatus(GetVerificationStatusRequest) returns (GetVerificationStatusResponse);
 }

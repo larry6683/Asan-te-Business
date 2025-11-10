@@ -1,5 +1,5 @@
 # new-grpc-api/src/services/business/business_service.py
-# UPDATED VERSION - Replace the existing CreateBusiness method
+# UPDATED VERSION with GetBusinessByUserEmail method
 
 from config.config import Config
 from sqlalchemy import func
@@ -11,9 +11,10 @@ from database.db_manager import DatabaseManager
 from converters.business_converter import BusinessConverter
 from utils.error_handler import ErrorHandler
 from utils.validator import Validator
-from utils.cause_mapper import CauseMapper  # 🆕 ADD THIS IMPORT
+from utils.cause_mapper import CauseMapper
 from codegen.business.business_pb2 import (
     GetBusinessRequest, GetBusinessResponse,
+    GetBusinessByUserEmailRequest, GetBusinessByUserEmailResponse,  # NEW
     CreateBusinessRequest, CreateBusinessResponse,
     Business as ProtoBusiness
 )
@@ -57,6 +58,57 @@ class BusinessService(BusinessServiceServicer):
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
             print(f"Error in GetBusiness: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        return response
+    
+    # NEW METHOD: Get business by user email
+    def GetBusinessByUserEmail(self, request: GetBusinessByUserEmailRequest, context):
+        response = GetBusinessByUserEmailResponse()
+        response.has_business = False  # Default to False
+        
+        try:
+            if not Validator.is_valid_email(request.user_email):
+                response.errors.append(ErrorHandler.invalid_parameter('user_email'))
+                return response
+            
+            with DatabaseManager.get_session() as session:
+                # Query: Find business linked to this user's email
+                # Join: app_user -> business_user -> business
+                db_business = session.query(Business).join(
+                    BusinessUser, Business.business_id == BusinessUser.business_id
+                ).join(
+                    AppUser, BusinessUser.app_user_id == AppUser.app_user_id
+                ).filter(
+                    func.lower(AppUser.email) == func.lower(request.user_email)
+                ).first()
+                
+                if db_business:
+                    # Business found!
+                    response.has_business = True
+                    domain_business = BusinessConverter.to_domain(db_business)
+                    response.business.CopyFrom(ProtoBusiness(
+                        id=domain_business.id,
+                        business_name=domain_business.business_name,
+                        email=domain_business.email,
+                        website_url=domain_business.website_url,
+                        phone_number=domain_business.phone_number,
+                        location_city=domain_business.location_city,
+                        location_state=domain_business.location_state,
+                        ein=domain_business.ein,
+                        business_description=domain_business.business_description,
+                        business_size=BusinessConverter.size_to_string(domain_business.business_size)
+                    ))
+                    print(f"✅ Found business for user {request.user_email}: {db_business.business_name}")
+                else:
+                    # No business found - this is OK, not an error
+                    response.has_business = False
+                    print(f"ℹ️ No business found for user {request.user_email}")
+                
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"❌ Error in GetBusinessByUserEmail: {e}")
             import traceback
             traceback.print_exc()
         
@@ -148,7 +200,7 @@ class BusinessService(BusinessServiceServicer):
                             )
                             session.add(business_user)
                 
-                # 🆕 CREATE CAUSE PREFERENCES - UPDATED LOGIC
+                # CREATE CAUSE PREFERENCES
                 if request.cause_codes:
                     print(f"📥 Received {len(request.cause_codes)} cause codes from frontend")
                     
@@ -172,7 +224,7 @@ class BusinessService(BusinessServiceServicer):
                     causes_failed = []
                     
                     for enum_value in request.cause_codes:
-                        # 🆕 Convert enum to database name
+                        # Convert enum to database name
                         db_cause_name = CauseMapper.enum_to_db_name(enum_value)
                         print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
                         
