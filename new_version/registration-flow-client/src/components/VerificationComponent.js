@@ -8,6 +8,7 @@ import { verifyUser } from "../user-auth/verifyUser";
 import { resendUserVerificationCode } from "../user-auth/resendUserAuthenticationCode";
 import { USER_TYPE } from "../types/userType";
 import { clearStore } from "../redux/store";
+import { analyticsService } from "../api/analyticsService";
 
 const VerificationComponent = () => {
   const email = useSelector((state) => state.email.address);
@@ -22,6 +23,11 @@ const VerificationComponent = () => {
       (_, i) => refs.current[i] || React.createRef(),
     );
   }, [verificationCode]);
+
+  // Track verification step when component mounts
+  useEffect(() => {
+    analyticsService.trackStep(2, 1, 3); // step 2: verification, previous: signup, next: first_login
+  }, []);
 
   const handleChange = (e, index) => {
     const { value } = e.target;
@@ -53,8 +59,8 @@ const VerificationComponent = () => {
           email,
           codeStr,
           () => {
-            // console.log("verification success");
-            // createUser(email);
+            // Complete verification step
+            analyticsService.completeStep(2, 3);
             clearStore(true);
             navigate(`/`);
           },
@@ -65,6 +71,7 @@ const VerificationComponent = () => {
       }
     }
   };
+
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && verificationCode[index] === "") {
       if (index > 0 && refs.current[index - 1]) {
@@ -75,7 +82,6 @@ const VerificationComponent = () => {
 
   const handleResendCode = () => {
     resendUserVerificationCode(email);
-    // console.log("Resend code");
   };
 
   const handleUseDifferentEmail = () => {
@@ -102,8 +108,8 @@ const VerificationComponent = () => {
         email,
         pastedText,
         () => {
-          // console.log("verification success");
-          // createUser(email);
+          // Complete verification step
+          analyticsService.completeStep(2, 3);
           clearStore(true);
           navigate(`/`);
         },
@@ -115,6 +121,7 @@ const VerificationComponent = () => {
 
     event.preventDefault();
   };
+
   return (
     <Box className={styles.container}>
       <div className={styles.imageContainer} />
@@ -232,7 +239,7 @@ const VerificationComponent = () => {
             textDecoration: "underline",
             cursor: "pointer",
             "&:hover": {
-              color: "#707070", // Change to desired hover color
+              color: "#707070",
             },
           }}
         >

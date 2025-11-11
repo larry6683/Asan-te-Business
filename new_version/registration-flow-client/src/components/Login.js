@@ -13,12 +13,13 @@ import { clearStore } from "../redux/store";
 import { setSelectedOption } from "../redux/selectedOptionSlice";
 import { USER_TYPE } from "../types/userType";
 import { UserApiService } from "../api/userApiService";
+import { analyticsService } from "../api/analyticsService";
 
 import BusinessImage from "../assets/business.png";
 import ConsumerImage from "../assets/consumer.png";
 import NonprofitImage from "../assets/nonprofit.png";
 import { CookieFactory } from "../cookies/cookieFactory";
-import { redirectUrls } from "../web-data/redirectUrls"
+import { redirectUrls } from "../web-data/redirectUrls";
 
 const Login = () => {
   clearStore(true);
@@ -99,51 +100,65 @@ const Login = () => {
       const userApiService = new UserApiService();
       userApiService.getUserByEmail(email)
         .then((response) => {
-
-            // 🔍 ADD ALL THIS LOGGING:
           console.log('🔍 Full response:', response);
           console.log('🔍 response.data:', response.data);
           console.log('🔍 response.data.relationships:', response.data.relationships);
           console.log('🔍 Session businessId:', sessionStorage.getItem("asante:businessId"));
           console.log('🔍 Session beneficiaryId:', sessionStorage.getItem("asante:beneficiaryId"));
+          
           const user = {
             id: response.data.id,
             email: response.data.attributes.email,
             userType: response.data.attributes.userType,
           };
+          
           if (response.data.relationships) {
             const relationships = response.data.relationships;
 
             // this indicates a user has already registered a business
             // or belongs to one.
-            let entityType = ""
-            let entityId = ""
-            if (relationships.businesses&& relationships.businesses.data && relationships.businesses.data.length > 0) {
+            let entityType = "";
+            let entityId = "";
+            if (relationships.businesses && relationships.businesses.data && relationships.businesses.data.length > 0) {
               const entity = relationships.businesses.data[0];
-              entityType = "business"
+              entityType = "business";
               entityId = entity.id;
             } else if (relationships.beneficiaries && relationships.beneficiaries.data && relationships.beneficiaries.data.length > 0) {
               const entity = relationships.beneficiaries.data[0];
-              entityType = "beneficiary"
+              entityType = "beneficiary";
               entityId = entity.id;
             }
+            
             if (entityId) {
               CookieFactory.createAppCookieFromDataOrStorage(
                 user, { entityType: entityType, entityId: entityId }
-              )
+              );
               // navigate to profile.
               window.location.href = `${redirectUrls.portal}/profile`;
             } else {
               // No entity found, continue registration
               dispatch(setUser(user));
               sessionStorage.setItem("asante:user", JSON.stringify(user));
+              
+              // Track first login step
+              analyticsService.trackStep(3, 2, 4).then(() => {
+                // Complete first login immediately and move to causes
+                analyticsService.completeStep(3, 4);
+              });
+              
               navigate(`/register/causes`);
             }
 
           } else {
             dispatch(setUser(user));
-          
             sessionStorage.setItem("asante:user", JSON.stringify(user));
+            
+            // Track first login step
+            analyticsService.trackStep(3, 2, 4).then(() => {
+              // Complete first login immediately and move to causes
+              analyticsService.completeStep(3, 4);
+            });
+            
             navigate(`/register/causes`);
           }
         })
@@ -178,6 +193,13 @@ const Login = () => {
         };
         dispatch(setUser(user));
         sessionStorage.setItem("asante:user", JSON.stringify(user));
+        
+        // Track first login step
+        analyticsService.trackStep(3, 2, 4).then(() => {
+          // Complete first login immediately and move to causes
+          analyticsService.completeStep(3, 4);
+        });
+        
         navigate(`/register/causes`);
       },
       (error) => {

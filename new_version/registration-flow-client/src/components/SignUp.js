@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import styles from "./SignUp.module.css";
 import { styled } from "@mui/material/styles";
@@ -22,6 +22,7 @@ import { useDispatch } from "react-redux";
 import { setEmailID } from "../redux/emailSlice";
 import { USER_TYPE } from "../types/userType";
 import validator from "validator";
+import { analyticsService } from "../api/analyticsService";
 
 const CustomButton = styled(Button)({
   width: "450px",
@@ -66,6 +67,11 @@ const SignUp = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Track step when component mounts
+  useEffect(() => {
+    analyticsService.trackStep(1, 0, 2); // step 1: signup, next step: verification
+  }, []);
+
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -93,7 +99,6 @@ const SignUp = () => {
       return;
     }
 
-    // signup to user business admin userpool
     let entityType;
     if (selectedOption.selected === "Business") {
       entityType = USER_TYPE.BUSINESS_ADMIN;
@@ -107,23 +112,19 @@ const SignUp = () => {
 
     if (entityType) {
       dispatch(setEmailID(email));
-      // I don't think callbacks should be used like this
-      // but I was running into a weird async issue with displaying result in console
-      let signupSuccess = false;
-      let authenticationSuccess = false;
-      signupSuccess = signupUser(
+      
+      signupUser(
         entityType,
         email,
         password,
         agreeToMailingList ? "true" : "false",
         () => {
-          // console.log("sign-up success");
+          // Complete signup step, move to verification
+          analyticsService.completeStep(1, 2);
           navigate(`/register/verification`);
-          signupSuccess = true;
         },
         (err) => {
-          signupSuccess = false;
-          // console.error("sign-up error", err);
+          console.error("sign-up error", err);
         },
       );
     }
@@ -371,7 +372,7 @@ const SignUp = () => {
                       lineHeight: "20px",
                     }}
                   >
-                    I agree to join ASANTe’s mailing list
+                    I agree to join ASANTe's mailing list
                   </Typography>
                   <Typography
                     sx={{
@@ -448,7 +449,7 @@ const SignUp = () => {
                 marginLeft: "5px",
               }}
             >
-              ASANTe’s Privacy Policy
+              ASANTe's Privacy Policy
             </Link>
             {" and "}
             <Link

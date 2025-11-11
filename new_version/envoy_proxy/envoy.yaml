@@ -1,9 +1,3 @@
-admin:
-  address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: 9901
-
 static_resources:
   listeners:
   - name: listener_0
@@ -16,50 +10,43 @@ static_resources:
       - name: envoy.filters.network.http_connection_manager
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-          codec_type: AUTO
           stat_prefix: ingress_http
-          
+          codec_type: AUTO
           route_config:
             name: local_route
             virtual_hosts:
-            - name: backend
+            - name: local_service
               domains: ["*"]
               routes:
-              # User Service routes
+  
               - match:
                   prefix: "/user.UserService"
                 route:
                   cluster: user_service
-                  timeout: 0s
-                  max_stream_duration:
-                    grpc_timeout_header_max: 0s
-              
-              # Business Service routes
+                  timeout: 30s
               - match:
                   prefix: "/business.BusinessService"
                 route:
                   cluster: business_service
-                  timeout: 0s
-                  max_stream_duration:
-                    grpc_timeout_header_max: 0s
-              
-              # Beneficiary Service routes
+                  timeout: 30s
               - match:
                   prefix: "/beneficiary.BeneficiaryService"
                 route:
                   cluster: beneficiary_service
-                  timeout: 0s
-                  max_stream_duration:
-                    grpc_timeout_header_max: 0s
-              
+                  timeout: 30s
+              - match:
+                  prefix: "/analytics.AnalyticsService"
+                route:
+                  cluster: analytics_service
+                  timeout: 30s
+
               cors:
                 allow_origin_string_match:
                 - prefix: "*"
                 allow_methods: GET, PUT, DELETE, POST, OPTIONS
-                allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout,authorization
+                allow_headers: keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout
                 max_age: "1728000"
-                expose_headers: grpc-status,grpc-message,grpc-status-details-bin
-          
+                expose_headers: grpc-status,grpc-message
           http_filters:
           - name: envoy.filters.http.grpc_web
             typed_config:
@@ -72,17 +59,11 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
 
   clusters:
-  # User Service Cluster
   - name: user_service
-    type: LOGICAL_DNS
     connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
     lb_policy: ROUND_ROBIN
-    dns_lookup_family: V4_ONLY
-    typed_extension_protocol_options:
-      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-        explicit_http_config:
-          http2_protocol_options: {}
     load_assignment:
       cluster_name: user_service
       endpoints:
@@ -90,21 +71,14 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                # Use host.docker.internal to reach services on host machine
                 address: host.docker.internal
                 port_value: 50051
-  
-  # Business Service Cluster
+
   - name: business_service
-    type: LOGICAL_DNS
     connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
     lb_policy: ROUND_ROBIN
-    dns_lookup_family: V4_ONLY
-    typed_extension_protocol_options:
-      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-        explicit_http_config:
-          http2_protocol_options: {}
     load_assignment:
       cluster_name: business_service
       endpoints:
@@ -114,18 +88,12 @@ static_resources:
               socket_address:
                 address: host.docker.internal
                 port_value: 50052
-  
-  # Beneficiary Service Cluster
+
   - name: beneficiary_service
-    type: LOGICAL_DNS
     connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
     lb_policy: ROUND_ROBIN
-    dns_lookup_family: V4_ONLY
-    typed_extension_protocol_options:
-      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
-        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
-        explicit_http_config:
-          http2_protocol_options: {}
     load_assignment:
       cluster_name: beneficiary_service
       endpoints:
@@ -135,3 +103,18 @@ static_resources:
               socket_address:
                 address: host.docker.internal
                 port_value: 50053
+                
+  - name: analytics_service
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: analytics_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: host.docker.internal
+                port_value: 50054
