@@ -1,8 +1,9 @@
-import { grpcEndpoint } from './apiUrls';
+import { grpcService } from './grpcService';
+import { getAccessJwtFromStorage } from '../user-auth/authenticateUser';
 
 class AnalyticsService {
   constructor() {
-    this.endpoint = grpcEndpoint;
+    this.grpcService = grpcService;
     this.sessionId = this.getOrCreateSessionId();
   }
 
@@ -23,39 +24,43 @@ class AnalyticsService {
     });
   }
 
+  getUserId() {
+    const userJson = sessionStorage.getItem('asante:user');
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        return user.id || '';
+      } catch (e) {
+        return '';
+      }
+    }
+    return '';
+  }
+
   async trackStep(stepCode, previousStepCode = 0, nextStepCode = 0) {
     const userId = this.getUserId();
+    const token = getAccessJwtFromStorage();
     
     try {
-      const response = await fetch(`${this.endpoint}/analytics.AnalyticsService/TrackStep`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: this.sessionId,
-          app_user_id: userId || '',
-          step_code: stepCode,
-          previous_step_code: previousStepCode,
-          next_step_code: nextStepCode
-        })
-      });
-
-      if (!response.ok) {
-        console.error('Analytics tracking failed:', response.status);
-        return null;
-      }
-
-      const data = await response.json();
+      const response = await this.grpcService.trackStep(
+        this.sessionId,
+        userId,
+        stepCode,
+        previousStepCode,
+        nextStepCode,
+        token
+      );
       
       // Store interaction ID for completing later
-      if (data.interaction && data.interaction.id) {
-        sessionStorage.setItem(`asante:interactionId_${stepCode}`, data.interaction.id);
+      const interaction = response.getInteraction();
+      if (interaction && interaction.getId()) {
+        sessionStorage.setItem(`asante:interactionId_${stepCode}`, interaction.getId());
       }
       
-      return data;
+      return response;
     } catch (error) {
-      console.error('Analytics tracking error:', error);
+      // Silently fail - don't block user flow
+      console.error('Analytics tracking error (non-blocking):', error);
       return null;
     }
   }
@@ -68,41 +73,28 @@ class AnalyticsService {
       return null;
     }
 
+    const token = getAccessJwtFromStorage();
+
     try {
-      const response = await fetch(`${this.endpoint}/analytics.AnalyticsService/CompleteStep`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          interaction_id: interactionId,
-          next_step_code: nextStepCode
-        })
-      });
-
-      if (!response.ok) {
-        console.error('Analytics completion failed:', response.status);
-        return null;
-      }
-
-      return await response.json();
+      const response = await this.grpcService.completeStep(
+        interactionId,
+        nextStepCode,
+        token
+      );
+      
+      return response;
     } catch (error) {
-      console.error('Analytics completion error:', error);
+      // Silently fail - don't block user flow
+      console.error('Analytics completion error (non-blocking):', error);
       return null;
     }
   }
 
-  getUserId() {
-    const userJson = sessionStorage.getItem('asante:user');
-    if (userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        return user.id || '';
-      } catch (e) {
-        return '';
-      }
-    }
-    return '';
+  // Helper method to map session to user after login
+  mapSessionToUser(userId) {
+    // This will be called after successful login/verification
+    // The backend will handle the mapping via app_user_id in future trackStep calls
+    console.log('Session mapped to user:', userId);
   }
 }
 

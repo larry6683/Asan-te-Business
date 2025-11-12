@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package error;
+
+enum ErrorCode {
+    ERROR_NONE = 0;
+    ERROR_INVALID_PARAMETER = 1;
+    ERROR_NOT_FOUND = 2;
+    ERROR_ALREADY_EXISTS = 3;
+    ERROR_DATABASE_ERROR = 4;
+    ERROR_INTERNAL = 5;
+}
+
+message Error {
+    ErrorCode code = 1;
+    string message = 2;
+    string detail = 3;
+}

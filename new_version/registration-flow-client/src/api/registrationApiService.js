@@ -1,6 +1,7 @@
 import { grpcService } from "./grpcService";
 import { getAccessJwtFromStorage } from "../user-auth/authenticateUser";
 import { mapCauseOptionToEnumValue } from "./models/mapCauseOptionToEnumValue"; 
+import { getOrCreateSessionId } from "../utils/sessionManager";
 
 export class RegistrationApiService {
   constructor() {
@@ -46,6 +47,7 @@ export class RegistrationApiService {
       
       // Map the DTO to gRPC format
       const businessData = {
+        sessionId: getOrCreateSessionId(),
         businessName: profile.name,
         email: profile.email,
         website: profile.website || '',
@@ -128,6 +130,7 @@ export class RegistrationApiService {
       });
       
       const beneficiaryData = {
+        sessionId: getOrCreateSessionId(),
         beneficiaryName: registration.profile.name,
         email: registration.profile.email,
         website: registration.profile.website,

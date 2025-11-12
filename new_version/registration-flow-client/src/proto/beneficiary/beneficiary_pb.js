@@ -96,7 +96,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.beneficiary.CreateBeneficiaryRequest = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.beneficiary.CreateBeneficiaryRequest.repeatedFields_, null);
 };
 goog.inherits(proto.beneficiary.CreateBeneficiaryRequest, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -869,6 +869,13 @@ proto.beneficiary.GetBeneficiaryResponse.prototype.clearErrorsList = function() 
 
 
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.beneficiary.CreateBeneficiaryRequest.repeatedFields_ = [11];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -909,7 +916,8 @@ proto.beneficiary.CreateBeneficiaryRequest.toObject = function(includeInstance, 
     ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
     beneficiaryDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
     beneficiarySize: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    userEmail: jspb.Message.getFieldWithDefault(msg, 10, "")
+    userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
+    causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -985,6 +993,10 @@ proto.beneficiary.CreateBeneficiaryRequest.deserializeBinaryFromReader = functio
     case 10:
       var value = /** @type {string} */ (reader.readString());
       msg.setUserEmail(value);
+      break;
+    case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addCauseCodes(value);
       break;
     default:
       reader.skipField();
@@ -1082,6 +1094,13 @@ proto.beneficiary.CreateBeneficiaryRequest.serializeBinaryToWriter = function(me
   if (f.length > 0) {
     writer.writeString(
       10,
+      f
+    );
+  }
+  f = message.getCauseCodesList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      11,
       f
     );
   }
@@ -1265,6 +1284,43 @@ proto.beneficiary.CreateBeneficiaryRequest.prototype.getUserEmail = function() {
  */
 proto.beneficiary.CreateBeneficiaryRequest.prototype.setUserEmail = function(value) {
   return jspb.Message.setProto3StringField(this, 10, value);
+};
+
+
+/**
+ * repeated string cause_codes = 11;
+ * @return {!Array<string>}
+ */
+proto.beneficiary.CreateBeneficiaryRequest.prototype.getCauseCodesList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 11));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.beneficiary.CreateBeneficiaryRequest} returns this
+ */
+proto.beneficiary.CreateBeneficiaryRequest.prototype.setCauseCodesList = function(value) {
+  return jspb.Message.setField(this, 11, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.beneficiary.CreateBeneficiaryRequest} returns this
+ */
+proto.beneficiary.CreateBeneficiaryRequest.prototype.addCauseCodes = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 11, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.beneficiary.CreateBeneficiaryRequest} returns this
+ */
+proto.beneficiary.CreateBeneficiaryRequest.prototype.clearCauseCodesList = function() {
+  return this.setCauseCodesList([]);
 };
 
 

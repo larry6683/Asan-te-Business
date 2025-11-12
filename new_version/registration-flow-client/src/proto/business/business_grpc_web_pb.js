@@ -140,6 +140,67 @@ proto.business.BusinessServicePromiseClient.prototype.getBusiness =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
+ *   !proto.business.GetBusinessByUserEmailRequest,
+ *   !proto.business.GetBusinessByUserEmailResponse>}
+ */
+const methodDescriptor_BusinessService_GetBusinessByUserEmail = new grpc.web.MethodDescriptor(
+  '/business.BusinessService/GetBusinessByUserEmail',
+  grpc.web.MethodType.UNARY,
+  proto.business.GetBusinessByUserEmailRequest,
+  proto.business.GetBusinessByUserEmailResponse,
+  /**
+   * @param {!proto.business.GetBusinessByUserEmailRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.business.GetBusinessByUserEmailResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.business.GetBusinessByUserEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.business.GetBusinessByUserEmailResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.business.GetBusinessByUserEmailResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.business.BusinessServiceClient.prototype.getBusinessByUserEmail =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/business.BusinessService/GetBusinessByUserEmail',
+      request,
+      metadata || {},
+      methodDescriptor_BusinessService_GetBusinessByUserEmail,
+      callback);
+};
+
+
+/**
+ * @param {!proto.business.GetBusinessByUserEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.business.GetBusinessByUserEmailResponse>}
+ *     Promise that resolves to the response
+ */
+proto.business.BusinessServicePromiseClient.prototype.getBusinessByUserEmail =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/business.BusinessService/GetBusinessByUserEmail',
+      request,
+      metadata || {},
+      methodDescriptor_BusinessService_GetBusinessByUserEmail);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
  *   !proto.business.CreateBusinessRequest,
  *   !proto.business.CreateBusinessResponse>}
  */

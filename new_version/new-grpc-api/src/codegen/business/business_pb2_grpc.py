@@ -5,7 +5,7 @@ import warnings
 
 from codegen.business import business_pb2 as business_dot_business__pb2
 
-GRPC_GENERATED_VERSION = '1.75.0'
+GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in business/business_pb2_grpc.py depends on'
+        + ' but the generated code in business/business_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -39,6 +39,11 @@ class BusinessServiceStub(object):
                 request_serializer=business_dot_business__pb2.GetBusinessRequest.SerializeToString,
                 response_deserializer=business_dot_business__pb2.GetBusinessResponse.FromString,
                 _registered_method=True)
+        self.GetBusinessByUserEmail = channel.unary_unary(
+                '/business.BusinessService/GetBusinessByUserEmail',
+                request_serializer=business_dot_business__pb2.GetBusinessByUserEmailRequest.SerializeToString,
+                response_deserializer=business_dot_business__pb2.GetBusinessByUserEmailResponse.FromString,
+                _registered_method=True)
         self.CreateBusiness = channel.unary_unary(
                 '/business.BusinessService/CreateBusiness',
                 request_serializer=business_dot_business__pb2.CreateBusinessRequest.SerializeToString,
@@ -51,6 +56,13 @@ class BusinessServiceServicer(object):
 
     def GetBusiness(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetBusinessByUserEmail(self, request, context):
+        """NEW METHOD
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -68,6 +80,11 @@ def add_BusinessServiceServicer_to_server(servicer, server):
                     servicer.GetBusiness,
                     request_deserializer=business_dot_business__pb2.GetBusinessRequest.FromString,
                     response_serializer=business_dot_business__pb2.GetBusinessResponse.SerializeToString,
+            ),
+            'GetBusinessByUserEmail': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetBusinessByUserEmail,
+                    request_deserializer=business_dot_business__pb2.GetBusinessByUserEmailRequest.FromString,
+                    response_serializer=business_dot_business__pb2.GetBusinessByUserEmailResponse.SerializeToString,
             ),
             'CreateBusiness': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateBusiness,
@@ -102,6 +119,33 @@ class BusinessService(object):
             '/business.BusinessService/GetBusiness',
             business_dot_business__pb2.GetBusinessRequest.SerializeToString,
             business_dot_business__pb2.GetBusinessResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetBusinessByUserEmail(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/business.BusinessService/GetBusinessByUserEmail',
+            business_dot_business__pb2.GetBusinessByUserEmailRequest.SerializeToString,
+            business_dot_business__pb2.GetBusinessByUserEmailResponse.FromString,
             options,
             channel_credentials,
             insecure,

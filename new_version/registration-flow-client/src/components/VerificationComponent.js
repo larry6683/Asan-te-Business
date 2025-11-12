@@ -24,11 +24,6 @@ const VerificationComponent = () => {
     );
   }, [verificationCode]);
 
-  // Track verification step when component mounts
-  useEffect(() => {
-    analyticsService.trackStep(2, 1, 3); // step 2: verification, previous: signup, next: first_login
-  }, []);
-
   const handleChange = (e, index) => {
     const { value } = e.target;
     if (/^[0-9]$/.test(value) || value === "") {
@@ -59,8 +54,8 @@ const VerificationComponent = () => {
           email,
           codeStr,
           () => {
-            // Complete verification step
-            analyticsService.completeStep(2, 3);
+            // console.log("verification success");
+            // createUser(email);
             clearStore(true);
             navigate(`/`);
           },
@@ -71,7 +66,6 @@ const VerificationComponent = () => {
       }
     }
   };
-
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && verificationCode[index] === "") {
       if (index > 0 && refs.current[index - 1]) {
@@ -82,18 +76,22 @@ const VerificationComponent = () => {
 
   const handleResendCode = () => {
     resendUserVerificationCode(email);
+    // console.log("Resend code");
   };
 
   const handleUseDifferentEmail = () => {
     // console.log("Use a different email");
   };
 
-  const handlePaste = (event) => {
+const handlePaste = (event) => {
     const pastedText = event.clipboardData.getData("text");
-    if (pastedText.length === 6) {
+    if (pastedText.length === 6 && /^\d{6}$/.test(pastedText)) {
       const arr = Array.from(pastedText);
       setVerificationCode(arr);
-      // signup to user business admin userpool
+      
+      // Verify immediately
+      const codeStr = arr.join("");
+      
       let userType;
       if (selectedOption.selected === "Business") {
         userType = USER_TYPE.BUSINESS_ADMIN;
@@ -104,9 +102,10 @@ const VerificationComponent = () => {
       } else {
         console.error("verification: invalid pool selection", userType);
       }
+
       verifyUser(
         email,
-        pastedText,
+        codeStr,
         () => {
           // Complete verification step
           analyticsService.completeStep(2, 3);
@@ -114,11 +113,10 @@ const VerificationComponent = () => {
           navigate(`/`);
         },
         (err) => {
-          // console.error("error callback", err);
+          console.error("error callback", err);
         },
       );
     }
-
     event.preventDefault();
   };
 
@@ -239,7 +237,7 @@ const VerificationComponent = () => {
             textDecoration: "underline",
             cursor: "pointer",
             "&:hover": {
-              color: "#707070",
+              color: "#707070", // Change to desired hover color
             },
           }}
         >

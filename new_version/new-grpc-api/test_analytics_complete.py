@@ -1,301 +1,140 @@
 #!/usr/bin/env python3
 """
-Test script for Analytics Service
-Tests registration step tracking and metrics
+Test frontend analytics integration
+Queries the database to verify tracking data
 """
-import grpc
-import sys
-import uuid
-from datetime import datetime, timedelta
+import psycopg2
+from datetime import datetime
 
-sys.path.insert(0, 'src')
-
-from codegen.analytics.analytics_pb2 import (
-    TrackInteractionRequest, CompleteStepRequest,
-    GetUserProgressRequest, GetRegistrationMetricsRequest,
-    RegistrationStepCode
+# Database connection
+conn = psycopg2.connect(
+    host="localhost",
+    port=5432,
+    database="postgres",
+    user="asante_dev",
+    password="password"
 )
-from codegen.analytics.analytics_pb2_grpc import AnalyticsServiceStub
-from codegen.user.user_pb2 import CreateUserRequest
-from codegen.user.user_pb2_grpc import UserServiceStub
-from codegen.business.business_pb2 import CreateBusinessRequest
-from codegen.business.business_pb2_grpc import BusinessServiceStub
+cur = conn.cursor()
 
+print("=" * 60)
+print("FRONTEND ANALYTICS VERIFICATION")
+print("=" * 60)
 
-def test_analytics_service():
-    """Test the analytics service with a simulated registration flow"""
-    print("\n" + "=" * 60)
-    print("ANALYTICS SERVICE TEST")
-    print("=" * 60)
-    
-    # Create channels
-    analytics_channel = grpc.insecure_channel('localhost:50054')
-    user_channel = grpc.insecure_channel('localhost:50051')
-    business_channel = grpc.insecure_channel('localhost:50052')
-    
-    analytics_stub = AnalyticsServiceStub(analytics_channel)
-    user_stub = UserServiceStub(user_channel)
-    business_stub = BusinessServiceStub(business_channel)
-    
-    # Generate session ID (simulating frontend)
-    session_id = str(uuid.uuid4())
-    print(f"\n📱 Session ID: {session_id}")
-    
-    try:
-        # Test 1: Track signup step (anonymous user)
-        print("\n1️⃣ TRACKING SIGNUP STEP (Anonymous)")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_SIGNUP
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print(f"✅ Tracked signup step")
-            print(f"   Interaction ID: {track_response.interaction_id}")
-            signup_interaction_id = track_response.interaction_id
-        else:
-            print(f"❌ Failed to track signup: {track_response.errors}")
-            return
-        
-        # Test 2: Create user (with session tracking)
-        print("\n2️⃣ CREATING USER")
-        print("-" * 40)
-        
-        email = f"test_{uuid.uuid4().hex[:8]}@example.com"
-        metadata = [('session-id', session_id)]
-        
-        user_request = CreateUserRequest(
-            email=email,
-            user_type='BUSINESS',
-            mailing_list_signup=True
-        )
-        
-        user_response = user_stub.CreateUser(user_request, metadata=metadata)
-        
-        if not user_response.errors:
-            print(f"✅ Created user: {user_response.user.email}")
-            print(f"   User ID: {user_response.user.id}")
-            user_id = user_response.user.id
-        else:
-            print(f"❌ Failed to create user: {user_response.errors}")
-            return
-        
-        # Test 3: Complete signup step
-        print("\n3️⃣ COMPLETING SIGNUP STEP")
-        print("-" * 40)
-        
-        complete_request = CompleteStepRequest(
-            interaction_id=signup_interaction_id
-        )
-        
-        complete_response = analytics_stub.CompleteStep(complete_request)
-        
-        if complete_response.success:
-            print("✅ Completed signup step")
-        else:
-            print(f"❌ Failed to complete step: {complete_response.errors}")
-        
-        # Test 4: Track verification step
-        print("\n4️⃣ TRACKING VERIFICATION STEP")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            app_user_id=user_id,
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_VERIFICATION,
-            previous_step_id=signup_interaction_id
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print("✅ Tracked verification step")
-            verification_interaction_id = track_response.interaction_id
-            
-            # Immediately complete it (simulating email verification)
-            complete_response = analytics_stub.CompleteStep(
-                CompleteStepRequest(interaction_id=verification_interaction_id)
-            )
-            if complete_response.success:
-                print("✅ Completed verification step")
-        
-        # Test 5: Track first login
-        print("\n5️⃣ TRACKING FIRST LOGIN")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            app_user_id=user_id,
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_FIRST_LOGIN,
-            previous_step_id=verification_interaction_id
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print("✅ Tracked first login")
-            login_interaction_id = track_response.interaction_id
-            analytics_stub.CompleteStep(
-                CompleteStepRequest(interaction_id=login_interaction_id)
-            )
-        
-        # Test 6: Track cause selection
-        print("\n6️⃣ TRACKING CAUSE SELECTION")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            app_user_id=user_id,
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_CAUSE_SELECTION
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print("✅ Tracked cause selection")
-            cause_interaction_id = track_response.interaction_id
-            analytics_stub.CompleteStep(
-                CompleteStepRequest(interaction_id=cause_interaction_id)
-            )
-        
-        # Test 7: Track size selection
-        print("\n7️⃣ TRACKING SIZE SELECTION")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            app_user_id=user_id,
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_SIZE
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print("✅ Tracked size selection")
-            size_interaction_id = track_response.interaction_id
-            analytics_stub.CompleteStep(
-                CompleteStepRequest(interaction_id=size_interaction_id)
-            )
-        
-        # Test 8: Track entity information (and create business)
-        print("\n8️⃣ TRACKING ENTITY INFORMATION")
-        print("-" * 40)
-        
-        track_request = TrackInteractionRequest(
-            app_user_id=user_id,
-            session_id=session_id,
-            step_code=RegistrationStepCode.STEP_ENTITY_INFORMATION
-        )
-        
-        track_response = analytics_stub.TrackInteraction(track_request)
-        
-        if track_response.success:
-            print("✅ Tracked entity information")
-            entity_interaction_id = track_response.interaction_id
-            
-            # Create business (this completes registration)
-            business_request = CreateBusinessRequest(
-                business_name=f"Test Business {uuid.uuid4().hex[:8]}",
-                email=f"biz_{uuid.uuid4().hex[:8]}@example.com",
-                location_city="Denver",
-                location_state="CO",
-                business_size="MEDIUM",
-                user_email=email,
-                cause_codes=["EDUCATION", "CLIMATE_ADVOCACY"]
-            )
-            
-            business_response = business_stub.CreateBusiness(
-                business_request, 
-                metadata=metadata
-            )
-            
-            if not business_response.errors:
-                print(f"✅ Created business: {business_response.business.business_name}")
-                
-                # Complete entity information step
-                analytics_stub.CompleteStep(
-                    CompleteStepRequest(interaction_id=entity_interaction_id)
-                )
-                print("✅ Completed registration!")
-        
-        # Test 9: Get user progress
-        print("\n9️⃣ GETTING USER PROGRESS")
-        print("-" * 40)
-        
-        progress_request = GetUserProgressRequest(
-            app_user_id=user_id,
-            session_id=session_id
-        )
-        
-        progress_response = analytics_stub.GetUserProgress(progress_request)
-        
-        if not progress_response.errors:
-            print(f"📊 Registration Progress:")
-            print(f"   Current Step: {progress_response.current_step}")
-            print(f"   Completion: {progress_response.completion_percentage:.1f}%")
-            print(f"   Steps Completed:")
-            
-            for step in progress_response.steps:
-                status = "✅" if step.completed else "⏳"
-                print(f"     {status} {step.step_name}")
-                if step.began_at:
-                    print(f"        Started: {step.began_at[:19]}")
-                if step.completed_at:
-                    print(f"        Completed: {step.completed_at[:19]}")
-        
-        # Test 10: Get registration metrics
-        print("\n🔟 GETTING REGISTRATION METRICS")
-        print("-" * 40)
-        
-        # Get metrics for last 30 days
-        end_date = datetime.utcnow()
-        start_date = end_date - timedelta(days=30)
-        
-        metrics_request = GetRegistrationMetricsRequest(
-            start_date=start_date.isoformat(),
-            end_date=end_date.isoformat()
-        )
-        
-        metrics_response = analytics_stub.GetRegistrationMetrics(metrics_request)
-        
-        if not metrics_response.errors:
-            metrics = metrics_response.metrics
-            print(f"📈 Registration Metrics (Last 30 Days):")
-            print(f"   Total Sessions: {metrics.total_sessions}")
-            print(f"   Completed Registrations: {metrics.completed_registrations}")
-            print(f"   Abandoned Registrations: {metrics.abandoned_registrations}")
-            print(f"   Completion Rate: {metrics.completion_rate:.1f}%")
-            print(f"   Avg Time to Complete: {metrics.avg_time_to_complete_minutes:.1f} minutes")
-            
-            if metrics.dropout_by_step:
-                print(f"   Dropouts by Step:")
-                for step_name, count in metrics.dropout_by_step.items():
-                    if count > 0:
-                        print(f"     - {step_name}: {count}")
-        
-        print("\n" + "=" * 60)
-        print("✅ ALL ANALYTICS TESTS PASSED!")
-        print("=" * 60)
-        
-    except grpc.RpcError as e:
-        print(f"\n❌ gRPC Error: {e.code()}: {e.details()}")
-        print("\nMake sure all services are running:")
-        print("  - User Service (port 50051)")
-        print("  - Business Service (port 50052)")
-        print("  - Analytics Service (port 50054)")
-    except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        analytics_channel.close()
-        user_channel.close()
-        business_channel.close()
+# 1. Check if registration steps exist
+print("\n1️⃣ REGISTRATION STEPS IN DATABASE:")
+print("-" * 60)
+cur.execute("""
+    SELECT code, step_name, step_order, description
+    FROM analytics.registration_step
+    ORDER BY step_order
+""")
+steps = cur.fetchall()
+if steps:
+    for code, name, order, desc in steps:
+        print(f"   Step {code}: {name} (order: {order})")
+else:
+    print("   ❌ No steps found! Run seed script.")
 
+# 2. Check recent interactions
+print("\n2️⃣ RECENT REGISTRATION INTERACTIONS:")
+print("-" * 60)
+cur.execute("""
+    SELECT 
+        ri.session_id,
+        ri.app_user_id,
+        rs.step_name,
+        ri.step_began_at,
+        ri.step_completed_at,
+        EXTRACT(EPOCH FROM (ri.step_completed_at - ri.step_began_at)) as duration
+    FROM analytics.registration_interaction ri
+    JOIN analytics.registration_step rs ON ri.registration_step_id = rs.registration_step_id
+    ORDER BY ri.step_began_at DESC
+    LIMIT 20
+""")
+interactions = cur.fetchall()
+if interactions:
+    for session, user, step, began, completed, duration in interactions:
+        status = "✅ Completed" if completed else "⏳ In Progress"
+        duration_str = f"{duration:.1f}s" if duration else "N/A"
+        print(f"   {step}: {status} (duration: {duration_str})")
+        print(f"      Session: {session}")
+        if user:
+            print(f"      User: {user}")
+else:
+    print("   ℹ️ No interactions found yet")
 
-if __name__ == '__main__':
-    test_analytics_service()
+# 3. Check sessions with most activity
+print("\n3️⃣ SESSIONS BY ACTIVITY:")
+print("-" * 60)
+cur.execute("""
+    SELECT 
+        session_id,
+        COUNT(*) as step_count,
+        COUNT(DISTINCT registration_step_id) as unique_steps,
+        MIN(step_began_at) as first_step,
+        MAX(step_began_at) as last_step
+    FROM analytics.registration_interaction
+    GROUP BY session_id
+    ORDER BY step_count DESC
+    LIMIT 5
+""")
+sessions = cur.fetchall()
+if sessions:
+    for session, count, unique, first, last in sessions:
+        print(f"   Session: {session}")
+        print(f"      Total interactions: {count}")
+        print(f"      Unique steps: {unique}/6")
+        print(f"      Duration: {first} to {last}")
+        print()
+else:
+    print("   ℹ️ No sessions found yet")
+
+# 4. Check completion funnel
+print("\n4️⃣ REGISTRATION FUNNEL:")
+print("-" * 60)
+cur.execute("""
+    SELECT 
+        rs.code,
+        rs.step_name,
+        COUNT(DISTINCT ri.session_id) as sessions_reached,
+        COUNT(CASE WHEN ri.step_completed_at IS NOT NULL THEN 1 END) as sessions_completed
+    FROM analytics.registration_step rs
+    LEFT JOIN analytics.registration_interaction ri ON rs.registration_step_id = ri.registration_step_id
+    GROUP BY rs.code, rs.step_name
+    ORDER BY rs.code
+""")
+funnel = cur.fetchall()
+if funnel:
+    for code, name, reached, completed in funnel:
+        completion_rate = (completed / reached * 100) if reached > 0 else 0
+        print(f"   Step {code} ({name}): {reached} reached, {completed} completed ({completion_rate:.1f}%)")
+else:
+    print("   ℹ️ No funnel data yet")
+
+# 5. Check user journeys
+print("\n5️⃣ COMPLETE USER JOURNEYS:")
+print("-" * 60)
+cur.execute("""
+    SELECT 
+        app_user_id,
+        COUNT(*) as steps_taken,
+        MIN(step_began_at) as started,
+        MAX(step_completed_at) as finished
+    FROM analytics.registration_interaction
+    WHERE app_user_id IS NOT NULL
+    GROUP BY app_user_id
+    HAVING COUNT(CASE WHEN step_completed_at IS NOT NULL THEN 1 END) >= 6
+""")
+complete_journeys = cur.fetchall()
+if complete_journeys:
+    print(f"   ✅ {len(complete_journeys)} users completed full registration")
+    for user, steps, started, finished in complete_journeys[:5]:
+        print(f"      User {user}: {steps} steps, {started} to {finished}")
+else:
+    print("   ℹ️ No completed journeys yet")
+
+conn.close()
+
+print("\n" + "=" * 60)
+print("VERIFICATION COMPLETE")
+print("=" * 60)

@@ -3,96 +3,24 @@ version: '3.8'
 services:
   envoy:
     image: envoyproxy/envoy:v1.28-latest
-    container_name: envoy-proxy
+    container_name: envoy-grpc-proxy
     ports:
-      - "8080:8080"
+      - "8080:8080"  # gRPC-Web endpoint
       - "9901:9901"  # Admin interface
     volumes:
       - ./envoy.yaml:/etc/envoy/envoy.yaml
     networks:
       - asante-network
     extra_hosts:
+      # Allow Envoy to reach services on host machine
       - "host.docker.internal:host-gateway"
-
-  user-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: user-service
-    ports:
-      - '50051:50051'
-    environment:
-      - PYTHONPATH=/app/src
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=postgres
-      - DB_USER=asante_dev
-      - DB_PASSWORD=password
-    command: python src/services/user/server.py
-    networks:
-      - asante-network
-    depends_on:
-      - postgres
-
-  business-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: business-service
-    ports:
-      - '50052:50052'
-    environment:
-      - PYTHONPATH=/app/src
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=postgres
-      - DB_USER=asante_dev
-      - DB_PASSWORD=password
-    command: python src/services/business/server.py
-    networks:
-      - asante-network
-    depends_on:
-      - postgres
-
-  beneficiary-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: beneficiary-service
-    ports:
-      - '50053:50053'
-    environment:
-      - PYTHONPATH=/app/src
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=postgres
-      - DB_USER=asante_dev
-      - DB_PASSWORD=password
-    command: python src/services/beneficiary/server.py
-    networks:
-      - asante-network
-    depends_on:
-      - postgres
-
-  analytics-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: analytics-service
-    ports:
-      - '50054:50054'
-    environment:
-      - PYTHONPATH=/app/src
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=postgres
-      - DB_USER=asante_dev
-      - DB_PASSWORD=password
-    command: python src/services/analytics/server.py
-    networks:
-      - asante-network
-    depends_on:
-      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9901/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
   asante-network:

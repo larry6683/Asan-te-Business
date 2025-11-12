@@ -5,7 +5,7 @@ import warnings
 
 from codegen.analytics import analytics_pb2 as analytics_dot_analytics__pb2
 
-GRPC_GENERATED_VERSION = '1.75.0'
+GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in analytics/analytics_pb2_grpc.py depends on'
+        + ' but the generated code in analytics/analytics_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -63,6 +63,21 @@ class AnalyticsServiceStub(object):
                 '/analytics.AnalyticsService/GetRegistrationStats',
                 request_serializer=analytics_dot_analytics__pb2.GetRegistrationStatsRequest.SerializeToString,
                 response_deserializer=analytics_dot_analytics__pb2.GetRegistrationStatsResponse.FromString,
+                _registered_method=True)
+        self.TrackVerificationRequest = channel.unary_unary(
+                '/analytics.AnalyticsService/TrackVerificationRequest',
+                request_serializer=analytics_dot_analytics__pb2.TrackVerificationRequestRequest.SerializeToString,
+                response_deserializer=analytics_dot_analytics__pb2.TrackVerificationRequestResponse.FromString,
+                _registered_method=True)
+        self.MarkVerificationComplete = channel.unary_unary(
+                '/analytics.AnalyticsService/MarkVerificationComplete',
+                request_serializer=analytics_dot_analytics__pb2.MarkVerificationCompleteRequest.SerializeToString,
+                response_deserializer=analytics_dot_analytics__pb2.MarkVerificationCompleteResponse.FromString,
+                _registered_method=True)
+        self.GetVerificationStatus = channel.unary_unary(
+                '/analytics.AnalyticsService/GetVerificationStatus',
+                request_serializer=analytics_dot_analytics__pb2.GetVerificationStatusRequest.SerializeToString,
+                response_deserializer=analytics_dot_analytics__pb2.GetVerificationStatusResponse.FromString,
                 _registered_method=True)
 
 
@@ -111,6 +126,25 @@ class AnalyticsServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def TrackVerificationRequest(self, request, context):
+        """Verification tracking
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MarkVerificationComplete(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetVerificationStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AnalyticsServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -143,6 +177,21 @@ def add_AnalyticsServiceServicer_to_server(servicer, server):
                     servicer.GetRegistrationStats,
                     request_deserializer=analytics_dot_analytics__pb2.GetRegistrationStatsRequest.FromString,
                     response_serializer=analytics_dot_analytics__pb2.GetRegistrationStatsResponse.SerializeToString,
+            ),
+            'TrackVerificationRequest': grpc.unary_unary_rpc_method_handler(
+                    servicer.TrackVerificationRequest,
+                    request_deserializer=analytics_dot_analytics__pb2.TrackVerificationRequestRequest.FromString,
+                    response_serializer=analytics_dot_analytics__pb2.TrackVerificationRequestResponse.SerializeToString,
+            ),
+            'MarkVerificationComplete': grpc.unary_unary_rpc_method_handler(
+                    servicer.MarkVerificationComplete,
+                    request_deserializer=analytics_dot_analytics__pb2.MarkVerificationCompleteRequest.FromString,
+                    response_serializer=analytics_dot_analytics__pb2.MarkVerificationCompleteResponse.SerializeToString,
+            ),
+            'GetVerificationStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetVerificationStatus,
+                    request_deserializer=analytics_dot_analytics__pb2.GetVerificationStatusRequest.FromString,
+                    response_serializer=analytics_dot_analytics__pb2.GetVerificationStatusResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -307,6 +356,87 @@ class AnalyticsService(object):
             '/analytics.AnalyticsService/GetRegistrationStats',
             analytics_dot_analytics__pb2.GetRegistrationStatsRequest.SerializeToString,
             analytics_dot_analytics__pb2.GetRegistrationStatsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def TrackVerificationRequest(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/analytics.AnalyticsService/TrackVerificationRequest',
+            analytics_dot_analytics__pb2.TrackVerificationRequestRequest.SerializeToString,
+            analytics_dot_analytics__pb2.TrackVerificationRequestResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MarkVerificationComplete(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/analytics.AnalyticsService/MarkVerificationComplete',
+            analytics_dot_analytics__pb2.MarkVerificationCompleteRequest.SerializeToString,
+            analytics_dot_analytics__pb2.MarkVerificationCompleteResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetVerificationStatus(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/analytics.AnalyticsService/GetVerificationStatus',
+            analytics_dot_analytics__pb2.GetVerificationStatusRequest.SerializeToString,
+            analytics_dot_analytics__pb2.GetVerificationStatusResponse.FromString,
             options,
             channel_credentials,
             insecure,

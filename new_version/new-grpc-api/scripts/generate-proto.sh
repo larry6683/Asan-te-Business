@@ -17,7 +17,8 @@ python -m grpc_tools.protoc \
   $PROTO_DIR/error/error.proto \
   $PROTO_DIR/user/user.proto \
   $PROTO_DIR/business/business.proto \
-  $PROTO_DIR/beneficiary/beneficiary.proto
+  $PROTO_DIR/beneficiary/beneficiary.proto \
+  $PROTO_DIR/analytics/analytics.proto
 
 echo "✅ Protobuf files generated"
 echo "🔧 Fixing import paths..."
@@ -39,6 +40,10 @@ find $OUT_DIR -type f \( -name "*_pb2.py" -o -name "*_pb2_grpc.py" \) | while re
   # Fix beneficiary imports
   sed -i '' 's/^from beneficiary import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
   sed -i '' 's/^import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
+
+  # Fix analytics imports
+  sed -i '' 's/^from analytics import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
+  sed -i '' 's/^import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
 done
 
 # Add __init__.py files
@@ -47,6 +52,7 @@ touch $OUT_DIR/error/__init__.py
 touch $OUT_DIR/user/__init__.py
 touch $OUT_DIR/business/__init__.py
 touch $OUT_DIR/beneficiary/__init__.py
+touch $OUT_DIR/analytics/__init__.py
 
 echo "✅ Import paths fixed"
 echo "✅ Complete!"

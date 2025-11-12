@@ -64,7 +64,7 @@ const CausesComponent = () => {
 
   const isNonProfit = selectedOption.selected === "Non-Profit";
 
-  useEffect(() => {
+useEffect(() => {
     const selectedOption = getSelectedOptionOrSetIfNotPresent();
     if (selectedOption) {
       setSelectedType(selectedOption);
@@ -77,7 +77,7 @@ const CausesComponent = () => {
         const savedCauses = JSON.parse(savedCausesStr);
  
         if (selectedOption === "Business") {
-          // Handles businesss flow
+          // Handles business flow
           const businessCauses = savedCauses.filter(cause => cause.rank === "UNRANKED" && cause.name !== "Emergency Relief").map(cause => cause.name);
           const emergencySelected = savedCauses.some(cause => cause.name === "Emergency Relief");
 
@@ -105,7 +105,7 @@ const CausesComponent = () => {
         console.error("Error parsing saved causes:", e);
       }
     }
-  }, []);
+  }, []); // Empty dependency array - runs once on mount
 
   const handleNext = () => {
     let causesToSave = [];
