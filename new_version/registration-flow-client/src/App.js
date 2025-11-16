@@ -7,27 +7,31 @@ import SignUp from "./components/SignUp";
 import VerificationComponent from "./components/VerificationComponent";
 import CausesComponent from "./components/CausesComponent";
 import SizeOptionSelection from "./components/SizeOptionSelection";
-import BusinessRegistrationForm from "./components/BusinessRegistrationForm";
-import NonprofitRegistrationForm from "./components/NonprofitRegistrationForm";
 import RegistrationForm from "./components/CombinedForm";
-import WelcomeScreen from "./components/WelcomeScreen";
+import HomePage from "./components/HomePage"; // ✅ CHANGED: Import HomePage instead of WelcomeScreen
 
 const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Login route */}
         <Route path="/" element={<Login />} />
+        
+        {/* Registration flow routes */}
         <Route path="/register">
           <Route index element={<RegisteringAsComponent />} />
           <Route path="signup" element={<SignUp />} />
           <Route path="verification" element={<VerificationComponent />} />
           <Route path="causes" element={<CausesComponent />} />
           <Route path="sizeoptionselection" element={<SizeOptionSelection />} />
-          <Route path="businessregister" element={<BusinessRegistrationForm />} />
-          <Route path="nonprofitregister" element={<NonprofitRegistrationForm />} />
           <Route path="registrationform" element={<RegistrationForm />} />
-          <Route path="welcome" element={<WelcomeScreen />} />
         </Route>
+
+        {/* ✅ CHANGED: /home route instead of /register/welcome */}
+        <Route path="/home" element={<HomePage />} />
+
+        {/* Catch-all redirect to login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

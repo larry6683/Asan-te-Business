@@ -144,12 +144,26 @@ const RegistrationForm = () => {
     }
   };
 
-  const handleSuccess = (jsonResponse) => {
-    const entityKey = entityType === "Business" || entityType === "business" ? "business" : "beneficiary";
-    sessionStorage.setItem(`asante:${entityKey}Id`, jsonResponse.data.id);
-    CookieFactory.createAppCookieFromDataOrStorage();
-    navigate(`/register/welcome`);
-  };
+    const handleSuccess = (jsonResponse) => {
+      console.log('🎉 Registration successful:', jsonResponse);
+      
+      // Determine entity type and save ID
+      const entityKey = entityType === "Business" ? "business" : "beneficiary";
+      const entityId = jsonResponse.data.id;
+      
+      sessionStorage.setItem(`asante:${entityKey}Id`, entityId);
+      
+      // Get user from storage and create cookie
+      const user = getUserFromStorage();
+      CookieFactory.createAppCookieFromDataOrStorage(
+        user,
+        { entityType: entityKey, entityId: entityId }
+      );
+      
+      // Navigate to home page
+      console.log('✅ Registration complete - navigating to /home');
+      navigate('/home');
+    };
 
   const handleError = (error) => {
     try {

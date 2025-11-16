@@ -49,9 +49,23 @@ const Login = () => {
     return valid;
   };
 
+  const getImageForType = (type) => {
+    switch (type) {
+      case "Business":
+        return BusinessImage;
+      case "Non-Profit":
+        return NonprofitImage;
+      case "Consumer":
+        return ConsumerImage;
+      default:
+        return ConsumerImage;
+    }
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!validateForm()) return;
+    
     let registrationOption = null;
     getUserAuthenticationTokenAndSaveInStorage(
       email,
@@ -110,57 +124,73 @@ const Login = () => {
           userType: userResponse.data.attributes.userType,
         };
         
-        // NEW: Check if user has a business/beneficiary in the database
+        // Save user to Redux and session
+        dispatch(setUser(user));
+        sessionStorage.setItem("asante:user", JSON.stringify(user));
+        
+        // Check if user has a business/beneficiary in the database and save their IDs
         const token = sessionStorage.getItem("asante:accessJwt");
         
         if (registrationOption.registeringAs === "Business") {
           console.log('🔍 Checking if business exists for:', email);
           
-          const businessResponse = await grpcService.getBusinessByUserEmail(email, token);
-          const hasBusiness = businessResponse.getHasBusiness();
-          
-          console.log('✅ Business check result:', hasBusiness);
-          
-          if (hasBusiness) {
-            // Business exists - redirect to portal
-            const business = businessResponse.getBusiness();
-            const businessId = business.getId();
+          try {
+            const businessResponse = await grpcService.getBusinessByUserEmail(email, token);
+            const hasBusiness = businessResponse.getHasBusiness();
             
-            console.log('🏢 Business found:', business.getBusinessName(), 'ID:', businessId);
+            console.log('✅ Business check result:', hasBusiness);
             
-            // Save to session storage
-            sessionStorage.setItem("asante:businessId", businessId);
-            
-            // Create cookie
-            CookieFactory.createAppCookieFromDataOrStorage(
-              user, 
-              { entityType: "business", entityId: businessId }
-            );
-            
-            // Redirect to portal
-            window.location.href = `${redirectUrls.portal}/profile`;
-          } else {
-            // No business - continue registration
-            console.log('ℹ️ No business found - continuing registration');
-            dispatch(setUser(user));
-            sessionStorage.setItem("asante:user", JSON.stringify(user));
-            navigate(`/register/causes`);
+            if (hasBusiness) {
+              const business = businessResponse.getBusiness();
+              const businessId = business.getId();
+              
+              console.log('🏢 Business found:', business.getBusinessName(), 'ID:', businessId);
+              
+              // Save to session storage
+              sessionStorage.setItem("asante:businessId", businessId);
+              
+              // Create cookie
+              CookieFactory.createAppCookieFromDataOrStorage(
+                user, 
+                { entityType: "business", entityId: businessId }
+              );
+            }
+          } catch (error) {
+            console.error('Error checking business:', error);
           }
           
         } else if (registrationOption.registeringAs === "Non-Profit") {
-          // TODO: Add beneficiary check similar to business
-          // For now, just continue to registration
-          console.log('ℹ️ Beneficiary check not implemented yet - continuing registration');
-          dispatch(setUser(user));
-          sessionStorage.setItem("asante:user", JSON.stringify(user));
-          navigate(`/register/causes`);
+          console.log('🔍 Checking if beneficiary exists for:', email);
           
-        } else {
-          // Consumer
-          dispatch(setUser(user));
-          sessionStorage.setItem("asante:user", JSON.stringify(user));
-          navigate(`/register/causes`);
+          try {
+            const beneficiaryResponse = await grpcService.getBeneficiaryByUserEmail(email, token);
+            const hasBeneficiary = beneficiaryResponse.getHasBeneficiary();
+            
+            console.log('✅ Beneficiary check result:', hasBeneficiary);
+            
+            if (hasBeneficiary) {
+              const beneficiary = beneficiaryResponse.getBeneficiary();
+              const beneficiaryId = beneficiary.getId();
+              
+              console.log('💚 Beneficiary found:', beneficiary.getBeneficiaryName(), 'ID:', beneficiaryId);
+              
+              // Save to session storage
+              sessionStorage.setItem("asante:beneficiaryId", beneficiaryId);
+              
+              // Create cookie
+              CookieFactory.createAppCookieFromDataOrStorage(
+                user,
+                { entityType: "beneficiary", entityId: beneficiaryId }
+              );
+            }
+          } catch (error) {
+            console.error('Error checking beneficiary:', error);
+          }
         }
+        
+        // Always navigate to /home after successful login
+        console.log('✅ Login successful - navigating to /home');
+        navigate('/home');
         
       } catch (error) {
         console.error('❌ Error during login flow:', error);
@@ -196,6 +226,8 @@ const Login = () => {
         };
         dispatch(setUser(user));
         sessionStorage.setItem("asante:user", JSON.stringify(user));
+        
+        // New user always goes to registration flow
         navigate(`/register/causes`);
       },
       (error) => {
@@ -206,65 +238,70 @@ const Login = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <Box className={styles.box}>
-        <div className={styles.imageContainer}></div>
-        <div className={styles.textSecondary}>
-          Log in to <span className={styles.highlight}>ASANTe</span> portal
-        </div>
+    <div className={styles.loginContainer}>
+      <Box className={styles.loginBox}>
+        <Typography className={styles.asanteTitle}>
+          AsanTe
+        </Typography>
+        <Typography className={styles.welcomeText}>
+          Welcome!
+        </Typography>
         <Box
           component="form"
-          onSubmit={handleSubmit}
           className={styles.formContainer}
+          onSubmit={handleSubmit}
         >
-          <div className={styles.inputWrapper}>
-            <label htmlFor="email" className={styles.inputLabel}>
-              Email
-              {invalidCredentials && <span className={styles.errorText}> Invalid Credentials</span>}
-              {emailEmpty && <span className={styles.errorText}> Email required</span>}
-            </label>
+          <div className={styles.inputGroup}>
             <TextField
-              variant="outlined"
+              required
               fullWidth
               id="email"
-              placeholder="Enter email address here"
+              label="Email"
               name="email"
               autoComplete="email"
               autoFocus
               value={email}
               onChange={(e) => {
-                setInvalidCredentials(false);
-                setEmailEmpty(false);
                 setEmail(e.target.value);
+                setEmailEmpty(false);
+                setInvalidCredentials(false);
               }}
-              className={styles.inputField}
-              InputProps={{
-                classes: { root: styles.inputRoot, input: styles.input },
-              }}
+              error={emailEmpty || invalidCredentials}
+              helperText={
+                emailEmpty
+                  ? "Email is required"
+                  : invalidCredentials
+                    ? "Invalid email or password"
+                    : ""
+              }
+              className={styles.textField}
             />
           </div>
-          <div className={styles.inputWrapper}>
-            <label htmlFor="password" className={styles.inputLabel}>
-              Password
-              {passwordEmpty && <span className={styles.errorText}> Password required</span>}
-            </label>
+          <div className={styles.inputGroup}>
             <TextField
-              variant="outlined"
+              required
               fullWidth
               name="password"
-              placeholder="Enter a strong password here"
+              label="Password"
               type={showPassword ? "text" : "password"}
               id="password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => {
-                setInvalidCredentials(false);
-                setPasswordEmpty(false);
                 setPassword(e.target.value);
+                setPasswordEmpty(false);
+                setInvalidCredentials(false);
               }}
-              className={styles.inputField}
+              error={passwordEmpty || invalidCredentials}
+              helperText={
+                passwordEmpty
+                  ? "Password is required"
+                  : invalidCredentials
+                    ? ""
+                    : ""
+              }
+              className={styles.textField}
               InputProps={{
-                classes: { root: styles.inputRoot, input: styles.input },
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
@@ -272,7 +309,6 @@ const Login = () => {
                       onClick={handleClickShowPassword}
                       onMouseDown={handleMouseDownPassword}
                       edge="end"
-                      tabIndex={-1}
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
