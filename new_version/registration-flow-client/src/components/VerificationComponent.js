@@ -51,18 +51,21 @@ const VerificationComponent = () => {
         }
 
         verifyUser(
-          email,
-          codeStr,
-          () => {
-            // console.log("verification success");
-            // createUser(email);
-            clearStore(true);
-            navigate(`/`);
-          },
-          (err) => {
-            console.error("error callback", err);
-          },
-        );
+      email,
+      codeStr,
+      () => {
+        // console.log("verification success");
+        // Do NOT clear the store, we need the registration state
+        // clearStore(true); 
+
+        // Navigate to the next step in the flow
+        navigate(`/register/causes`);
+      },
+      (err) => {
+        console.error("error callback", err);
+      },
+    );
+
       }
     }
   };
@@ -103,14 +106,18 @@ const handlePaste = (event) => {
         console.error("verification: invalid pool selection", userType);
       }
 
-      verifyUser(
+        verifyUser(
         email,
         codeStr,
         () => {
           // Complete verification step
           analyticsService.completeStep(2, 3);
-          clearStore(true);
-          navigate(`/`);
+
+          // Do NOT clear the store, we need the registration state
+          // clearStore(true); 
+
+          // Navigate to the next step in the flow
+          navigate(`/register/causes`);
         },
         (err) => {
           console.error("error callback", err);
