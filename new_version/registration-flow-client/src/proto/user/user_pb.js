@@ -13,7 +13,13 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
 
 var error_error_pb = require('../error/error_pb.js');
 goog.object.extend(proto, error_error_pb);
@@ -159,10 +165,10 @@ proto.user.User.prototype.toObject = function(opt_includeInstance) {
  */
 proto.user.User.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    userType: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    mailingListSignup: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+email: jspb.Message.getFieldWithDefault(msg, 2, ""),
+userType: jspb.Message.getFieldWithDefault(msg, 3, ""),
+mailingListSignup: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -379,7 +385,7 @@ proto.user.GetUserRequest.prototype.toObject = function(opt_includeInstance) {
  */
 proto.user.GetUserRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    email: jspb.Message.getFieldWithDefault(msg, 1, "")
+email: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -516,8 +522,8 @@ proto.user.GetUserResponse.prototype.toObject = function(opt_includeInstance) {
  */
 proto.user.GetUserResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    user: (f = msg.getUser()) && proto.user.User.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+user: (f = msg.getUser()) && proto.user.User.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 
@@ -720,9 +726,9 @@ proto.user.CreateUserRequest.prototype.toObject = function(opt_includeInstance) 
  */
 proto.user.CreateUserRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    email: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    userType: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    mailingListSignup: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
+email: jspb.Message.getFieldWithDefault(msg, 1, ""),
+userType: jspb.Message.getFieldWithDefault(msg, 2, ""),
+mailingListSignup: jspb.Message.getBooleanFieldWithDefault(msg, 3, false)
   };
 
   if (includeInstance) {
@@ -917,8 +923,8 @@ proto.user.CreateUserResponse.prototype.toObject = function(opt_includeInstance)
  */
 proto.user.CreateUserResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    user: (f = msg.getUser()) && proto.user.User.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+user: (f = msg.getUser()) && proto.user.User.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 

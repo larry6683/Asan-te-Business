@@ -13,7 +13,13 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
 
 var error_error_pb = require('../error/error_pb.js');
 goog.object.extend(proto, error_error_pb);
@@ -225,16 +231,16 @@ proto.business.Business.prototype.toObject = function(opt_includeInstance) {
  */
 proto.business.Business.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    businessName: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    websiteUrl: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    phoneNumber: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    locationCity: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    locationState: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    ein: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    businessDescription: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    businessSize: jspb.Message.getFieldWithDefault(msg, 10, "")
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+businessName: jspb.Message.getFieldWithDefault(msg, 2, ""),
+email: jspb.Message.getFieldWithDefault(msg, 3, ""),
+websiteUrl: jspb.Message.getFieldWithDefault(msg, 4, ""),
+phoneNumber: jspb.Message.getFieldWithDefault(msg, 5, ""),
+locationCity: jspb.Message.getFieldWithDefault(msg, 6, ""),
+locationState: jspb.Message.getFieldWithDefault(msg, 7, ""),
+ein: jspb.Message.getFieldWithDefault(msg, 8, ""),
+businessDescription: jspb.Message.getFieldWithDefault(msg, 9, ""),
+businessSize: jspb.Message.getFieldWithDefault(msg, 10, "")
   };
 
   if (includeInstance) {
@@ -625,7 +631,7 @@ proto.business.GetBusinessRequest.prototype.toObject = function(opt_includeInsta
  */
 proto.business.GetBusinessRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    businessId: jspb.Message.getFieldWithDefault(msg, 1, "")
+businessId: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -762,8 +768,8 @@ proto.business.GetBusinessResponse.prototype.toObject = function(opt_includeInst
  */
 proto.business.GetBusinessResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 
@@ -966,7 +972,7 @@ proto.business.GetBusinessByUserEmailRequest.prototype.toObject = function(opt_i
  */
 proto.business.GetBusinessByUserEmailRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    userEmail: jspb.Message.getFieldWithDefault(msg, 1, "")
+userEmail: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -1103,9 +1109,9 @@ proto.business.GetBusinessByUserEmailResponse.prototype.toObject = function(opt_
  */
 proto.business.GetBusinessByUserEmailResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
-    hasBusiness: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
+hasBusiness: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 
@@ -1337,8 +1343,8 @@ proto.business.Cause.prototype.toObject = function(opt_includeInstance) {
  */
 proto.business.Cause.toObject = function(includeInstance, msg) {
   var f, obj = {
-    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    rank: jspb.Message.getFieldWithDefault(msg, 2, "")
+name: jspb.Message.getFieldWithDefault(msg, 1, ""),
+rank: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -1504,17 +1510,17 @@ proto.business.CreateBusinessRequest.prototype.toObject = function(opt_includeIn
  */
 proto.business.CreateBusinessRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    businessName: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    websiteUrl: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    phoneNumber: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    locationCity: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    locationState: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    businessDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    businessSize: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
-    causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
+businessName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+email: jspb.Message.getFieldWithDefault(msg, 2, ""),
+websiteUrl: jspb.Message.getFieldWithDefault(msg, 3, ""),
+phoneNumber: jspb.Message.getFieldWithDefault(msg, 4, ""),
+locationCity: jspb.Message.getFieldWithDefault(msg, 5, ""),
+locationState: jspb.Message.getFieldWithDefault(msg, 6, ""),
+ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
+businessDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
+businessSize: jspb.Message.getFieldWithDefault(msg, 9, ""),
+userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
+causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -1960,8 +1966,8 @@ proto.business.CreateBusinessResponse.prototype.toObject = function(opt_includeI
  */
 proto.business.CreateBusinessResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+business: (f = msg.getBusiness()) && proto.business.Business.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 

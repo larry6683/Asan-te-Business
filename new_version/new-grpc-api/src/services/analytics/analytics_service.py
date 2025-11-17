@@ -2,13 +2,17 @@
 from config.config import Config
 
 import uuid
-from datetime import datetime, timedelta
-from sqlalchemy import func, and_
+# --- CORRECTED IMPORT ---
+from datetime import datetime, timedelta, timezone 
+from sqlalchemy import func, and_, desc
+from sqlalchemy.orm import aliased
 from src.analytics.tables import ( # type: ignore
     RegistrationStep as DBRegistrationStep,
     RegistrationInteraction as DBRegistrationInteraction,
     VerificationTracking as DBVerificationTracking
 )
+from src.public.tables import AppUser as DBAppUser 
+
 from database.db_manager import DatabaseManager
 from converters.analytics_converter import AnalyticsConverter
 from utils.error_handler import ErrorHandler
@@ -26,9 +30,13 @@ from codegen.analytics.analytics_pb2 import (
     TrackVerificationRequestRequest, TrackVerificationRequestResponse,
     MarkVerificationCompleteRequest, MarkVerificationCompleteResponse,
     GetVerificationStatusRequest, GetVerificationStatusResponse,
-    VerificationTracking as ProtoVerificationTracking
+    VerificationTracking as ProtoVerificationTracking,
+    GetAllSessionsRequest, GetAllSessionsResponse,
+    SessionLog as ProtoSessionLog
 )
 from codegen.analytics.analytics_pb2_grpc import AnalyticsServiceServicer
+
+ABANDONMENT_MINUTES = 30
 
 class AnalyticsService(AnalyticsServiceServicer):
     """Analytics service implementation for tracking registration workflows"""
@@ -104,7 +112,8 @@ class AnalyticsService(AnalyticsServiceServicer):
                     registration_step_id=registration_step.registration_step_id,
                     previous_step_id=previous_step_id,
                     next_step_id=next_step_id,
-                    step_began_at=datetime.utcnow()
+                    # --- FIXED ---
+                    step_began_at=datetime.now(timezone.utc)
                 )
                 
                 session.add(new_interaction)
@@ -144,7 +153,8 @@ class AnalyticsService(AnalyticsServiceServicer):
                     return response
                 
                 # Update completion time
-                interaction.step_completed_at = datetime.utcnow()
+                # --- FIXED ---
+                interaction.step_completed_at = datetime.now(timezone.utc)
                 
                 # Update next_step_id if provided
                 if request.next_step_code > 0:
@@ -167,6 +177,103 @@ class AnalyticsService(AnalyticsServiceServicer):
             traceback.print_exc()
         
         return response
+    
+    # ---
+    # NEW METHOD: GetAllSessions
+    # ---
+    def GetAllSessions(self, request: GetAllSessionsRequest, context):
+        """Get all session logs for the analytics dashboard"""
+        response = GetAllSessionsResponse()
+        try:
+            with DatabaseManager.get_session() as session:
+                # 1. Get all steps for mapping
+                steps_query = session.query(DBRegistrationStep).all()
+                step_map = {str(step.registration_step_id): step for step in steps_query}
+                
+                # 2. Get all user IDs and emails for mapping
+                users_query = session.query(DBAppUser.app_user_id, DBAppUser.email).all()
+                user_email_map = {str(user.app_user_id): user.email for user in users_query}
+
+                # 3. Get all interactions, ordered by session and time
+                all_interactions = session.query(DBRegistrationInteraction).order_by(
+                    DBRegistrationInteraction.session_id,
+                    DBRegistrationInteraction.step_began_at
+                ).all()
+
+                if not all_interactions:
+                    return response # Return empty response if no data
+
+                # 4. Process interactions into session logs in Python
+                session_logs = {}
+                for interaction in all_interactions:
+                    session_id_str = str(interaction.session_id)
+                    if session_id_str not in session_logs:
+                        # Initialize new session log
+                        session_logs[session_id_str] = {
+                            "session_id": session_id_str,
+                            "app_user_id": str(interaction.app_user_id) if interaction.app_user_id else None,
+                            "user_email": user_email_map.get(str(interaction.app_user_id)),
+                            "started_at": interaction.step_began_at,
+                            "last_activity": interaction.updated_at,
+                            "latest_interaction": interaction,
+                            "completed_step_ids": set()
+                        }
+                    
+                    # Update session log with this interaction's data
+                    log = session_logs[session_id_str]
+                    log["last_activity"] = max(log["last_activity"], interaction.updated_at)
+                    log["latest_interaction"] = interaction # This one is the latest so far
+                    
+                    if interaction.app_user_id and not log["app_user_id"]:
+                         log["app_user_id"] = str(interaction.app_user_id)
+                         log["user_email"] = user_email_map.get(str(interaction.app_user_id))
+
+                    if interaction.step_completed_at:
+                        log["completed_step_ids"].add(str(interaction.registration_step_id))
+
+                # 5. Convert processed logs into Proto messages
+                # --- FIXED: This is the line that caused the error ---
+                abandonment_threshold = datetime.now(timezone.utc) - timedelta(minutes=ABANDONMENT_MINUTES)
+                
+                for log in session_logs.values():
+                    latest_interaction = log["latest_interaction"]
+                    current_step_db = step_map.get(str(latest_interaction.registration_step_id))
+                    
+                    if not current_step_db:
+                        continue # Skip if step not found
+
+                    # Determine final state
+                    status = "In Progress"
+                    if current_step_db.code == 6 and latest_interaction.step_completed_at:
+                        status = "Completed"
+                    # This comparison is now safe
+                    elif log["last_activity"] < abandonment_threshold:
+                        status = "Abandoned"
+
+                    duration = (log["last_activity"] - log["started_at"]).total_seconds()
+                    
+                    proto_log = ProtoSessionLog(
+                        session_id=log["session_id"],
+                        app_user_id=log["app_user_id"] or "",
+                        user_email=log["user_email"] or "N/A",
+                        status=status,
+                        current_step_code=current_step_db.code,
+                        current_step_name=current_step_db.step_name,
+                        steps_completed=len(log["completed_step_ids"]),
+                        started_at=AnalyticsConverter.datetime_to_string(log["started_at"]),
+                        last_activity=AnalyticsConverter.datetime_to_string(log["last_activity"]),
+                        duration_seconds=duration
+                    )
+                    response.sessions.append(proto_log)
+
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"Error in GetAllSessions: {e}")
+            import traceback
+            traceback.print_exc()
+            
+        return response
+
     
     def GetRegistrationSteps(self, request: GetRegistrationStepsRequest, context):
         """Get all registration steps"""
@@ -409,7 +516,8 @@ class AnalyticsService(AnalyticsServiceServicer):
                 if vt:
                     # Existing record - increment count
                     vt.verification_codes_requested += 1
-                    vt.last_code_requested_at = datetime.utcnow()
+                    # --- FIXED ---
+                    vt.last_code_requested_at = datetime.now(timezone.utc)
                     print(f"📧 Verification resend #{vt.verification_codes_requested} for user {request.app_user_id}")
                 else:
                     # New record - first request
@@ -435,103 +543,105 @@ class AnalyticsService(AnalyticsServiceServicer):
         
         return response
     
-        def MarkVerificationComplete(self, request: MarkVerificationCompleteRequest, context):
-            """Mark email verification as complete"""
-            response = MarkVerificationCompleteResponse()
+    def MarkVerificationComplete(self, request: MarkVerificationCompleteRequest, context):
+        """Mark email verification as complete"""
+        response = MarkVerificationCompleteResponse()
+        
+        try:
+            # Validate
+            if not Validator.is_not_empty(request.app_user_id):
+                response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
+                return response
+            
+            # Parse UUID
+            try:
+                app_user_uuid = uuid.UUID(request.app_user_id)
+            except ValueError:
+                response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
+                return response
+            
+            with DatabaseManager.get_session() as session:
+                vt = session.query(DBVerificationTracking).filter(
+                    DBVerificationTracking.app_user_id == app_user_uuid
+                ).first()
+                
+                if vt:
+                    vt.email_verified = True
+                    # --- FIXED ---
+                    vt.verification_completed_at = datetime.now(timezone.utc)
+                    session.flush()
+                    print(f"✅ Verification completed for user {request.app_user_id}")
+                    response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                else:
+                    # Create record if doesn't exist
+                    session_uuid = uuid.UUID(request.session_id) if request.session_id else None
+                    vt = DBVerificationTracking(
+                        app_user_id=app_user_uuid,
+                        session_id=session_uuid,
+                        verification_codes_requested=1,
+                        email_verified=True,
+                        # --- FIXED ---
+                        verification_completed_at=datetime.now(timezone.utc)
+                    )
+                    session.add(vt)
+                    session.flush()
+                    print(f"✅ Verification completed (created record) for user {request.app_user_id}")
+                    response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"Error in MarkVerificationComplete: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        return response
+    
+    def GetVerificationStatus(self, request: GetVerificationStatusRequest, context):
+        """Get verification status for a user"""
+        response = GetVerificationStatusResponse()
+        
+        try:
+            if not Validator.is_not_empty(request.app_user_id):
+                response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
+                return response
             
             try:
-                # Validate
-                if not Validator.is_not_empty(request.app_user_id):
-                    response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
-                    return response
-                
-                # Parse UUID
-                try:
-                    app_user_uuid = uuid.UUID(request.app_user_id)
-                except ValueError:
-                    response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
-                    return response
-                
-                with DatabaseManager.get_session() as session:
-                    vt = session.query(DBVerificationTracking).filter(
-                        DBVerificationTracking.app_user_id == app_user_uuid
-                    ).first()
-                    
-                    if vt:
-                        vt.email_verified = True
-                        vt.verification_completed_at = datetime.utcnow()
-                        session.flush()
-                        print(f"✅ Verification completed for user {request.app_user_id}")
-                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
-                    else:
-                        # Create record if doesn't exist
-                        session_uuid = uuid.UUID(request.session_id) if request.session_id else None
-                        vt = DBVerificationTracking(
-                            app_user_id=app_user_uuid,
-                            session_id=session_uuid,
-                            verification_codes_requested=1,
-                            email_verified=True,
-                            verification_completed_at=datetime.utcnow()
-                        )
-                        session.add(vt)
-                        session.flush()
-                        print(f"✅ Verification completed (created record) for user {request.app_user_id}")
-                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
-                    
-            except Exception as e:
-                response.errors.append(ErrorHandler.internal_error(str(e)))
-                print(f"Error in MarkVerificationComplete: {e}")
-                import traceback
-                traceback.print_exc()
+                app_user_uuid = uuid.UUID(request.app_user_id)
+            except ValueError:
+                response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
+                return response
             
-            return response
+            with DatabaseManager.get_session() as session:
+                vt = session.query(DBVerificationTracking).filter(
+                    DBVerificationTracking.app_user_id == app_user_uuid
+                ).first()
+                
+                if vt:
+                    response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
+                else:
+                    response.errors.append(
+                        ErrorHandler.not_found('VerificationTracking', request.app_user_id)
+                    )
+                
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"Error in GetVerificationStatus: {e}")
+            import traceback
+            traceback.print_exc()
         
-        def GetVerificationStatus(self, request: GetVerificationStatusRequest, context):
-            """Get verification status for a user"""
-            response = GetVerificationStatusResponse()
-            
-            try:
-                if not Validator.is_not_empty(request.app_user_id):
-                    response.errors.append(ErrorHandler.invalid_parameter('app_user_id'))
-                    return response
-                
-                try:
-                    app_user_uuid = uuid.UUID(request.app_user_id)
-                except ValueError:
-                    response.errors.append(ErrorHandler.invalid_parameter('Invalid UUID format'))
-                    return response
-                
-                with DatabaseManager.get_session() as session:
-                    vt = session.query(DBVerificationTracking).filter(
-                        DBVerificationTracking.app_user_id == app_user_uuid
-                    ).first()
-                    
-                    if vt:
-                        response.verification_tracking.CopyFrom(self._verification_to_proto(vt))
-                    else:
-                        response.errors.append(
-                            ErrorHandler.not_found('VerificationTracking', request.app_user_id)
-                        )
-                    
-            except Exception as e:
-                response.errors.append(ErrorHandler.internal_error(str(e)))
-                print(f"Error in GetVerificationStatus: {e}")
-                import traceback
-                traceback.print_exc()
-            
-            return response
-        
-        def _verification_to_proto(self, db_verification) -> ProtoVerificationTracking:
-            """Convert DB verification to proto"""
-            return ProtoVerificationTracking(
-                id=str(db_verification.verification_tracking_id),
-                app_user_id=str(db_verification.app_user_id),
-                session_id=str(db_verification.session_id),
-                email_verified=db_verification.email_verified,
-                verification_completed_at=AnalyticsConverter.datetime_to_string(db_verification.verification_completed_at),
-                verification_codes_requested=db_verification.verification_codes_requested,
-                first_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.first_code_requested_at),
-                last_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.last_code_requested_at),
-                created_at=AnalyticsConverter.datetime_to_string(db_verification.created_at),
-                updated_at=AnalyticsConverter.datetime_to_string(db_verification.updated_at)
-            )
+        return response
+    
+    def _verification_to_proto(self, db_verification) -> ProtoVerificationTracking:
+        """Convert DB verification to proto"""
+        return ProtoVerificationTracking(
+            id=str(db_verification.verification_tracking_id),
+            app_user_id=str(db_verification.app_user_id),
+            session_id=str(db_verification.session_id),
+            email_verified=db_verification.email_verified,
+            verification_completed_at=AnalyticsConverter.datetime_to_string(db_verification.verification_completed_at),
+            verification_codes_requested=db_verification.verification_codes_requested,
+            first_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.first_code_requested_at),
+            last_code_requested_at=AnalyticsConverter.datetime_to_string(db_verification.last_code_requested_at),
+            created_at=AnalyticsConverter.datetime_to_string(db_verification.created_at),
+            updated_at=AnalyticsConverter.datetime_to_string(db_verification.updated_at)
+        )

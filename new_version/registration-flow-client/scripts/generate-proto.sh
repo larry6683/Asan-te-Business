@@ -11,9 +11,9 @@ protoc -I=$PROTO_DIR \
   $PROTO_DIR/error/error.proto \
   $PROTO_DIR/user/user.proto \
   $PROTO_DIR/business/business.proto \
-  $PROTO_DIR/beneficiary/beneficiary.proto
+  $PROTO_DIR/beneficiary/beneficiary.proto \
+  $PROTO_DIR/analytics/analytics.proto 
 
 echo "✅ Generated files:"
 ls -la $OUT_DIR
 echo "✅ Proto generation complete!"
-EOF

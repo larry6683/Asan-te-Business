@@ -23,27 +23,27 @@ python -m grpc_tools.protoc \
 echo "✅ Protobuf files generated"
 echo "🔧 Fixing import paths..."
 
-# Fix ALL imports for macOS
+# Fix ALL imports for Linux (GNU sed)
 find $OUT_DIR -type f \( -name "*_pb2.py" -o -name "*_pb2_grpc.py" \) | while read file; do
   # Fix error imports
-  sed -i '' 's/^from error import error_pb2/from codegen.error import error_pb2/g' "$file"
-  sed -i '' 's/^import error_pb2/from codegen.error import error_pb2/g' "$file"
+  sed -i 's/^from error import error_pb2/from codegen.error import error_pb2/g' "$file"
+  sed -i 's/^import error_pb2/from codegen.error import error_pb2/g' "$file"
   
   # Fix user imports
-  sed -i '' 's/^from user import user_pb2/from codegen.user import user_pb2/g' "$file"
-  sed -i '' 's/^import user_pb2/from codegen.user import user_pb2/g' "$file"
+  sed -i 's/^from user import user_pb2/from codegen.user import user_pb2/g' "$file"
+  sed -i 's/^import user_pb2/from codegen.user import user_pb2/g' "$file"
   
   # Fix business imports
-  sed -i '' 's/^from business import business_pb2/from codegen.business import business_pb2/g' "$file"
-  sed -i '' 's/^import business_pb2/from codegen.business import business_pb2/g' "$file"
+  sed -i 's/^from business import business_pb2/from codegen.business import business_pb2/g' "$file"
+  sed -i 's/^import business_pb2/from codegen.business import business_pb2/g' "$file"
   
   # Fix beneficiary imports
-  sed -i '' 's/^from beneficiary import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
-  sed -i '' 's/^import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
+  sed -i 's/^from beneficiary import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
+  sed -i 's/^import beneficiary_pb2/from codegen.beneficiary import beneficiary_pb2/g' "$file"
 
   # Fix analytics imports
-  sed -i '' 's/^from analytics import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
-  sed -i '' 's/^import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
+  sed -i 's/^from analytics import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
+  sed -i 's/^import analytics_pb2/from codegen.analytics import analytics_pb2/g' "$file"
 done
 
 # Add __init__.py files

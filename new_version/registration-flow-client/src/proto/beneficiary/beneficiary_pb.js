@@ -13,7 +13,13 @@
 
 var jspb = require('google-protobuf');
 var goog = jspb;
-var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
 
 var error_error_pb = require('../error/error_pb.js');
 goog.object.extend(proto, error_error_pb);
@@ -159,16 +165,16 @@ proto.beneficiary.Beneficiary.prototype.toObject = function(opt_includeInstance)
  */
 proto.beneficiary.Beneficiary.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    beneficiaryName: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    websiteUrl: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    phoneNumber: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    locationCity: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    locationState: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    ein: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    beneficiaryDescription: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    beneficiarySize: jspb.Message.getFieldWithDefault(msg, 10, "")
+id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+beneficiaryName: jspb.Message.getFieldWithDefault(msg, 2, ""),
+email: jspb.Message.getFieldWithDefault(msg, 3, ""),
+websiteUrl: jspb.Message.getFieldWithDefault(msg, 4, ""),
+phoneNumber: jspb.Message.getFieldWithDefault(msg, 5, ""),
+locationCity: jspb.Message.getFieldWithDefault(msg, 6, ""),
+locationState: jspb.Message.getFieldWithDefault(msg, 7, ""),
+ein: jspb.Message.getFieldWithDefault(msg, 8, ""),
+beneficiaryDescription: jspb.Message.getFieldWithDefault(msg, 9, ""),
+beneficiarySize: jspb.Message.getFieldWithDefault(msg, 10, "")
   };
 
   if (includeInstance) {
@@ -559,7 +565,7 @@ proto.beneficiary.GetBeneficiaryRequest.prototype.toObject = function(opt_includ
  */
 proto.beneficiary.GetBeneficiaryRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    beneficiaryId: jspb.Message.getFieldWithDefault(msg, 1, "")
+beneficiaryId: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -696,8 +702,8 @@ proto.beneficiary.GetBeneficiaryResponse.prototype.toObject = function(opt_inclu
  */
 proto.beneficiary.GetBeneficiaryResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    beneficiary: (f = msg.getBeneficiary()) && proto.beneficiary.Beneficiary.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+beneficiary: (f = msg.getBeneficiary()) && proto.beneficiary.Beneficiary.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 
@@ -907,17 +913,17 @@ proto.beneficiary.CreateBeneficiaryRequest.prototype.toObject = function(opt_inc
  */
 proto.beneficiary.CreateBeneficiaryRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    beneficiaryName: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    websiteUrl: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    phoneNumber: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    locationCity: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    locationState: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    beneficiaryDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    beneficiarySize: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
-    causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
+beneficiaryName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+email: jspb.Message.getFieldWithDefault(msg, 2, ""),
+websiteUrl: jspb.Message.getFieldWithDefault(msg, 3, ""),
+phoneNumber: jspb.Message.getFieldWithDefault(msg, 4, ""),
+locationCity: jspb.Message.getFieldWithDefault(msg, 5, ""),
+locationState: jspb.Message.getFieldWithDefault(msg, 6, ""),
+ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
+beneficiaryDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
+beneficiarySize: jspb.Message.getFieldWithDefault(msg, 9, ""),
+userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
+causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -1363,8 +1369,8 @@ proto.beneficiary.CreateBeneficiaryResponse.prototype.toObject = function(opt_in
  */
 proto.beneficiary.CreateBeneficiaryResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
-    beneficiary: (f = msg.getBeneficiary()) && proto.beneficiary.Beneficiary.toObject(includeInstance, f),
-    errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
+beneficiary: (f = msg.getBeneficiary()) && proto.beneficiary.Beneficiary.toObject(includeInstance, f),
+errorsList: jspb.Message.toObjectList(msg.getErrorsList(),
     error_error_pb.Error.toObject, includeInstance)
   };
 

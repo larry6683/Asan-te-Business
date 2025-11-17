@@ -54,6 +54,11 @@ class AnalyticsServiceStub(object):
                 request_serializer=analytics_dot_analytics__pb2.GetUserJourneyRequest.SerializeToString,
                 response_deserializer=analytics_dot_analytics__pb2.GetUserJourneyResponse.FromString,
                 _registered_method=True)
+        self.GetAllSessions = channel.unary_unary(
+                '/analytics.AnalyticsService/GetAllSessions',
+                request_serializer=analytics_dot_analytics__pb2.GetAllSessionsRequest.SerializeToString,
+                response_deserializer=analytics_dot_analytics__pb2.GetAllSessionsResponse.FromString,
+                _registered_method=True)
         self.GetSessionJourney = channel.unary_unary(
                 '/analytics.AnalyticsService/GetSessionJourney',
                 request_serializer=analytics_dot_analytics__pb2.GetSessionJourneyRequest.SerializeToString,
@@ -107,6 +112,13 @@ class AnalyticsServiceServicer(object):
 
     def GetUserJourney(self, request, context):
         """Get user's registration journey
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetAllSessions(self, request, context):
+        """Get all sessions for the dashboard
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -167,6 +179,11 @@ def add_AnalyticsServiceServicer_to_server(servicer, server):
                     servicer.GetUserJourney,
                     request_deserializer=analytics_dot_analytics__pb2.GetUserJourneyRequest.FromString,
                     response_serializer=analytics_dot_analytics__pb2.GetUserJourneyResponse.SerializeToString,
+            ),
+            'GetAllSessions': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAllSessions,
+                    request_deserializer=analytics_dot_analytics__pb2.GetAllSessionsRequest.FromString,
+                    response_serializer=analytics_dot_analytics__pb2.GetAllSessionsResponse.SerializeToString,
             ),
             'GetSessionJourney': grpc.unary_unary_rpc_method_handler(
                     servicer.GetSessionJourney,
@@ -302,6 +319,33 @@ class AnalyticsService(object):
             '/analytics.AnalyticsService/GetUserJourney',
             analytics_dot_analytics__pb2.GetUserJourneyRequest.SerializeToString,
             analytics_dot_analytics__pb2.GetUserJourneyResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetAllSessions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/analytics.AnalyticsService/GetAllSessions',
+            analytics_dot_analytics__pb2.GetAllSessionsRequest.SerializeToString,
+            analytics_dot_analytics__pb2.GetAllSessionsResponse.FromString,
             options,
             channel_credentials,
             insecure,

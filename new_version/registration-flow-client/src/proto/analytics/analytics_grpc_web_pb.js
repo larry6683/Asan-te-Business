@@ -323,6 +323,67 @@ proto.analytics.AnalyticsServicePromiseClient.prototype.getUserJourney =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
+ *   !proto.analytics.GetAllSessionsRequest,
+ *   !proto.analytics.GetAllSessionsResponse>}
+ */
+const methodDescriptor_AnalyticsService_GetAllSessions = new grpc.web.MethodDescriptor(
+  '/analytics.AnalyticsService/GetAllSessions',
+  grpc.web.MethodType.UNARY,
+  proto.analytics.GetAllSessionsRequest,
+  proto.analytics.GetAllSessionsResponse,
+  /**
+   * @param {!proto.analytics.GetAllSessionsRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.analytics.GetAllSessionsResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.analytics.GetAllSessionsRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.analytics.GetAllSessionsResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.analytics.GetAllSessionsResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.analytics.AnalyticsServiceClient.prototype.getAllSessions =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/analytics.AnalyticsService/GetAllSessions',
+      request,
+      metadata || {},
+      methodDescriptor_AnalyticsService_GetAllSessions,
+      callback);
+};
+
+
+/**
+ * @param {!proto.analytics.GetAllSessionsRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.analytics.GetAllSessionsResponse>}
+ *     Promise that resolves to the response
+ */
+proto.analytics.AnalyticsServicePromiseClient.prototype.getAllSessions =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/analytics.AnalyticsService/GetAllSessions',
+      request,
+      metadata || {},
+      methodDescriptor_AnalyticsService_GetAllSessions);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
  *   !proto.analytics.GetSessionJourneyRequest,
  *   !proto.analytics.GetSessionJourneyResponse>}
  */

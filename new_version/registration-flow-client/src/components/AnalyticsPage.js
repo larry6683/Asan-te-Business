@@ -1,12 +1,10 @@
-// new_version/registration-flow-client/src/components/AnalyticsLogsPage.js
-// Wide-format logs dashboard showing all registration sessions in a detailed table
 
 import React, { useState, useEffect } from "react";
 import styles from "./AnalyticsPage.module.css";
 import { analyticsService } from "../api/analyticsService";
 import { getOrCreateSessionId } from "../utils/sessionManager";
 
-const AnalyticsLogsPage = () => {
+const AnalyticsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
@@ -38,6 +36,7 @@ const AnalyticsLogsPage = () => {
         analyticsService.getRegistrationStats(),
       ]);
 
+      // stepsData and statsData are now plain JS objects
       setSteps(stepsData);
       setStats(statsData);
       
@@ -56,8 +55,8 @@ const AnalyticsLogsPage = () => {
 
     const loadSessionsData = async () => {
     try {
-        // Add this method to your analyticsService.js:
         const sessionsData = await analyticsService.getAllSessions();
+        // sessionsData is now a plain JS object array
         setSessions(sessionsData);
     } catch (err) {
         console.error('Error loading sessions:', err);
@@ -67,8 +66,9 @@ const AnalyticsLogsPage = () => {
 
 
   const getStepName = (stepId) => {
+    // FIXED: Use step.stepName instead of step.step_name
     const step = steps.find(s => s.id === stepId);
-    return step ? step.step_name : 'Unknown';
+    return step ? step.stepName : 'Unknown';
   };
 
   const formatDateTime = (dateTimeString) => {
@@ -135,16 +135,17 @@ const AnalyticsLogsPage = () => {
     
     const filteredSessions = getFilteredSessions();
     filteredSessions.forEach(session => {
+      // FIXED: Use camelCase properties
       const row = [
-        `"${session.session_id}"`,
-        session.user_id || 'Anonymous',
-        session.user_email || 'N/A',
+        `"${session.sessionId}"`,
+        session.appUserId || 'Anonymous',
+        session.userEmail || 'N/A',
         session.status,
-        `"${session.current_step}"`,
-        session.steps_completed,
-        `"${session.started_at}"`,
-        `"${session.last_activity}"`,
-        session.duration_seconds
+        `"${session.currentStepName}"`,
+        session.stepsCompleted,
+        `"${session.startedAt}"`,
+        `"${session.lastActivity}"`,
+        session.durationSeconds
       ];
       csvContent += row.join(',') + '\n';
     });
@@ -165,15 +166,17 @@ const AnalyticsLogsPage = () => {
     }
     
     if (stepFilter !== 'all') {
-      filtered = filtered.filter(s => s.current_step_code === parseInt(stepFilter));
+      // FIXED: Use currentStepCode
+      filtered = filtered.filter(s => s.currentStepCode === parseInt(stepFilter));
     }
     
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
+      // FIXED: Use camelCase properties
       filtered = filtered.filter(s => 
-        s.session_id.toLowerCase().includes(term) ||
-        s.user_id?.toLowerCase().includes(term) ||
-        s.user_email?.toLowerCase().includes(term)
+        s.sessionId.toLowerCase().includes(term) ||
+        s.appUserId?.toLowerCase().includes(term) ||
+        s.userEmail?.toLowerCase().includes(term)
       );
     }
     
@@ -252,27 +255,31 @@ const AnalyticsLogsPage = () => {
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <div className={styles.statLabel}>Total Sessions</div>
-            <div className={styles.statValue}>{stats.total_sessions || 0}</div>
+            {/* FIXED: Use totalSessions */}
+            <div className={styles.statValue}>{stats.totalSessions || 0}</div>
           </div>
           
           <div className={styles.statCard}>
             <div className={styles.statLabel}>Completed</div>
+            {/* FIXED: Use completedRegistrations */}
             <div className={styles.statValue} style={{ color: '#2e7d32' }}>
-              {stats.completed_registrations || 0}
+              {stats.completedRegistrations || 0}
             </div>
           </div>
           
           <div className={styles.statCard}>
             <div className={styles.statLabel}>Incomplete</div>
+            {/* FIXED: Use incompleteRegistrations */}
             <div className={styles.statValue} style={{ color: '#e65100' }}>
-              {stats.incomplete_registrations || 0}
+              {stats.incompleteRegistrations || 0}
             </div>
           </div>
           
           <div className={styles.statCard}>
             <div className={styles.statLabel}>Success Rate</div>
             <div className={styles.statValue}>
-              {stats.completion_rate ? `${stats.completion_rate.toFixed(1)}%` : '0%'}
+              {/* FIXED: Use completionRate */}
+              {stats.completionRate ? `${stats.completionRate.toFixed(1)}%` : '0%'}
             </div>
             <div style={{ 
               width: '100%', 
@@ -283,7 +290,8 @@ const AnalyticsLogsPage = () => {
               overflow: 'hidden'
             }}>
               <div style={{
-                width: `${stats.completion_rate || 0}%`,
+                // FIXED: Use completionRate
+                width: `${stats.completionRate || 0}%`,
                 height: '100%',
                 background: 'linear-gradient(90deg, #667eea, #764ba2)',
                 transition: 'width 0.3s ease'
@@ -348,9 +356,11 @@ const AnalyticsLogsPage = () => {
             }}
           >
             <option value="all">All Steps</option>
+            {/* FIXED: This is the line that caused your error. */}
+            {/* Use step.code and step.stepName */}
             {steps.map(step => (
               <option key={step.code} value={step.code.toString()}>
-                {step.code}. {step.step_name}
+                {step.code}. {step.stepName}
               </option>
             ))}
           </select>
@@ -388,26 +398,27 @@ const AnalyticsLogsPage = () => {
                 </tr>
               </thead>
               <tbody>
+                {/* FIXED: Use camelCase properties for all session fields */}
                 {paginatedSessions.map((session, index) => (
-                  <tr key={session.session_id} className={styles.tableRow}>
+                  <tr key={session.sessionId} className={styles.tableRow}>
                     <td className={styles.tableCell}>
                       <span 
                         className={styles.truncate} 
-                        title={session.session_id}
+                        title={session.sessionId}
                         style={{ maxWidth: '180px' }}
                       >
-                        {session.session_id}
+                        {session.sessionId}
                       </span>
                     </td>
                     
                     <td className={styles.tableCell}>
-                      {session.user_id ? (
+                      {session.appUserId ? (
                         <span 
                           className={styles.truncate}
-                          title={session.user_id}
+                          title={session.appUserId}
                           style={{ maxWidth: '130px' }}
                         >
-                          {session.user_id}
+                          {session.appUserId}
                         </span>
                       ) : (
                         <span style={{ color: '#999', fontSize: '12px' }}>Anonymous</span>
@@ -420,32 +431,32 @@ const AnalyticsLogsPage = () => {
                     
                     <td className={styles.tableCell}>
                       <span className={`${styles.chip} ${styles.chipPrimary}`}>
-                        {session.current_step_code}. {session.current_step}
+                        {session.currentStepCode}. {session.currentStepName}
                       </span>
                     </td>
                     
                     <td className={styles.tableCell}>
                       <strong style={{ color: '#667eea' }}>
-                        {session.steps_completed} / 6
+                        {session.stepsCompleted} / 6
                       </strong>
                     </td>
                     
                     <td className={styles.tableCell} style={{ fontSize: '13px' }}>
-                      {formatDateTime(session.started_at)}
+                      {formatDateTime(session.startedAt)}
                     </td>
                     
                     <td className={styles.tableCell} style={{ fontSize: '13px' }}>
-                      {formatDateTime(session.last_activity)}
+                      {formatDateTime(session.lastActivity)}
                     </td>
                     
                     <td className={styles.tableCell}>
                       <strong style={{ color: '#667eea' }}>
-                        {formatDuration(session.duration_seconds)}
+                        {formatDuration(session.durationSeconds)}
                       </strong>
                     </td>
                     
                     <td className={styles.tableCell} style={{ fontSize: '13px' }}>
-                      {session.user_email || 'N/A'}
+                      {session.userEmail || 'N/A'}
                     </td>
                   </tr>
                 ))}
@@ -546,4 +557,4 @@ const AnalyticsLogsPage = () => {
   );
 };
 
-export default AnalyticsLogsPage;
+export default AnalyticsPage;

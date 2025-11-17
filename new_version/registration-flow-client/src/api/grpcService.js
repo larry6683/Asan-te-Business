@@ -248,6 +248,30 @@ class GrpcService {
   // ANALYTICS SERVICE METHODS
   // ============================================
 
+  getAllSessions(token) {
+    const { GetAllSessionsRequest } = require('../proto/analytics/analytics_pb');
+    const request = new GetAllSessionsRequest();
+
+    return new Promise((resolve, reject) => {
+      this.analyticsClient.getAllSessions(request, this.getMetadata(token), (err, response) => {
+        if (err) {
+          console.error('Analytics getAllSessions error:', err);
+          reject(err);
+        } else {
+          const errors = response.getErrorsList();
+          if (errors && errors.length > 0) {
+            console.error('Analytics getAllSessions errors:', errors);
+            reject(new Error(errors.map(e => e.getMessage()).join(', ')));
+          } else {
+            // Assuming the response has a list of sessions
+            // Adjust .getSessionsList() if your proto definition is different
+            resolve(response.getSessionsList());
+          }
+        }
+      });
+    });
+  }
+  
   trackStep(sessionId, appUserId, stepCode, previousStepCode = 0, nextStepCode = 0, token) {
     const { TrackStepRequest } = require('../proto/analytics/analytics_pb');
     const request = new TrackStepRequest();

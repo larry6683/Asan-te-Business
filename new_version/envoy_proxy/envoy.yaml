@@ -52,6 +52,16 @@ static_resources:
                   max_stream_duration:
                     grpc_timeout_header_max: 0s
               
+              # Analytics Service routes
+              - match:
+                  prefix: "/analytics.AnalyticsService"
+                route:
+                  cluster: analytics_service
+                  timeout: 0s
+                  max_stream_duration:
+                    grpc_timeout_header_max: 0s
+                    
+                    #
               cors:
                 allow_origin_string_match:
                 - prefix: "*"
@@ -135,3 +145,25 @@ static_resources:
               socket_address:
                 address: host.docker.internal
                 port_value: 50053
+
+                # Analytics Service Cluster
+  - name: analytics_service
+    type: LOGICAL_DNS
+    connect_timeout: 0.25s
+    lb_policy: ROUND_ROBIN
+    dns_lookup_family: V4_ONLY
+    typed_extension_protocol_options:
+      envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+        "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+        explicit_http_config:
+          http2_protocol_options: {}
+    load_assignment:
+      cluster_name: analytics_service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: host.docker.internal
+                # Assuming port 50054 for the 4th service
+                port_value: 50054

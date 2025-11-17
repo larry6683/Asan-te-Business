@@ -90,6 +90,55 @@ class AnalyticsService {
     }
   }
 
+  // --- METHODS FOR ANALYTICS DASHBOARD ---
+
+  async getRegistrationSteps() {
+    const token = getAccessJwtFromStorage();
+    try {
+      const response = await this.grpcService.getRegistrationSteps(token);
+      // Convert proto list to plain JS object list
+      return response.getStepsList().map(step => step.toObject());
+    } catch (error) {
+      console.error('Error fetching registration steps:', error);
+      throw error;
+    }
+  }
+
+  // --- THIS METHOD IS NOW FIXED ---
+  async getRegistrationStats() {
+    const token = getAccessJwtFromStorage();
+    try {
+      // FIXED: Pass undefined for startDate/endDate and token as the last arg
+      const response = await this.grpcService.getRegistrationStats(undefined, undefined, token); 
+      
+      // FIXED: Get the 'stats' message from the response before converting
+      const stats = response.getStats();
+      
+      return stats ? stats.toObject() : null;
+    } catch (error) {
+      console.error('Error fetching registration stats:', error);
+      throw error;
+    }
+  }
+
+  async getAllSessions() {
+    const token = getAccessJwtFromStorage();
+    try {
+      // This calls the method we added to grpcService
+      const sessionsListProto = await this.grpcService.getAllSessions(token);
+      
+      // Convert the list of proto messages into plain JS objects
+      return sessionsListProto.map(session => session.toObject());
+    } catch (error) {
+      console.error('Error fetching all sessions:', error);
+      throw error;
+    }
+  }
+  // --- END OF FIX ---
+
+
+  // ---------------------------------------------
+
   // Helper method to map session to user after login
   mapSessionToUser(userId) {
     // This will be called after successful login/verification

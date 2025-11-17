@@ -103,6 +103,30 @@ message GetRegistrationStatsResponse {
     RegistrationStats stats = 1;
     repeated error.Error errors = 2;
 }
+
+// Message for the analytics dashboard session log
+message SessionLog {
+    string session_id = 1;
+    string app_user_id = 2;
+    string user_email = 3;
+    string status = 4; // "Completed", "In Progress", "Abandoned"
+    int32 current_step_code = 5;
+    string current_step_name = 6;
+    int32 steps_completed = 7;
+    string started_at = 8;
+    string last_activity = 9;
+    float duration_seconds = 10;
+}
+
+message GetAllSessionsRequest {
+    // optional filters can go here in the future
+}
+
+message GetAllSessionsResponse {
+    repeated SessionLog sessions = 1;
+    repeated error.Error errors = 2;
+}
+
 // ========== VERIFICATION TRACKING ==========
 
 message VerificationTracking {
@@ -160,6 +184,9 @@ service AnalyticsService {
     
     // Get user's registration journey
     rpc GetUserJourney(GetUserJourneyRequest) returns (GetUserJourneyResponse);
+    
+    // Get all sessions for the dashboard
+    rpc GetAllSessions(GetAllSessionsRequest) returns (GetAllSessionsResponse);
     
     // Get session's registration journey
     rpc GetSessionJourney(GetSessionJourneyRequest) returns (GetSessionJourneyResponse);
