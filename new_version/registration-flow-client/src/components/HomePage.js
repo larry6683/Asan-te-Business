@@ -1,3 +1,9 @@
+/*
+  FILENAME: new_version/registration-flow-client/src/components/HomePage.js
+  DESCRIPTION: Added a useEffect hook to fire an analytics event on load.
+               This immediately links the user_id (from login) to the
+               session_id.
+*/
 import React, { useEffect, useState } from "react";
 import styles from "./HomePage.module.css";
 import { styled } from "@mui/material/styles";
@@ -8,6 +14,8 @@ import businessWelcome from "../assets/HomeScreen-Confetti.svg";
 import welcomePortal from "../assets/WelcomePortal.svg";
 import { AppCookieService } from "../cookies/appCookieService";
 import { redirectUrls } from "../web-data/redirectUrls";
+// ✅ CHANGED: Import analyticsService
+import { analyticsService } from "../api/analyticsService";
 
 const HomePage = () => {
   const selectedOption = useSelector((state) => state.selectedOption);
@@ -18,6 +26,12 @@ const HomePage = () => {
   const [entityData, setEntityData] = useState(null);
 
   useEffect(() => {
+    // ✅ CHANGED: Fire analytics event for Step 6 (Welcome Page)
+    // Because analyticsService.trackStep() now reads user_id from
+    // sessionStorage, this call will successfully link the user to the session.
+    // We use 0 for previous step since we could get here from login OR step 5.
+    analyticsService.trackStep(6, 0, 0);
+
     const selectedOption = sessionStorage.getItem("asante:selectedOption");
     if (selectedOption) {
       setSelectedType(selectedOption);
@@ -47,7 +61,7 @@ const HomePage = () => {
     // Log cookie for debugging
     const appCookie = AppCookieService.getAppCookie();
     console.log('HomePage loaded - Cookie:', appCookie);
-  }, []);
+  }, []); // <-- This empty array ensures the effect runs only ONCE when the page loads
 
   const backgroundImageUrl = businessWelcome;
   const portalImageUrl = welcomePortal;

@@ -1,50 +1,51 @@
+/*
+  FILENAME: new_version/registration-flow-client/src/api/analyticsService.js
+  DESCRIPTION: This is the critical update. It now gets the session_id and
+               user_id from storage *inside* the trackStep call, ensuring
+               it always has the most recent data.
+*/
 import { grpcService } from './grpcService';
 import { getAccessJwtFromStorage } from '../user-auth/authenticateUser';
+// ✅ CHANGED: Import the official session manager
+import { getOrCreateSessionId, getSessionId } from '../utils/sessionManager';
 
 class AnalyticsService {
   constructor() {
     this.grpcService = grpcService;
-    this.sessionId = this.getOrCreateSessionId();
+    // ✅ CHANGED: Use the official session ID on initialization
+    this.sessionId = getOrCreateSessionId();
   }
 
-  getOrCreateSessionId() {
-    let sessionId = sessionStorage.getItem('asante:analyticsSessionId');
-    if (!sessionId) {
-      sessionId = this.generateUUID();
-      sessionStorage.setItem('asante:analyticsSessionId', sessionId);
-    }
-    return sessionId;
-  }
-
-  generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
+  // 🛑 REMOVED: getOrCreateSessionId (using imported one)
+  // 🛑 REMOVED: generateUUID (using imported one)
 
   getUserId() {
+    // ✅ CHANGED: Simplified to read from sessionStorage
     const userJson = sessionStorage.getItem('asante:user');
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
-        return user.id || '';
+        return user.id || null; // Return null if no ID
       } catch (e) {
-        return '';
+        return null; // Return null on error
       }
     }
-    return '';
+    return null; // Return null if no user
   }
 
   async trackStep(stepCode, previousStepCode = 0, nextStepCode = 0) {
+    // ✅ CHANGED: getUserId() is now called *inside* trackStep
+    // This ensures it gets the most up-to-date user ID from sessionStorage
     const userId = this.getUserId();
     const token = getAccessJwtFromStorage();
     
     try {
+      // ✅ CHANGED: Get the session ID from the manager every time
+      const currentSessionId = getSessionId() || this.sessionId;
+
       const response = await this.grpcService.trackStep(
-        this.sessionId,
-        userId,
+        currentSessionId, // Pass the correct session ID
+        userId,           // Pass the user ID (or null if not logged in)
         stepCode,
         previousStepCode,
         nextStepCode,
@@ -139,12 +140,9 @@ class AnalyticsService {
 
   // ---------------------------------------------
 
-  // Helper method to map session to user after login
-  mapSessionToUser(userId) {
-    // This will be called after successful login/verification
-    // The backend will handle the mapping via app_user_id in future trackStep calls
-    console.log('Session mapped to user:', userId);
-  }
+  // This function is no longer needed, as the logic is
+  // now built into trackStep()
+  // mapSessionToUser(userId) {}
 }
 
 const analyticsServiceInstance = new AnalyticsService();
