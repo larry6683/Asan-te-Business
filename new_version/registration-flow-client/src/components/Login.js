@@ -14,6 +14,8 @@ import { setSelectedOption } from "../redux/selectedOptionSlice";
 import { USER_TYPE } from "../types/userType";
 import { UserApiService } from "../api/userApiService";
 import { grpcService } from "../api/grpcService";
+// ✅ Import analytics service
+import { analyticsService } from "../api/analyticsService";
 
 import BusinessImage from "../assets/business.png";
 import ConsumerImage from "../assets/consumer.png";
@@ -127,6 +129,12 @@ const Login = () => {
         // Save user to Redux and session
         dispatch(setUser(user));
         sessionStorage.setItem("asante:user", JSON.stringify(user));
+
+        // ✅ ADDED: Update Analytics with User Identity
+        // This triggers a new interaction on the SAME session, but now with the user_id attached.
+        // This updates "Last Activity" and enables duration calculation (T_login - T_start).
+        console.log("📊 Linking session to user in analytics...");
+        await analyticsService.trackStep(1); 
         
         // Check if user has a business/beneficiary in the database and save their IDs
         const token = sessionStorage.getItem("asante:accessJwt");
@@ -227,6 +235,9 @@ const Login = () => {
         dispatch(setUser(user));
         sessionStorage.setItem("asante:user", JSON.stringify(user));
         
+        // ✅ ADDED: Track new user creation in analytics
+        analyticsService.trackStep(1);
+
         // New user always goes to registration flow
         navigate(`/register/causes`);
       },

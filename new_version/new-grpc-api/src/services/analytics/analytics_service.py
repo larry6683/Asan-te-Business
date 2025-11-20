@@ -2,7 +2,6 @@
 from config.config import Config
 
 import uuid
-# --- CORRECTED IMPORT ---
 from datetime import datetime, timedelta, timezone 
 from sqlalchemy import func, and_, desc
 from sqlalchemy.orm import aliased
@@ -11,13 +10,11 @@ from src.analytics.tables import ( # type: ignore
     RegistrationInteraction as DBRegistrationInteraction,
     VerificationTracking as DBVerificationTracking
 )
-# UPDATE THIS IMPORT
 from src.public.tables import (
     AppUser as DBAppUser,
     Business as DBBusiness,
     Beneficiary as DBBeneficiary
 )
-from src.public.tables import AppUser as DBAppUser 
 
 from database.db_manager import DatabaseManager
 from converters.analytics_converter import AnalyticsConverter
@@ -118,7 +115,6 @@ class AnalyticsService(AnalyticsServiceServicer):
                     registration_step_id=registration_step.registration_step_id,
                     previous_step_id=previous_step_id,
                     next_step_id=next_step_id,
-                    # --- FIXED ---
                     step_began_at=datetime.now(timezone.utc)
                 )
                 
@@ -159,7 +155,6 @@ class AnalyticsService(AnalyticsServiceServicer):
                     return response
                 
                 # Update completion time
-                # --- FIXED ---
                 interaction.step_completed_at = datetime.now(timezone.utc)
                 
                 # Update next_step_id if provided
@@ -184,9 +179,6 @@ class AnalyticsService(AnalyticsServiceServicer):
         
         return response
     
-    # ---
-    # NEW METHOD: GetAllSessions
-    # ---
     def GetAllSessions(self, request: GetAllSessionsRequest, context):
         """Get all session logs for the analytics dashboard"""
         response = GetAllSessionsResponse()
@@ -201,6 +193,7 @@ class AnalyticsService(AnalyticsServiceServicer):
                 user_email_map = {str(user.app_user_id): user.email for user in users_query}
 
                 # 3. Get all interactions, ordered by session and time
+                # This ensures we capture ALL sessions in the DB
                 all_interactions = session.query(DBRegistrationInteraction).order_by(
                     DBRegistrationInteraction.session_id,
                     DBRegistrationInteraction.step_began_at
@@ -228,8 +221,9 @@ class AnalyticsService(AnalyticsServiceServicer):
                     # Update session log with this interaction's data
                     log = session_logs[session_id_str]
                     log["last_activity"] = max(log["last_activity"], interaction.updated_at)
-                    log["latest_interaction"] = interaction # This one is the latest so far
+                    log["latest_interaction"] = interaction 
                     
+                    # Update user info if found in this interaction (handles direct login scenario)
                     if interaction.app_user_id and not log["app_user_id"]:
                          log["app_user_id"] = str(interaction.app_user_id)
                          log["user_email"] = user_email_map.get(str(interaction.app_user_id))
@@ -238,33 +232,37 @@ class AnalyticsService(AnalyticsServiceServicer):
                         log["completed_step_ids"].add(str(interaction.registration_step_id))
 
                 # 5. Convert processed logs into Proto messages
-                # --- FIXED: This is the line that caused the error ---
                 abandonment_threshold = datetime.now(timezone.utc) - timedelta(minutes=ABANDONMENT_MINUTES)
                 
                 for log in session_logs.values():
                     latest_interaction = log["latest_interaction"]
                     current_step_db = step_map.get(str(latest_interaction.registration_step_id))
                     
-                    if not current_step_db:
-                        continue # Skip if step not found
+                    # Handle missing/unknown steps to ensure session is still listed
+                    current_step_code = 0
+                    current_step_name = "Unknown/Login"
+                    
+                    if current_step_db:
+                        current_step_code = current_step_db.code
+                        current_step_name = current_step_db.step_name
 
                     # Determine final state
                     status = "In Progress"
-                    if current_step_db.code == 6 and latest_interaction.step_completed_at:
+                    if current_step_db and current_step_db.code == 6 and latest_interaction.step_completed_at:
                         status = "Completed"
-                    # This comparison is now safe
                     elif log["last_activity"] < abandonment_threshold:
                         status = "Abandoned"
 
+                    # CALCULATE DURATION: LAST ACTIVITY - STARTED AT
                     duration = (log["last_activity"] - log["started_at"]).total_seconds()
                     
                     proto_log = ProtoSessionLog(
                         session_id=log["session_id"],
-                        app_user_id=log["app_user_id"] or "",
-                        user_email=log["user_email"] or "N/A",
+                        app_user_id=log["app_user_id"] or "", # Returns empty string if null
+                        user_email=log["user_email"] or "N/A", # Returns N/A if null
                         status=status,
-                        current_step_code=current_step_db.code,
-                        current_step_name=current_step_db.step_name,
+                        current_step_code=current_step_code,
+                        current_step_name=current_step_name,
                         steps_completed=len(log["completed_step_ids"]),
                         started_at=AnalyticsConverter.datetime_to_string(log["started_at"]),
                         last_activity=AnalyticsConverter.datetime_to_string(log["last_activity"]),
@@ -398,7 +396,7 @@ class AnalyticsService(AnalyticsServiceServicer):
                 if end_date:
                     query = query.filter(DBRegistrationInteraction.step_began_at <= end_date)
                 
-                # Get unique sessions
+                # Get unique sessions - KPI Requirement: Unique Sessions Only
                 total_sessions = query.with_entities(
                     func.count(func.distinct(DBRegistrationInteraction.session_id))
                 ).scalar()
@@ -536,7 +534,6 @@ class AnalyticsService(AnalyticsServiceServicer):
                 if vt:
                     # Existing record - increment count
                     vt.verification_codes_requested += 1
-                    # --- FIXED ---
                     vt.last_code_requested_at = datetime.now(timezone.utc)
                     print(f"📧 Verification resend #{vt.verification_codes_requested} for user {request.app_user_id}")
                 else:
@@ -587,7 +584,6 @@ class AnalyticsService(AnalyticsServiceServicer):
                 
                 if vt:
                     vt.email_verified = True
-                    # --- FIXED ---
                     vt.verification_completed_at = datetime.now(timezone.utc)
                     session.flush()
                     print(f"✅ Verification completed for user {request.app_user_id}")
@@ -600,7 +596,6 @@ class AnalyticsService(AnalyticsServiceServicer):
                         session_id=session_uuid,
                         verification_codes_requested=1,
                         email_verified=True,
-                        # --- FIXED ---
                         verification_completed_at=datetime.now(timezone.utc)
                     )
                     session.add(vt)

@@ -32,9 +32,9 @@ message RegistrationInteraction {
 // Track registration step interaction
 message TrackStepRequest {
     string session_id = 1;
-    string app_user_id = 2;  // Optional - can be null for anonymous
-    int32 step_code = 3;      // 1-6 based on registration steps
-    int32 previous_step_code = 4;  // Optional
+    string app_user_id = 2; // Optional - can be null for anonymous
+    int32 step_code = 3;    // 1-6 based on registration steps
+    int32 previous_step_code = 4; // Optional
     int32 next_step_code = 5;      // Optional
 }
 
@@ -149,7 +149,7 @@ message VerificationTracking {
 message TrackVerificationRequestRequest {
     string app_user_id = 1;
     string session_id = 2;
-    bool is_resend = 3;  // true if resend, false if initial
+    bool is_resend = 3; // true if resend, false if initial
 }
 
 message TrackVerificationRequestResponse {
@@ -179,19 +179,19 @@ message GetVerificationStatusResponse {
 service AnalyticsService {
     // Track a registration step interaction
     rpc TrackStep(TrackStepRequest) returns (TrackStepResponse);
-    
+
     // Mark a step as completed
     rpc CompleteStep(CompleteStepRequest) returns (CompleteStepResponse);
-    
+
     // Get all registration steps (reference data)
     rpc GetRegistrationSteps(GetRegistrationStepsRequest) returns (GetRegistrationStepsResponse);
-    
+
     // Get user's registration journey
     rpc GetUserJourney(GetUserJourneyRequest) returns (GetUserJourneyResponse);
-    
+
     // Get all sessions for the dashboard
     rpc GetAllSessions(GetAllSessionsRequest) returns (GetAllSessionsResponse);
-    
+
     // Get session's registration journey
     rpc GetSessionJourney(GetSessionJourneyRequest) returns (GetSessionJourneyResponse);
     
@@ -202,4 +202,5 @@ service AnalyticsService {
     rpc TrackVerificationRequest(TrackVerificationRequestRequest) returns (TrackVerificationRequestResponse);
     rpc MarkVerificationComplete(MarkVerificationCompleteRequest) returns (MarkVerificationCompleteResponse);
     rpc GetVerificationStatus(GetVerificationStatusRequest) returns (GetVerificationStatusResponse);
+    
 }
