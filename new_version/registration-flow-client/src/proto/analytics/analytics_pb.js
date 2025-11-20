@@ -374,7 +374,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.analytics.SessionLog = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.analytics.SessionLog.repeatedFields_, null);
 };
 goog.inherits(proto.analytics.SessionLog, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -3861,6 +3861,13 @@ proto.analytics.GetRegistrationStatsResponse.prototype.clearErrorsList = functio
 
 
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.analytics.SessionLog.repeatedFields_ = [16];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -3896,12 +3903,15 @@ sessionId: jspb.Message.getFieldWithDefault(msg, 1, ""),
 appUserId: jspb.Message.getFieldWithDefault(msg, 2, ""),
 userEmail: jspb.Message.getFieldWithDefault(msg, 3, ""),
 status: jspb.Message.getFieldWithDefault(msg, 4, ""),
-currentStepCode: jspb.Message.getFieldWithDefault(msg, 5, 0),
-currentStepName: jspb.Message.getFieldWithDefault(msg, 6, ""),
-stepsCompleted: jspb.Message.getFieldWithDefault(msg, 7, 0),
 startedAt: jspb.Message.getFieldWithDefault(msg, 8, ""),
 lastActivity: jspb.Message.getFieldWithDefault(msg, 9, ""),
-durationSeconds: jspb.Message.getFloatingPointFieldWithDefault(msg, 10, 0.0)
+durationSeconds: jspb.Message.getFloatingPointFieldWithDefault(msg, 10, 0.0),
+userType: jspb.Message.getFieldWithDefault(msg, 11, ""),
+entityName: jspb.Message.getFieldWithDefault(msg, 12, ""),
+entitySize: jspb.Message.getFieldWithDefault(msg, 13, ""),
+entityState: jspb.Message.getFieldWithDefault(msg, 14, ""),
+website: jspb.Message.getFieldWithDefault(msg, 15, ""),
+categoriesList: (f = jspb.Message.getRepeatedField(msg, 16)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -3954,18 +3964,6 @@ proto.analytics.SessionLog.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.setStatus(value);
       break;
-    case 5:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setCurrentStepCode(value);
-      break;
-    case 6:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setCurrentStepName(value);
-      break;
-    case 7:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setStepsCompleted(value);
-      break;
     case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setStartedAt(value);
@@ -3977,6 +3975,30 @@ proto.analytics.SessionLog.deserializeBinaryFromReader = function(msg, reader) {
     case 10:
       var value = /** @type {number} */ (reader.readFloat());
       msg.setDurationSeconds(value);
+      break;
+    case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setUserType(value);
+      break;
+    case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEntityName(value);
+      break;
+    case 13:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEntitySize(value);
+      break;
+    case 14:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEntityState(value);
+      break;
+    case 15:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setWebsite(value);
+      break;
+    case 16:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addCategories(value);
       break;
     default:
       reader.skipField();
@@ -4035,27 +4057,6 @@ proto.analytics.SessionLog.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getCurrentStepCode();
-  if (f !== 0) {
-    writer.writeInt32(
-      5,
-      f
-    );
-  }
-  f = message.getCurrentStepName();
-  if (f.length > 0) {
-    writer.writeString(
-      6,
-      f
-    );
-  }
-  f = message.getStepsCompleted();
-  if (f !== 0) {
-    writer.writeInt32(
-      7,
-      f
-    );
-  }
   f = message.getStartedAt();
   if (f.length > 0) {
     writer.writeString(
@@ -4074,6 +4075,48 @@ proto.analytics.SessionLog.serializeBinaryToWriter = function(message, writer) {
   if (f !== 0.0) {
     writer.writeFloat(
       10,
+      f
+    );
+  }
+  f = message.getUserType();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
+      f
+    );
+  }
+  f = message.getEntityName();
+  if (f.length > 0) {
+    writer.writeString(
+      12,
+      f
+    );
+  }
+  f = message.getEntitySize();
+  if (f.length > 0) {
+    writer.writeString(
+      13,
+      f
+    );
+  }
+  f = message.getEntityState();
+  if (f.length > 0) {
+    writer.writeString(
+      14,
+      f
+    );
+  }
+  f = message.getWebsite();
+  if (f.length > 0) {
+    writer.writeString(
+      15,
+      f
+    );
+  }
+  f = message.getCategoriesList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      16,
       f
     );
   }
@@ -4153,60 +4196,6 @@ proto.analytics.SessionLog.prototype.setStatus = function(value) {
 
 
 /**
- * optional int32 current_step_code = 5;
- * @return {number}
- */
-proto.analytics.SessionLog.prototype.getCurrentStepCode = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.analytics.SessionLog} returns this
- */
-proto.analytics.SessionLog.prototype.setCurrentStepCode = function(value) {
-  return jspb.Message.setProto3IntField(this, 5, value);
-};
-
-
-/**
- * optional string current_step_name = 6;
- * @return {string}
- */
-proto.analytics.SessionLog.prototype.getCurrentStepName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.analytics.SessionLog} returns this
- */
-proto.analytics.SessionLog.prototype.setCurrentStepName = function(value) {
-  return jspb.Message.setProto3StringField(this, 6, value);
-};
-
-
-/**
- * optional int32 steps_completed = 7;
- * @return {number}
- */
-proto.analytics.SessionLog.prototype.getStepsCompleted = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.analytics.SessionLog} returns this
- */
-proto.analytics.SessionLog.prototype.setStepsCompleted = function(value) {
-  return jspb.Message.setProto3IntField(this, 7, value);
-};
-
-
-/**
  * optional string started_at = 8;
  * @return {string}
  */
@@ -4257,6 +4246,133 @@ proto.analytics.SessionLog.prototype.getDurationSeconds = function() {
  */
 proto.analytics.SessionLog.prototype.setDurationSeconds = function(value) {
   return jspb.Message.setProto3FloatField(this, 10, value);
+};
+
+
+/**
+ * optional string user_type = 11;
+ * @return {string}
+ */
+proto.analytics.SessionLog.prototype.getUserType = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setUserType = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * optional string entity_name = 12;
+ * @return {string}
+ */
+proto.analytics.SessionLog.prototype.getEntityName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setEntityName = function(value) {
+  return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * optional string entity_size = 13;
+ * @return {string}
+ */
+proto.analytics.SessionLog.prototype.getEntitySize = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 13, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setEntitySize = function(value) {
+  return jspb.Message.setProto3StringField(this, 13, value);
+};
+
+
+/**
+ * optional string entity_state = 14;
+ * @return {string}
+ */
+proto.analytics.SessionLog.prototype.getEntityState = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setEntityState = function(value) {
+  return jspb.Message.setProto3StringField(this, 14, value);
+};
+
+
+/**
+ * optional string website = 15;
+ * @return {string}
+ */
+proto.analytics.SessionLog.prototype.getWebsite = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 15, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setWebsite = function(value) {
+  return jspb.Message.setProto3StringField(this, 15, value);
+};
+
+
+/**
+ * repeated string categories = 16;
+ * @return {!Array<string>}
+ */
+proto.analytics.SessionLog.prototype.getCategoriesList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 16));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.setCategoriesList = function(value) {
+  return jspb.Message.setField(this, 16, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.addCategories = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 16, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.analytics.SessionLog} returns this
+ */
+proto.analytics.SessionLog.prototype.clearCategoriesList = function() {
+  return this.setCategoriesList([]);
 };
 
 

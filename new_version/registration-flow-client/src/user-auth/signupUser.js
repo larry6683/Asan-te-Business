@@ -1,10 +1,10 @@
 import { AsanteUsersUserPool } from "./asanteUsersUserPool";
 import { UserApiService } from "../api/userApiService";
+import { USER_TYPE } from "../types/userType";
 
 // Initialize the user API service
 const userApiService = new UserApiService();
 
-// callbacks are so extra but i was running into some weird async shenanigains
 export const signupUser = (
   userType,
   email,
@@ -39,26 +39,36 @@ export const signupUser = (
         if (err) {
           if (errorCallback) errorCallback(err);
         } else {
-          // ✅ NEW: After Cognito sign-up succeeds, create user in database
           console.log('✅ Cognito sign-up successful, creating user in database...');
           
+          // MAP USER TYPE FOR API
+          let apiUserType = "CONSUMER";
+          if (userType === USER_TYPE.BUSINESS_ADMIN) {
+            apiUserType = "BUSINESS";
+          } else if (userType === USER_TYPE.BENEFICIARY_ADMIN) {
+            apiUserType = "BENEFICIARY";
+          }
+          
+          // Convert mailingListSignup string to boolean
+          const isMailingList = mailingListSignup === "true";
+
           try {
+            // UPDATED: Passing apiUserType and isMailingList
             await userApiService.createUser(
               email,
+              apiUserType,
+              isMailingList,
               (response) => {
                 console.log('✅ User created in database:', response);
                 if (successCallback) successCallback();
               },
               (dbError) => {
                 console.error('⚠️ User created in Cognito but failed to save to database:', dbError);
-                // Still call success since Cognito account was created
-                // The user will be created in DB on first sign-in as fallback
                 if (successCallback) successCallback();
               }
             );
           } catch (dbError) {
             console.error('⚠️ Database error during user creation:', dbError);
-            // Still call success since Cognito account was created
             if (successCallback) successCallback();
           }
         }

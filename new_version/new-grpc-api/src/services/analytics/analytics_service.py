@@ -4,16 +4,23 @@ from config.config import Config
 import uuid
 from datetime import datetime, timedelta, timezone 
 from sqlalchemy import func, and_, desc
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, joinedload
 from src.analytics.tables import ( # type: ignore
     RegistrationStep as DBRegistrationStep,
     RegistrationInteraction as DBRegistrationInteraction,
     VerificationTracking as DBVerificationTracking
 )
+# UPDATED: Added all necessary imports for joinedload
 from src.public.tables import (
     AppUser as DBAppUser,
     Business as DBBusiness,
-    Beneficiary as DBBeneficiary
+    Beneficiary as DBBeneficiary,
+    BusinessUser as DBBusinessUser,
+    BeneficiaryUser as DBBeneficiaryUser,
+    BusinessCausePreference as DBBusinessCausePreference,
+    BeneficiaryCausePreference as DBBeneficiaryCausePreference,
+    Cause as DBCause,
+    UserType as DBUserType
 )
 
 from database.db_manager import DatabaseManager
@@ -188,85 +195,141 @@ class AnalyticsService(AnalyticsServiceServicer):
                 steps_query = session.query(DBRegistrationStep).all()
                 step_map = {str(step.registration_step_id): step for step in steps_query}
                 
-                # 2. Get all user IDs and emails for mapping
-                users_query = session.query(DBAppUser.app_user_id, DBAppUser.email).all()
-                user_email_map = {str(user.app_user_id): user.email for user in users_query}
-
-                # 3. Get all interactions, ordered by session and time
-                # This ensures we capture ALL sessions in the DB
+                # 2. Get all interactions
                 all_interactions = session.query(DBRegistrationInteraction).order_by(
                     DBRegistrationInteraction.session_id,
                     DBRegistrationInteraction.step_began_at
                 ).all()
 
                 if not all_interactions:
-                    return response # Return empty response if no data
+                    return response
 
-                # 4. Process interactions into session logs in Python
+                # 3. Process interactions into session logs
                 session_logs = {}
+                user_ids_to_fetch = set()
+
                 for interaction in all_interactions:
                     session_id_str = str(interaction.session_id)
                     if session_id_str not in session_logs:
-                        # Initialize new session log
                         session_logs[session_id_str] = {
                             "session_id": session_id_str,
-                            "app_user_id": str(interaction.app_user_id) if interaction.app_user_id else None,
-                            "user_email": user_email_map.get(str(interaction.app_user_id)),
+                            "app_user_id": None,
+                            "user_email": "N/A",
                             "started_at": interaction.step_began_at,
                             "last_activity": interaction.updated_at,
                             "latest_interaction": interaction,
-                            "completed_step_ids": set()
+                            "completed_steps": set()
                         }
                     
-                    # Update session log with this interaction's data
                     log = session_logs[session_id_str]
                     log["last_activity"] = max(log["last_activity"], interaction.updated_at)
-                    log["latest_interaction"] = interaction 
+                    log["latest_interaction"] = interaction
                     
-                    # Update user info if found in this interaction (handles direct login scenario)
-                    if interaction.app_user_id and not log["app_user_id"]:
-                         log["app_user_id"] = str(interaction.app_user_id)
-                         log["user_email"] = user_email_map.get(str(interaction.app_user_id))
-
                     if interaction.step_completed_at:
-                        log["completed_step_ids"].add(str(interaction.registration_step_id))
+                        log["completed_steps"].add(interaction.registration_step_id)
 
-                # 5. Convert processed logs into Proto messages
+                    if interaction.app_user_id:
+                        log["app_user_id"] = str(interaction.app_user_id)
+                        user_ids_to_fetch.add(interaction.app_user_id)
+
+                # 4. Bulk fetch User & Entity Details
+                user_details_map = {} # user_id_str -> {type, name, size, state, website, categories}
+                
+                if user_ids_to_fetch:
+                    # A. Fetch Emails and actual User Types
+                    users = session.query(DBAppUser).options(
+                        joinedload(DBAppUser.user_type)
+                    ).filter(DBAppUser.app_user_id.in_(user_ids_to_fetch)).all()
+                    
+                    for u in users:
+                        # Determine user type from DB
+                        u_type = u.user_type.user_type_name if u.user_type else "Guest"
+                        if "business" in u_type.lower():
+                            display_type = "Business"
+                        elif "profit" in u_type.lower() or "beneficiary" in u_type.lower():
+                            display_type = "Non-Profit"
+                        else:
+                            display_type = u_type
+
+                        user_details_map[str(u.app_user_id)] = {
+                            "email": u.email, 
+                            "user_type": display_type
+                        }
+
+                    # B. Fetch Business Details
+                    business_data = session.query(DBBusinessUser).join(DBBusiness).options(
+                        joinedload(DBBusinessUser.business).joinedload(DBBusiness.business_size),
+                        joinedload(DBBusinessUser.business).joinedload(DBBusiness.cause_preferences).joinedload(DBBusinessCausePreference.cause)
+                    ).filter(DBBusinessUser.app_user_id.in_(user_ids_to_fetch)).all()
+
+                    for bu in business_data:
+                        b = bu.business
+                        causes = [p.cause.cause_name for p in b.cause_preferences if p.cause]
+                        size = b.business_size.business_size_name if b.business_size else "Unknown"
+                        
+                        if str(bu.app_user_id) in user_details_map:
+                            user_details_map[str(bu.app_user_id)].update({
+                                "entity_name": b.business_name,
+                                "entity_size": size,
+                                "entity_state": b.location_state,
+                                "website": b.website_url,
+                                "categories": causes
+                            })
+
+                    # C. Fetch Non-Profit Details
+                    beneficiary_data = session.query(DBBeneficiaryUser).join(DBBeneficiary).options(
+                        joinedload(DBBeneficiaryUser.beneficiary).joinedload(DBBeneficiary.beneficiary_size),
+                        joinedload(DBBeneficiaryUser.beneficiary).joinedload(DBBeneficiary.cause_preferences).joinedload(DBBeneficiaryCausePreference.cause)
+                    ).filter(DBBeneficiaryUser.app_user_id.in_(user_ids_to_fetch)).all()
+
+                    for bu in beneficiary_data:
+                        b = bu.beneficiary
+                        causes = [p.cause.cause_name for p in b.cause_preferences if p.cause]
+                        size = b.beneficiary_size.beneficiary_size_name if b.beneficiary_size else "Unknown"
+                        
+                        if str(bu.app_user_id) in user_details_map:
+                            user_details_map[str(bu.app_user_id)].update({
+                                "entity_name": b.beneficiary_name,
+                                "entity_size": size,
+                                "entity_state": b.location_state,
+                                "website": b.website_url,
+                                "categories": causes
+                            })
+
+                # 5. Build Response
                 abandonment_threshold = datetime.now(timezone.utc) - timedelta(minutes=ABANDONMENT_MINUTES)
                 
                 for log in session_logs.values():
-                    latest_interaction = log["latest_interaction"]
-                    current_step_db = step_map.get(str(latest_interaction.registration_step_id))
+                    uid = log["app_user_id"]
+                    details = user_details_map.get(uid, {}) if uid else {}
                     
-                    # Handle missing/unknown steps to ensure session is still listed
-                    current_step_code = 0
-                    current_step_name = "Unknown/Login"
-                    
-                    if current_step_db:
-                        current_step_code = current_step_db.code
-                        current_step_name = current_step_db.step_name
-
-                    # Determine final state
+                    # Determine status
                     status = "In Progress"
-                    if current_step_db and current_step_db.code == 6 and latest_interaction.step_completed_at:
+                    latest = log["latest_interaction"]
+                    step_info = step_map.get(str(latest.registration_step_id))
+                    
+                    if step_info and step_info.code == 6 and latest.step_completed_at:
                         status = "Completed"
                     elif log["last_activity"] < abandonment_threshold:
                         status = "Abandoned"
-
-                    # CALCULATE DURATION: LAST ACTIVITY - STARTED AT
+                        
                     duration = (log["last_activity"] - log["started_at"]).total_seconds()
-                    
+
                     proto_log = ProtoSessionLog(
                         session_id=log["session_id"],
-                        app_user_id=log["app_user_id"] or "", # Returns empty string if null
-                        user_email=log["user_email"] or "N/A", # Returns N/A if null
+                        app_user_id=uid or "",
+                        user_email=details.get("email", "N/A"),
                         status=status,
-                        current_step_code=current_step_code,
-                        current_step_name=current_step_name,
-                        steps_completed=len(log["completed_step_ids"]),
                         started_at=AnalyticsConverter.datetime_to_string(log["started_at"]),
                         last_activity=AnalyticsConverter.datetime_to_string(log["last_activity"]),
-                        duration_seconds=duration
+                        duration_seconds=duration,
+                        # New Fields
+                        user_type=details.get("user_type", "Guest"),
+                        entity_name=details.get("entity_name", "-"),
+                        entity_size=details.get("entity_size", "-"),
+                        entity_state=details.get("entity_state", "-"),
+                        website=details.get("website", "-"),
+                        categories=details.get("categories", [])
                     )
                     response.sessions.append(proto_log)
 

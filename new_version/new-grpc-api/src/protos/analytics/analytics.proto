@@ -114,12 +114,23 @@ message SessionLog {
     string app_user_id = 2;
     string user_email = 3;
     string status = 4; // "Completed", "In Progress", "Abandoned"
-    int32 current_step_code = 5;
-    string current_step_name = 6;
-    int32 steps_completed = 7;
+    
+    // Removed legacy step columns as requested
+    // int32 current_step_code = 5;
+    // string current_step_name = 6;
+    // int32 steps_completed = 7;
+    
     string started_at = 8;
     string last_activity = 9;
     float duration_seconds = 10;
+
+    // New Entity Information
+    string user_type = 11;      // "Business" or "Non-Profit"
+    string entity_name = 12;
+    string entity_size = 13;
+    string entity_state = 14;
+    string website = 15;
+    repeated string categories = 16;
 }
 
 message GetAllSessionsRequest {

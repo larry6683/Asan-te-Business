@@ -6,13 +6,14 @@ export class UserApiService {
     this.grpcService = grpcService;
   }
 
-  async createUser(email, onSuccess, onFailure) {
+  // UPDATED: Added userType and mailingListSignup parameters
+  async createUser(email, userType, mailingListSignup, onSuccess, onFailure) {
     try {
       const token = getAccessJwtFromStorage();
       
-      // Default values for user creation
-      const userType = "BUSINESS";
-      const mailingListSignup = false;
+      // REMOVED: Hardcoded values
+      // const userType = "BUSINESS"; 
+      // const mailingListSignup = false;
       
       const response = await this.grpcService.createUser(email, userType, mailingListSignup, token);
       
@@ -62,12 +63,11 @@ export class UserApiService {
             userType: user.getUserType(),
             mailingListSignup: user.getMailingListSignup()
           },
-          // ✅ NEW: Add relationships field
           relationships: {}
         }
       };
 
-      // ✅ NEW: Check for business/beneficiary relationships
+      // Check for business/beneficiary relationships
       try {
         // First check session storage (current session)
         let businessId = sessionStorage.getItem("asante:businessId");
@@ -78,20 +78,17 @@ export class UserApiService {
           const cookies = document.cookie.split(';');
           for (let cookie of cookies) {
             const [name, value] = cookie.trim().split('=');
-            if (name === 'asanteApp') {  // ✅ Fixed: correct cookie name
+            if (name === 'asanteApp') {
               try {
                 const cookieData = JSON.parse(decodeURIComponent(value));
                 console.log('🔍 Cookie data:', cookieData);
                 
-                // ✅ Fixed: check cookieData.app.entityType (nested structure)
                 if (cookieData.app && cookieData.app.entityType === 'business' && cookieData.app.entityId) {
                   businessId = cookieData.app.entityId;
-                  // Restore to session storage for this session
                   sessionStorage.setItem("asante:businessId", businessId);
                   console.log('✅ Restored business ID from cookie:', businessId);
                 } else if (cookieData.app && cookieData.app.entityType === 'beneficiary' && cookieData.app.entityId) {
                   beneficiaryId = cookieData.app.entityId;
-                  // Restore to session storage for this session
                   sessionStorage.setItem("asante:beneficiaryId", beneficiaryId);
                   console.log('✅ Restored beneficiary ID from cookie:', beneficiaryId);
                 }
@@ -121,7 +118,6 @@ export class UserApiService {
         console.log('⚠️ Error checking relationships:', err);
       }
 
-      // ✅ If no relationships found, remove the empty object
       if (Object.keys(jsonResponse.data.relationships).length === 0) {
         delete jsonResponse.data.relationships;
         console.log('ℹ️ No relationships found for user');
