@@ -3152,7 +3152,10 @@ completedRegistrations: jspb.Message.getFieldWithDefault(msg, 2, 0),
 incompleteRegistrations: jspb.Message.getFieldWithDefault(msg, 3, 0),
 completionRate: jspb.Message.getFloatingPointFieldWithDefault(msg, 4, 0.0),
 dropoffByStepMap: (f = msg.getDropoffByStepMap()) ? f.toObject(includeInstance, undefined) : [],
-averageDurationSeconds: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0)
+averageDurationSeconds: jspb.Message.getFloatingPointFieldWithDefault(msg, 6, 0.0),
+totalUsers: jspb.Message.getFieldWithDefault(msg, 7, 0),
+totalBusinesses: jspb.Message.getFieldWithDefault(msg, 8, 0),
+totalNonProfits: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -3214,6 +3217,18 @@ proto.analytics.RegistrationStats.deserializeBinaryFromReader = function(msg, re
     case 6:
       var value = /** @type {number} */ (reader.readFloat());
       msg.setAverageDurationSeconds(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setTotalUsers(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setTotalBusinesses(value);
+      break;
+    case 9:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setTotalNonProfits(value);
       break;
     default:
       reader.skipField();
@@ -3280,6 +3295,27 @@ proto.analytics.RegistrationStats.serializeBinaryToWriter = function(message, wr
   if (f !== 0.0) {
     writer.writeFloat(
       6,
+      f
+    );
+  }
+  f = message.getTotalUsers();
+  if (f !== 0) {
+    writer.writeInt32(
+      7,
+      f
+    );
+  }
+  f = message.getTotalBusinesses();
+  if (f !== 0) {
+    writer.writeInt32(
+      8,
+      f
+    );
+  }
+  f = message.getTotalNonProfits();
+  if (f !== 0) {
+    writer.writeInt32(
+      9,
       f
     );
   }
@@ -3396,6 +3432,60 @@ proto.analytics.RegistrationStats.prototype.getAverageDurationSeconds = function
  */
 proto.analytics.RegistrationStats.prototype.setAverageDurationSeconds = function(value) {
   return jspb.Message.setProto3FloatField(this, 6, value);
+};
+
+
+/**
+ * optional int32 total_users = 7;
+ * @return {number}
+ */
+proto.analytics.RegistrationStats.prototype.getTotalUsers = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.analytics.RegistrationStats} returns this
+ */
+proto.analytics.RegistrationStats.prototype.setTotalUsers = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * optional int32 total_businesses = 8;
+ * @return {number}
+ */
+proto.analytics.RegistrationStats.prototype.getTotalBusinesses = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.analytics.RegistrationStats} returns this
+ */
+proto.analytics.RegistrationStats.prototype.setTotalBusinesses = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional int32 total_non_profits = 9;
+ * @return {number}
+ */
+proto.analytics.RegistrationStats.prototype.getTotalNonProfits = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.analytics.RegistrationStats} returns this
+ */
+proto.analytics.RegistrationStats.prototype.setTotalNonProfits = function(value) {
+  return jspb.Message.setProto3IntField(this, 9, value);
 };
 
 

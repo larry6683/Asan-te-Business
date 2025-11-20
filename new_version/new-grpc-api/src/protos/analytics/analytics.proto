@@ -92,6 +92,10 @@ message RegistrationStats {
     float completion_rate = 4;
     map<string, int32> dropoff_by_step = 5;
     float average_duration_seconds = 6;
+    // New KPI fields
+    int32 total_users = 7;
+    int32 total_businesses = 8;
+    int32 total_non_profits = 9;
 }
 
 message GetRegistrationStatsRequest {

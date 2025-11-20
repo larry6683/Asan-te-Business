@@ -250,57 +250,41 @@ const AnalyticsPage = () => {
         </div>
       )}
 
-      {/* Statistics Cards */}
+ {/* Statistics Cards */}
       {stats && (
         <div className={styles.statsGrid}>
+          {/* Card 1: Total Sessions */}
           <div className={styles.statCard}>
             <div className={styles.statLabel}>Total Sessions</div>
-            {/* FIXED: Use totalSessions */}
             <div className={styles.statValue}>{stats.totalSessions || 0}</div>
           </div>
           
+          {/* Card 2: Total Users */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Completed</div>
-            {/* FIXED: Use completedRegistrations */}
+            <div className={styles.statLabel}>Total Users</div>
+            <div className={styles.statValue} style={{ color: '#667eea' }}>
+              {stats.totalUsers || 0}
+            </div>
+          </div>
+          
+          {/* Card 3: Total Businesses */}
+          <div className={styles.statCard}>
+            <div className={styles.statLabel}>Total Businesses</div>
             <div className={styles.statValue} style={{ color: '#2e7d32' }}>
-              {stats.completedRegistrations || 0}
+              {stats.totalBusinesses || 0}
             </div>
           </div>
           
+          {/* Card 4: Total Non-Profits */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Incomplete</div>
-            {/* FIXED: Use incompleteRegistrations */}
+            <div className={styles.statLabel}>Total Non-Profits</div>
             <div className={styles.statValue} style={{ color: '#e65100' }}>
-              {stats.incompleteRegistrations || 0}
-            </div>
-          </div>
-          
-          <div className={styles.statCard}>
-            <div className={styles.statLabel}>Success Rate</div>
-            <div className={styles.statValue}>
-              {/* FIXED: Use completionRate */}
-              {stats.completionRate ? `${stats.completionRate.toFixed(1)}%` : '0%'}
-            </div>
-            <div style={{ 
-              width: '100%', 
-              height: '6px', 
-              background: '#e0e0e0', 
-              borderRadius: '3px',
-              marginTop: '12px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                // FIXED: Use completionRate
-                width: `${stats.completionRate || 0}%`,
-                height: '100%',
-                background: 'linear-gradient(90deg, #667eea, #764ba2)',
-                transition: 'width 0.3s ease'
-              }} />
+              {stats.totalNonProfits || 0}
             </div>
           </div>
         </div>
       )}
-
+      
       {/* Filters Section */}
       <div className={styles.searchSection}>
         <h2 className={styles.searchTitle}>🔍 Filters & Search</h2>

@@ -11,6 +11,12 @@ from src.analytics.tables import ( # type: ignore
     RegistrationInteraction as DBRegistrationInteraction,
     VerificationTracking as DBVerificationTracking
 )
+# UPDATE THIS IMPORT
+from src.public.tables import (
+    AppUser as DBAppUser,
+    Business as DBBusiness,
+    Beneficiary as DBBeneficiary
+)
 from src.public.tables import AppUser as DBAppUser 
 
 from database.db_manager import DatabaseManager
@@ -448,13 +454,27 @@ class AnalyticsService(AnalyticsServiceServicer):
                 
                 avg_duration = total_duration / count if count > 0 else 0.0
                 
-                # Build response
+                # --- NEW KPI QUERIES ---
+                # Get total users from app_user table
+                total_users = session.query(func.count(DBAppUser.app_user_id)).scalar() or 0
+                
+                # Get total businesses from business table
+                total_businesses = session.query(func.count(DBBusiness.business_id)).scalar() or 0
+                
+                # Get total non-profits from beneficiary table
+                total_non_profits = session.query(func.count(DBBeneficiary.beneficiary_id)).scalar() or 0
+
+                # Build response with new fields
                 stats = ProtoRegistrationStats(
                     total_sessions=total_sessions or 0,
                     completed_registrations=completed_sessions or 0,
                     incomplete_registrations=incomplete_sessions or 0,
                     completion_rate=completion_rate,
-                    average_duration_seconds=avg_duration
+                    average_duration_seconds=avg_duration,
+                    # Add new fields here
+                    total_users=total_users,
+                    total_businesses=total_businesses,
+                    total_non_profits=total_non_profits
                 )
                 
                 # Add dropoff_by_step to the map
