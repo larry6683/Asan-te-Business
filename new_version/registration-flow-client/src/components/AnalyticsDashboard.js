@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import styles from "./AnalyticsDashboard.module.css";
 import { analyticsService } from "../api/analyticsService";
@@ -100,18 +99,19 @@ const AnalyticsPage = () => {
     return `${hours}h ${remainingMinutes}m`;
   };
 
-  const getStatusChip = (status) => {
-    const statusConfig = {
-      completed: { label: 'Completed', className: styles.chipSuccess, icon: '✓' },
-      in_progress: { label: 'In Progress', className: styles.chipPrimary, icon: '⏳' },
-      abandoned: { label: 'Abandoned', className: styles.chipWarning, icon: '⚠' }
-    };
-    
-    const config = statusConfig[status] || statusConfig.abandoned;
+  // UPDATED: Status logic based on User ID presence
+  const getStatusChip = (session) => {
+    if (session.appUserId) {
+      return (
+        <span className={`${styles.chip} ${styles.chipSuccess}`}>
+          ✓ Complete
+        </span>
+      );
+    }
     
     return (
-      <span className={`${styles.chip} ${config.className}`}>
-        {config.icon} {config.label}
+      <span className={`${styles.chip} ${styles.chipWarning}`}>
+        ⚠ Incomplete
       </span>
     );
   };
@@ -410,7 +410,7 @@ const AnalyticsPage = () => {
                     </td>
                     
                     <td className={styles.tableCell}>
-                      {getStatusChip(session.status)}
+                      {getStatusChip(session)}
                     </td>
                     
                     <td className={styles.tableCell}>
