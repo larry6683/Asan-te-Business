@@ -9,7 +9,7 @@ import CausesComponent from "./components/CausesComponent";
 import SizeOptionSelection from "./components/SizeOptionSelection";
 import RegistrationForm from "./components/CombinedForm";
 import HomePage from "./components/HomePage";
-import AnalyticsPage from "./components/AnalyticsPage";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import { analyticsService } from "./api/analyticsService"; // ✅ Import Analytics Service
 
 const App = () => {
@@ -48,7 +48,7 @@ const App = () => {
 
         {/* /home route */}
         <Route path="/home" element={<HomePage />} />
-        <Route path="/analytics" element={<AnalyticsPage />}/>
+        <Route path="/analytics" element={<AnalyticsDashboard />}/>
 
         {/* Catch-all redirect to login */}
         <Route path="*" element={<Navigate to="/" replace />} />

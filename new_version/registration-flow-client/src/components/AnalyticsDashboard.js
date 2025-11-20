@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import styles from "./AnalyticsPage.module.css";
+import styles from "./AnalyticsDashboard.module.css";
 import { analyticsService } from "../api/analyticsService";
 import { getOrCreateSessionId } from "../utils/sessionManager";
 
