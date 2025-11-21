@@ -281,9 +281,17 @@ const formatDateTime = (dateTimeString) => {
                   <td className={styles.tableCell}>{session.entityName || '-'}</td>
                   <td className={styles.tableCell}>{session.entitySize || '-'}</td>
                   <td className={styles.tableCell}>{session.entityState || '-'}</td>
-                  <td className={styles.tableCell}>
-                     {session.website && session.website !== '-' ? <a href={session.website} target="_blank" rel="noreferrer">Link</a> : '-'}
-                  </td>
+               <td className={styles.tableCell}>
+  {session.website && session.website !== '-' ? (
+    <a 
+      href={session.website.startsWith('http') ? session.website : `https://${session.website}`} 
+      target="_blank" 
+      rel="noreferrer"
+    >
+      Link
+    </a>
+  ) : '-'}
+</td>
                   <td className={styles.tableCell}>
                     <div className={styles.truncate} style={{maxWidth: '200px'}} title={(session.categories || []).join(', ')}>
                         {(session.categories || []).join(', ')}
