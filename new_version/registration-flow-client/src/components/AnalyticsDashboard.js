@@ -185,7 +185,7 @@ const formatDateTime = (dateTimeString) => {
         <div className={styles.statsGrid}>
           {/* Card 1: Total Sessions */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Total Sessions</div>
+            <div className={styles.statLabel}>Real-Time Unique Sessions</div>
             <div className={styles.statValue}>{stats.totalSessions || 0}</div>
           </div>
           
@@ -199,7 +199,7 @@ const formatDateTime = (dateTimeString) => {
           
           {/* Card 3: Total Businesses */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Total Businesses</div>
+            <div className={styles.statLabel}>Registered Businesses</div>
             <div className={styles.statValue} style={{ color: '#2e7d32' }}>
               {stats.totalBusinesses || 0}
             </div>
@@ -207,7 +207,7 @@ const formatDateTime = (dateTimeString) => {
           
           {/* Card 4: Total Non-Profits */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Total Non-Profits</div>
+            <div className={styles.statLabel}>Registered Non-Profits</div>
             <div className={styles.statValue} style={{ color: '#e65100' }}>
               {stats.totalNonProfits || 0}
             </div>
