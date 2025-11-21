@@ -29,6 +29,16 @@ message GetBeneficiaryResponse {
     repeated error.Error errors = 2;
 }
 
+message GetBeneficiaryByUserEmailRequest {
+    string user_email = 1;
+}
+
+message GetBeneficiaryByUserEmailResponse {
+    Beneficiary beneficiary = 1;
+    bool has_beneficiary = 2;  // Critical for Login.js logic
+    repeated error.Error errors = 3;
+}
+
 message CreateBeneficiaryRequest {
     string beneficiary_name = 1;
     string email = 2;
@@ -50,5 +60,6 @@ message CreateBeneficiaryResponse {
 
 service BeneficiaryService {
     rpc GetBeneficiary(GetBeneficiaryRequest) returns (GetBeneficiaryResponse);
+    rpc GetBeneficiaryByUserEmail(GetBeneficiaryByUserEmailRequest) returns (GetBeneficiaryByUserEmailResponse);
     rpc CreateBeneficiary(CreateBeneficiaryRequest) returns (CreateBeneficiaryResponse);
 }

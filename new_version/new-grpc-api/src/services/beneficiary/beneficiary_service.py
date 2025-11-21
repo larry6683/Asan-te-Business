@@ -1,19 +1,17 @@
-# new-grpc-api/src/services/beneficiary/beneficiary_service.py
-# UPDATED VERSION - Replace the CreateBeneficiary method
-
 from config.config import Config
 from sqlalchemy import func
 from src.public.tables import (
     Beneficiary, BeneficiarySize, AppUser, BeneficiaryUser, BeneficiaryUserPermissionRole,
-    Cause, BeneficiaryCausePreference, CausePreferenceRank  # 🆕 ADD THESE
+    Cause, BeneficiaryCausePreference, CausePreferenceRank
 )
 from database.db_manager import DatabaseManager
 from converters.beneficiary_converter import BeneficiaryConverter
 from utils.error_handler import ErrorHandler
 from utils.validator import Validator
-from utils.cause_mapper import CauseMapper  # 🆕 ADD THIS IMPORT
+from utils.cause_mapper import CauseMapper
 from codegen.beneficiary.beneficiary_pb2 import (
     GetBeneficiaryRequest, GetBeneficiaryResponse,
+    GetBeneficiaryByUserEmailRequest, GetBeneficiaryByUserEmailResponse, # ✅ Added these imports
     CreateBeneficiaryRequest, CreateBeneficiaryResponse,
     Beneficiary as ProtoBeneficiary
 )
@@ -57,6 +55,53 @@ class BeneficiaryService(BeneficiaryServiceServicer):
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
             print(f"Error in GetBeneficiary: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        return response
+
+    # ✅ NEW METHOD ADDED HERE
+    def GetBeneficiaryByUserEmail(self, request: GetBeneficiaryByUserEmailRequest, context):
+        response = GetBeneficiaryByUserEmailResponse()
+        response.has_beneficiary = False  # Default
+        
+        try:
+            if not Validator.is_valid_email(request.user_email):
+                response.errors.append(ErrorHandler.invalid_parameter('user_email'))
+                return response
+            
+            with DatabaseManager.get_session() as session:
+                # Find beneficiary linked to user email
+                db_beneficiary = session.query(Beneficiary).join(
+                    BeneficiaryUser, Beneficiary.beneficiary_id == BeneficiaryUser.beneficiary_id
+                ).join(
+                    AppUser, BeneficiaryUser.app_user_id == AppUser.app_user_id
+                ).filter(
+                    func.lower(AppUser.email) == func.lower(request.user_email)
+                ).first()
+                
+                if db_beneficiary:
+                    response.has_beneficiary = True
+                    domain_beneficiary = BeneficiaryConverter.to_domain(db_beneficiary)
+                    response.beneficiary.CopyFrom(ProtoBeneficiary(
+                        id=domain_beneficiary.id,
+                        beneficiary_name=domain_beneficiary.beneficiary_name,
+                        email=domain_beneficiary.email,
+                        website_url=domain_beneficiary.website_url,
+                        phone_number=domain_beneficiary.phone_number,
+                        location_city=domain_beneficiary.location_city,
+                        location_state=domain_beneficiary.location_state,
+                        ein=domain_beneficiary.ein,
+                        beneficiary_description=domain_beneficiary.beneficiary_description,
+                        beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size)
+                    ))
+                    print(f"✅ Found beneficiary for user {request.user_email}")
+                else:
+                    print(f"ℹ️ No beneficiary found for user {request.user_email}")
+                
+        except Exception as e:
+            response.errors.append(ErrorHandler.internal_error(str(e)))
+            print(f"Error in GetBeneficiaryByUserEmail: {e}")
             import traceback
             traceback.print_exc()
         
@@ -148,10 +193,7 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                             )
                             session.add(beneficiary_user)
                 
-                # 🆕 CREATE CAUSE PREFERENCES FOR BENEFICIARY
-                # Note: Beneficiaries can have PRIMARY, SUPPORTING causes
-                # The cause_codes should come from frontend with rank information
-                # For now, we'll treat all as primary mission-aligned causes
+                # CREATE CAUSE PREFERENCES FOR BENEFICIARY
                 if hasattr(request, 'cause_codes') and request.cause_codes:
                     print(f"📥 Received {len(request.cause_codes)} cause codes for beneficiary")
                     
@@ -175,19 +217,15 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                     causes_failed = []
                     
                     for enum_value in request.cause_codes:
-                        # Convert enum to database name
                         db_cause_name = CauseMapper.enum_to_db_name(enum_value)
                         print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
                         
-                        # Look up cause
                         cause = session.query(Cause).filter(
                             Cause.cause_name == db_cause_name
                         ).first()
                         
                         if cause:
                             print(f"✅ Found cause: '{cause.cause_name}' (ID={cause.cause_id})")
-                            
-                            # Create preference
                             cause_pref = BeneficiaryCausePreference(
                                 beneficiary_id=new_beneficiary.beneficiary_id,
                                 cause_id=cause.cause_id,

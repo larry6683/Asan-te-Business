@@ -39,6 +39,11 @@ class BeneficiaryServiceStub(object):
                 request_serializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryRequest.SerializeToString,
                 response_deserializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryResponse.FromString,
                 _registered_method=True)
+        self.GetBeneficiaryByUserEmail = channel.unary_unary(
+                '/beneficiary.BeneficiaryService/GetBeneficiaryByUserEmail',
+                request_serializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailRequest.SerializeToString,
+                response_deserializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailResponse.FromString,
+                _registered_method=True)
         self.CreateBeneficiary = channel.unary_unary(
                 '/beneficiary.BeneficiaryService/CreateBeneficiary',
                 request_serializer=beneficiary_dot_beneficiary__pb2.CreateBeneficiaryRequest.SerializeToString,
@@ -50,6 +55,12 @@ class BeneficiaryServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetBeneficiary(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetBeneficiaryByUserEmail(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -68,6 +79,11 @@ def add_BeneficiaryServiceServicer_to_server(servicer, server):
                     servicer.GetBeneficiary,
                     request_deserializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryRequest.FromString,
                     response_serializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryResponse.SerializeToString,
+            ),
+            'GetBeneficiaryByUserEmail': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetBeneficiaryByUserEmail,
+                    request_deserializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailRequest.FromString,
+                    response_serializer=beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailResponse.SerializeToString,
             ),
             'CreateBeneficiary': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateBeneficiary,
@@ -102,6 +118,33 @@ class BeneficiaryService(object):
             '/beneficiary.BeneficiaryService/GetBeneficiary',
             beneficiary_dot_beneficiary__pb2.GetBeneficiaryRequest.SerializeToString,
             beneficiary_dot_beneficiary__pb2.GetBeneficiaryResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetBeneficiaryByUserEmail(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/beneficiary.BeneficiaryService/GetBeneficiaryByUserEmail',
+            beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailRequest.SerializeToString,
+            beneficiary_dot_beneficiary__pb2.GetBeneficiaryByUserEmailResponse.FromString,
             options,
             channel_credentials,
             insecure,

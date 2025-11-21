@@ -140,6 +140,67 @@ proto.beneficiary.BeneficiaryServicePromiseClient.prototype.getBeneficiary =
 /**
  * @const
  * @type {!grpc.web.MethodDescriptor<
+ *   !proto.beneficiary.GetBeneficiaryByUserEmailRequest,
+ *   !proto.beneficiary.GetBeneficiaryByUserEmailResponse>}
+ */
+const methodDescriptor_BeneficiaryService_GetBeneficiaryByUserEmail = new grpc.web.MethodDescriptor(
+  '/beneficiary.BeneficiaryService/GetBeneficiaryByUserEmail',
+  grpc.web.MethodType.UNARY,
+  proto.beneficiary.GetBeneficiaryByUserEmailRequest,
+  proto.beneficiary.GetBeneficiaryByUserEmailResponse,
+  /**
+   * @param {!proto.beneficiary.GetBeneficiaryByUserEmailRequest} request
+   * @return {!Uint8Array}
+   */
+  function(request) {
+    return request.serializeBinary();
+  },
+  proto.beneficiary.GetBeneficiaryByUserEmailResponse.deserializeBinary
+);
+
+
+/**
+ * @param {!proto.beneficiary.GetBeneficiaryByUserEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>} metadata User defined
+ *     call metadata
+ * @param {function(?grpc.web.RpcError, ?proto.beneficiary.GetBeneficiaryByUserEmailResponse)}
+ *     callback The callback function(error, response)
+ * @return {!grpc.web.ClientReadableStream<!proto.beneficiary.GetBeneficiaryByUserEmailResponse>|undefined}
+ *     The XHR Node Readable Stream
+ */
+proto.beneficiary.BeneficiaryServiceClient.prototype.getBeneficiaryByUserEmail =
+    function(request, metadata, callback) {
+  return this.client_.rpcCall(this.hostname_ +
+      '/beneficiary.BeneficiaryService/GetBeneficiaryByUserEmail',
+      request,
+      metadata || {},
+      methodDescriptor_BeneficiaryService_GetBeneficiaryByUserEmail,
+      callback);
+};
+
+
+/**
+ * @param {!proto.beneficiary.GetBeneficiaryByUserEmailRequest} request The
+ *     request proto
+ * @param {?Object<string, string>=} metadata User defined
+ *     call metadata
+ * @return {!Promise<!proto.beneficiary.GetBeneficiaryByUserEmailResponse>}
+ *     Promise that resolves to the response
+ */
+proto.beneficiary.BeneficiaryServicePromiseClient.prototype.getBeneficiaryByUserEmail =
+    function(request, metadata) {
+  return this.client_.unaryCall(this.hostname_ +
+      '/beneficiary.BeneficiaryService/GetBeneficiaryByUserEmail',
+      request,
+      metadata || {},
+      methodDescriptor_BeneficiaryService_GetBeneficiaryByUserEmail);
+};
+
+
+/**
+ * @const
+ * @type {!grpc.web.MethodDescriptor<
  *   !proto.beneficiary.CreateBeneficiaryRequest,
  *   !proto.beneficiary.CreateBeneficiaryResponse>}
  */
