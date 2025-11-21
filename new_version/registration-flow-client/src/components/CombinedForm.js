@@ -110,17 +110,15 @@ const RegistrationForm = () => {
   };
 
   const registerAndNavigate = () => {
-    // collect registration data from session storage
-    // let userId = sessionStorage.get("userId")
-    const userFromStorage = getUserFromStorage();
+const userFromStorage = getUserFromStorage();
     const size = sessionStorage.getItem("asante:selectedSize", "");
-    // entityType = sessionStorage.getItem("asante:selectedOption")
     const causesString = sessionStorage.getItem("asante:selectedCauses") || "[]";
     const causes = JSON.parse(causesString);
 
+    // ✅ UPDATED CALL: Passing 'userFromStorage' instead of 'userFromStorage.id'
     const registrationDto = EntityRegistrationDtoFactory.createOrganizationRegistrationDto(
         entityType,
-        userFromStorage.id,
+        userFromStorage, // 👈 Pass the full object here
         size,
         causes,
         formData,
@@ -129,6 +127,7 @@ const RegistrationForm = () => {
     console.log('Sending registration data:', {
       entityType,
       userId: userFromStorage.id,
+      userEmail: userFromStorage.email, // You should see the correct login email here now
       size,
       causes,
       formData,

@@ -131,14 +131,15 @@ const Login = () => {
         sessionStorage.setItem("asante:user", JSON.stringify(user));
 
         // ✅ ADDED: Update Analytics with User Identity
-        // This triggers a new interaction on the SAME session, but now with the user_id attached.
-        // This updates "Last Activity" and enables duration calculation (T_login - T_start).
         console.log("📊 Linking session to user in analytics...");
         await analyticsService.trackStep(1); 
         
-        // Check if user has a business/beneficiary in the database and save their IDs
+        // Check if user has a business/beneficiary in the database
         const token = sessionStorage.getItem("asante:accessJwt");
         
+        // ✅ FIXED LOGIC: Default assumes we need to register, unless we find an entity
+        let entityFound = false; 
+
         if (registrationOption.registeringAs === "Business") {
           console.log('🔍 Checking if business exists for:', email);
           
@@ -149,15 +150,12 @@ const Login = () => {
             console.log('✅ Business check result:', hasBusiness);
             
             if (hasBusiness) {
+              entityFound = true; // Business exists!
               const business = businessResponse.getBusiness();
               const businessId = business.getId();
               
               console.log('🏢 Business found:', business.getBusinessName(), 'ID:', businessId);
-              
-              // Save to session storage
               sessionStorage.setItem("asante:businessId", businessId);
-              
-              // Create cookie
               CookieFactory.createAppCookieFromDataOrStorage(
                 user, 
                 { entityType: "business", entityId: businessId }
@@ -177,15 +175,12 @@ const Login = () => {
             console.log('✅ Beneficiary check result:', hasBeneficiary);
             
             if (hasBeneficiary) {
+              entityFound = true; // Beneficiary exists!
               const beneficiary = beneficiaryResponse.getBeneficiary();
               const beneficiaryId = beneficiary.getId();
               
               console.log('💚 Beneficiary found:', beneficiary.getBeneficiaryName(), 'ID:', beneficiaryId);
-              
-              // Save to session storage
               sessionStorage.setItem("asante:beneficiaryId", beneficiaryId);
-              
-              // Create cookie
               CookieFactory.createAppCookieFromDataOrStorage(
                 user,
                 { entityType: "beneficiary", entityId: beneficiaryId }
@@ -194,11 +189,19 @@ const Login = () => {
           } catch (error) {
             console.error('Error checking beneficiary:', error);
           }
+        } else {
+            // Consumers always go to home
+            entityFound = true;
         }
         
-        // Always navigate to /home after successful login
-        console.log('✅ Login successful - navigating to /home');
-        navigate('/home');
+        // ✅ FIXED: Navigate based on whether Entity was found
+        if (entityFound) {
+            console.log('✅ Login successful & Entity found - navigating to /home');
+            navigate('/home');
+        } else {
+            console.log('⚠️ User exists but no Entity found - resuming registration flow...');
+            navigate('/register/causes');
+        }
         
       } catch (error) {
         console.error('❌ Error during login flow:', error);
@@ -209,7 +212,7 @@ const Login = () => {
             errorJson.errors.forEach((value) => {
               if (value.errorCode === 250) {
                 // User doesn't exist in our database, create them
-                createUserAndContinue(email);
+                createUserAndContinue(email, registrationOption);
               }
             });
           }
@@ -222,11 +225,25 @@ const Login = () => {
     }
   };
 
-  const createUserAndContinue = (email) => {
+  // ✅ UPDATED: Now accepts registrationOption to determine user type
+  const createUserAndContinue = (email, registrationOption) => {
+    // Determine the backend User Type string
+    let backendUserType = "CONSUMER"; // Default
+    
+    if (registrationOption?.registeringAs === "Business") {
+        backendUserType = "BUSINESS";
+    } else if (registrationOption?.registeringAs === "Non-Profit") {
+        backendUserType = "BENEFICIARY";
+    }
+
     const userApiService = new UserApiService();
+    
+    // ✅ FIXED: Passing all 5 arguments required by UserApiService
     userApiService.createUser(
       email,
-      (response) => {
+      backendUserType, // 2. User Type
+      false,           // 3. Mailing List (default false)
+      (response) => {  // 4. Success Callback
         const user = {
           id: response.data.id,
           email: response.data.attributes.email,
@@ -235,13 +252,15 @@ const Login = () => {
         dispatch(setUser(user));
         sessionStorage.setItem("asante:user", JSON.stringify(user));
         
-        // ✅ ADDED: Track new user creation in analytics
+        // Track analytics
         analyticsService.trackStep(1);
 
         // New user always goes to registration flow
+        console.log(`✅ New user created (${backendUserType}). Navigating to registration...`);
         navigate(`/register/causes`);
       },
-      (error) => {
+      (error) => {     // 5. Failure Callback
+        console.error("Failed to create user during login:", error);
         clearStore(true);
         setInvalidCredentials(true);
       }

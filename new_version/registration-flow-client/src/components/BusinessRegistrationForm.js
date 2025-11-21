@@ -101,18 +101,18 @@ const BusinessRegistrationForm = () => {
   };
 
   const registerAndNavigate = () => {
-    // collect registration data from session storage
-    // let userId = sessionStorage.get("userId")
+ // collect registration data from session storage
     const userFromStorage = getUserFromStorage();
     const size = sessionStorage.getItem("asante:selectedSize", "");
-    // entityType = sessionStorage.getItem("asante:selectedOption")
     const causes = sessionStorage
       .getItem("asante:selectedCauses", "")
       .split(",");
+
+    // ✅ UPDATED CALL: Passing 'userFromStorage' instead of 'userFromStorage.id'
     const businessRegistrationDto =
       EntityRegistrationDtoFactory.createOrganizationRegistrationDto(
         "business",
-        userFromStorage.id,
+        userFromStorage, // 👈 Pass the full object here
         size,
         causes,
         formData,

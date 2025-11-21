@@ -3,24 +3,24 @@ import { mapCauseOptionToEnumValue } from "./mapCauseOptionToEnumValue";
 export class EntityRegistrationDtoFactory {
   static createOrganizationRegistrationDto(
     entityType,
-    userId,
+    user, // 👈 CHANGED: Now accepts the full user object (id & email)
     size,
     causes,
     profileForm,
   ) {
-    // ✅ SIMPLIFIED: Both business and beneficiary use 'name'
-    const name = profileForm.name;
-    
+    // Handle different field names between forms (CombinedForm uses 'name', BusinessForm uses 'businessName')
+    const entityName = profileForm.name || profileForm.businessName || "";
+    console.log("🏭 Factory received User:", user);
     return {
       user: {
-        id: userId,
-        email: profileForm.email,  // ✅ Also add user email
+        id: user.id,
+        email: user.email,  // ✅ FIXED: Uses the logged-in User's email for linking
       },
       registration: {
         entityType: entityType,
         profile: {
-          name: name,
-          email: profileForm.email,
+          name: entityName,
+          email: profileForm.email, // 👈 This stays as the Business Contact Email
           phone: profileForm.phoneNumber,
           location: {
             city: profileForm.locationCity,
@@ -32,7 +32,7 @@ export class EntityRegistrationDtoFactory {
           socialMediaUrls: [profileForm.socialMedia],
           teamMemberEmails: [profileForm.teamMemberEmail],
         },
-        causes: causes,  // 🆕 FIXED: Pass objects as-is
+        causes: causes,
       },
     };
   }

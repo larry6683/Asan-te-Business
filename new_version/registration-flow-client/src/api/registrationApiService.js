@@ -44,6 +44,8 @@ export class RegistrationApiService {
         ...causePreferences.supporting,
         ...causePreferences.unranked
       ]);
+
+      console.log("📤 API Service - User Email to Send:", user.email);
       
       // Map the DTO to gRPC format
       const businessData = {

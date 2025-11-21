@@ -180,6 +180,11 @@ class BusinessService(BusinessServiceServicer):
                 
                 session.add(new_business)
                 session.flush()
+
+                print(f"✅ Business Record Created: {new_business.business_id}")
+
+                # --- 🔍 DEBUGGING / FIX SECTION START ---
+                print(f"🔍 LINKING USER: Request email is '{request.user_email}'")
                 
                 # Link user if provided
                 if request.user_email:
@@ -188,11 +193,13 @@ class BusinessService(BusinessServiceServicer):
                     ).first()
                     
                     if user:
+                        print(f"✅ User Found: ID={user.app_user_id} (Email: {user.email})")
                         admin_role = session.query(BusinessUserPermissionRole).filter(
                             BusinessUserPermissionRole.code == 1
                         ).first()
                         
                         if admin_role:
+                            print(f"✅ Admin Role Found: ID={admin_role.business_user_permission_role_id}")
                             business_user = BusinessUser(
                                 business_id=new_business.business_id,
                                 app_user_id=user.app_user_id,
