@@ -1,11 +1,14 @@
 #!/bin/bash
 
 # Predefined parameters for local development
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_NAME="postgres"
-DB_USER="asante_dev"
-DB_PASSWORD="password"
+# PostgreSQL Configuration
+POSTGRES_USER={DB_USER}
+POSTGRES_PASSWORD={DB_PASSWORD}
+POSTGRES_DB={D}
+
+# pgAdmin Configuration
+PGADMIN_DEFAULT_EMAIL=admin@asante.com
+PGADMIN_DEFAULT_PASSWORD=your_admin_password
 
 echo "Creating seed data for DEVELOPMENT"
 

@@ -1,6 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "./new_version/new-grpc-api/src",
-        "./new_version/database_schema_sqlalchemy"
-    ]
-}

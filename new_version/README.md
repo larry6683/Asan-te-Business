@@ -1,347 +1,475 @@
-# Business Registration Flow - Setup Guide
+<div align="center">
 
-Complete setup instructions for the business registration application with gRPC backend, PostgreSQL database, and React frontend.
+# 🌟 ASANTe Platform
+
+### Business Registration & Analytics Platform
+
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=flat&logo=react&logoColor=white)](https://reactjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![gRPC](https://img.shields.io/badge/gRPC-Web-4285F4?style=flat&logo=google&logoColor=white)](https://grpc.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+[![AWS Cognito](https://img.shields.io/badge/AWS-Cognito-FF9900?style=flat&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/cognito/)
+
+*A comprehensive platform connecting businesses with non-profit beneficiaries through a seamless registration flow and powerful analytics.*
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture) • [Documentation](#-documentation)
+
+</div>
 
 ---
 
-## 📋 Prerequisites
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [Testing](#-testing)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+
+---
+
+## 🎯 Overview
+
+ASANTe is a full-stack platform that enables:
+- **Businesses** to register and connect with social causes
+- **Non-profits** (beneficiaries) to create profiles and receive support
+- **Analytics** tracking for user journeys and engagement metrics
+- **Multi-step registration** with cause mapping across 26 categories
+
+Built with modern microservices architecture, featuring React frontend, Python gRPC backend, and PostgreSQL database.
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication & User Management
+- AWS Cognito integration for secure authentication
+- Email verification with code-based confirmation
+- Session management with secure cookies
+- Automatic redirect handling for incomplete registrations
+
+### 📝 Registration Flow
+- **6-Step Process**: Signup → Verification → First Login → Causes → Size → Entity Info
+- **Business Registration**: Cause selection, size classification, detailed information
+- **Beneficiary Registration**: Primary/supporting causes, organization details
+- **Form Validation**: Real-time error handling and user feedback
+
+### 📊 Analytics Dashboard
+- Real-time KPI tracking (users, sessions, businesses, beneficiaries)
+- Session interaction monitoring
+- Registration completion funnel analysis
+- Responsive design for mobile, tablet, and desktop
+
+### 🎨 User Experience
+- Modern glassmorphism UI with gradient backgrounds
+- Fully responsive layouts across all device sizes
+- Smooth animations and transitions
+- Accessibility-focused design
+
+---
+
+## 📦 Prerequisites
 
 Ensure you have the following installed:
-- **Docker Desktop** (running)
-- **Node.js** (v16 or higher)
-- **npm** or **yarn**
-- **Python 3.8+** (with pip)
-- **Git**
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| **Docker Desktop** | Latest | Container orchestration |
+| **Node.js** | 16+ | Frontend development |
+| **Python** | 3.8+ | Backend services |
+| **npm/yarn** | Latest | Package management |
+| **Git** | Latest | Version control |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone and Install
+### 1️⃣ Clone & Install Dependencies
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd <project-directory>
+cd asante-platform
 
 # Install frontend dependencies
 cd registration-flow-client
 npm install
 cd ..
 
-# Install backend Python dependencies
+# Install backend dependencies
 cd new-grpc-api
-pip install grpcio grpcio-tools psycopg2-binary sqlalchemy
+pip install -r requirements.txt
 cd ..
 ```
 
-### 2. Set Up Docker Network
+### 2️⃣ Configure Environment Variables
+
+Create environment configuration files from templates:
+
+```bash
+# Frontend configuration
+cd registration-flow-client
+cp .env.example .env.local
+# Edit .env.local with your AWS Cognito credentials
+cd ..
+
+# Backend configuration
+cd new-grpc-api
+cp .env.example .env
+# Edit .env with your database credentials
+cd ..
+
+# Database configuration
+cd database_schema_sqlalchemy/_dev
+cp template.env .env
+# Edit .env with your PostgreSQL settings
+cd ../..
+```
+
+> 📝 **Note**: See [Configuration](#-configuration) section for detailed setup instructions.
+
+### 3️⃣ Set Up Docker Network
 
 ```bash
 docker network create asante-network
 ```
 
-### 3. Start PostgreSQL Database
+### 4️⃣ Start PostgreSQL Database
 
 ```bash
 cd database_schema_sqlalchemy/_dev
+
+# Start database containers
 bash setup-postgres-dev.sh
-# When prompted, choose 'y' to start containers
-```
 
-**Wait 30 seconds for containers to fully start:**
-```bash
+# Wait for containers to initialize
 sleep 30
+
+# Populate database schema and initial data
+cd ../migrations/initial_schema
+python populate_public_schema.py
+python populate_analytics_schema.py
 ```
 
-**Database will be running on:**
-- PostgreSQL: `localhost:5432`
-- pgAdmin: `http://localhost:5050`
-
-**Credentials (from `.env` file):**
-- DB User: `asante_dev`
-- DB Password: `password`
-- pgAdmin Email: `admin@asante.com`
-- pgAdmin Password: `AdminPass123!`
-
-### 3.1. Configure pgAdmin (First Time Setup - Do This Once)
-
-1. Open browser to `http://localhost:5050`
-2. Login with:
-   - **Email:** `admin@asante.com`
-   - **Password:** `AdminPass123!`
-3. **Right-click** on "Servers" in left sidebar
-4. Click **"Register" → "Server..."**
-5. **General tab:**
-   - Name: `Local Development` (or any name)
-6. **Connection tab** - Enter these EXACT values:
-   - **Host name/address:** `postgres` (⚠️ NOT localhost!)
-   - **Port:** `5432`
-   - **Maintenance database:** `postgres`
-   - **Username:** `asante_dev`
-   - **Password:** `password`
-   - ✅ Check "Save password"
-7. Click **"Save"**
-
-You should now see the server connected in the left sidebar.
-
-### 3.2. Populate Database Tables
-
+**Verify database setup:**
 ```bash
-# Go to migrations directory
-cd database_schema_sqlalchemy/migrations/initial_schema
-
-# Run population script
-python populate_data.py
-
-# Verify tables were created (should show 26 tables)
 docker exec -it asante-postgres-dev psql -U asante_dev -d postgres -c "\dt"
 ```
 
-**Expected output:** List of 26 tables including `users`, `businesses`, `beneficiaries`, etc.
+You should see 26 tables listed.
 
-### 4. Start Envoy Proxy
+### 5️⃣ Start Envoy Proxy
 
 ```bash
 cd envoy_proxy
-docker run -d --name envoy_proxy \
-  --network asante-network \
-  -p 8080:8080 \
-  -p 9901:9901 \
-  -v $(pwd)/envoy.yaml:/etc/envoy/envoy.yaml \
-  envoyproxy/envoy:v1.27-latest
+
+# Using Docker Compose (recommended)
+docker-compose up -d
+
 ```
 
-**Envoy will be running on:**
-- Proxy: `localhost:8080`
-- Admin: `localhost:9901`
+**Verify Envoy is running:**
+```bash
+curl http://localhost:9901/ready
+# Should return: LIVE
+```
 
-### 5. Generate Protobuf Files (Backend - Python)
+### 6️⃣ Generate Protobuf Files
 
-**This must be done before starting the backend services!**
-
+**Backend (Python):**
 ```bash
 cd new-grpc-api
-
-# Create scripts directory if it doesn't exist
-mkdir -p scripts
-
-# Make the generation script executable
-chmod +x scripts/generate-proto.sh
-
-# Generate Python protobuf files
 ./scripts/generate-proto.sh
 ```
 
-**Expected output:**
-```
-🔧 Generating Python protobuf files...
-✅ Protobuf files generated
-🔧 Fixing import paths...
-✅ Import paths fixed
-✅ Complete!
-```
-
-**What this does:**
-- Generates Python code from `.proto` files
-- Fixes import paths for proper module resolution
-- Creates necessary `__init__.py` files
-
-### 6. Generate Protobuf Files (Frontend - JavaScript)
-
+**Frontend (JavaScript):**
 ```bash
 cd registration-flow-client
-
-# Make the generation script executable (if not already)
-chmod +x scripts/generate-proto.sh
-
-# Generate JavaScript protobuf files
 ./scripts/generate-proto.sh
 ```
 
-**Expected output:**
-```
-🔧 Generating JavaScript code from proto files...
-✅ Generated files:
-✅ Proto generation complete!
-```
+### 7️⃣ Start Backend Services
 
-### 7. Start gRPC Backend Services (Python)
+Open 4 separate terminals for each service:
 
-Open **3 separate terminals** and run each command in its own terminal:
-
-**Terminal 1 - User Service:**
 ```bash
+# Terminal 1: User Service (port 50051)
 cd new-grpc-api
-chmod +x run_user_service.sh
 ./run_user_service.sh
-```
 
-**Terminal 2 - Business Service:**
-```bash
+# Terminal 2: Business Service (port 50052)
 cd new-grpc-api
-chmod +x run_business_service.sh
 ./run_business_service.sh
+
+# Terminal 3: Beneficiary Service (port 50053)
+cd new-grpc-api
+./run_beneficiary_service.sh
+
+# Terminal 4: Analytics Service (port 50054)
+cd new-grpc-api
+./run_analytics_service.sh
 ```
 
-**Terminal 3 - Beneficiary Service:**
+**Alternative - Start all services at once:**
 ```bash
 cd new-grpc-api
-chmod +x run_beneficiary_service.sh
-./run_beneficiary_service.sh
+./run_all_services.sh
 ```
 
-**Services will be running on:**
-- User Service: `localhost:50051`
-- Business Service: `localhost:50052`
-- Beneficiary Service: `localhost:50053`
-
-**✅ You should see output like:**
-```
-Starting User Service on port 50051...
-User service listening on [::]:50051
-```
-
-**⚠️ Keep these terminals open** - the services need to keep running!
-
-### 8. Start React Frontend
-
-**Open a 4th terminal:**
+### 8️⃣ Start Frontend Application
 
 ```bash
 cd registration-flow-client
 npm start
 ```
 
-**Frontend will open at:** `http://localhost:3000`
+**Application will open at:** `http://localhost:3000`
 
 ---
 
-## 🖥️ Terminal Setup Summary
+## 🏗️ Architecture
 
-You should have **6 terminals open** in total:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    React Frontend (Port 3000)                │
+│              Material-UI • gRPC-Web • AWS Cognito            │
+└────────────────────────────┬────────────────────────────────┘
+                             │ HTTP/1.1 (gRPC-Web)
+┌────────────────────────────▼────────────────────────────────┐
+│                    Envoy Proxy (Port 8080)                   │
+│              gRPC-Web ↔ gRPC Transcoding • CORS              │
+└────────────────────────────┬────────────────────────────────┘
+                             │ HTTP/2 (native gRPC)
+┌────────────────────────────▼────────────────────────────────┐
+│                    Python gRPC Services                      │
+├──────────────────────────────────────────────────────────────┤
+│  • User Service (50051)        • Analytics Service (50054)  │
+│  • Business Service (50052)    • CQRS Pattern               │
+│  • Beneficiary Service (50053) • SQLAlchemy ORM             │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│              PostgreSQL Database (Port 5432)                 │
+│              26 Tables • 26 Cause Categories                 │
+│              pgAdmin Web UI (Port 5050)                      │
+└──────────────────────────────────────────────────────────────┘
+```
 
-1. **PostgreSQL/Docker** - Shows Docker container logs (optional to keep open)
-2. **Envoy Proxy** - Running in Docker (background)
-3. **User Service** - `./run_user_service.sh` (keep open)
-4. **Business Service** - `./run_business_service.sh` (keep open)
-5. **Beneficiary Service** - `./run_beneficiary_service.sh` (keep open)
-6. **React App** - `npm start` (keep open)
+### Microservices Architecture
 
-**Quick tip:** Use a terminal multiplexer like `tmux` or `iTerm2` split panes to manage multiple terminals easily.
+- **User Service**: Authentication, user management, session handling
+- **Business Service**: Business registration, cause mapping, profile management
+- **Beneficiary Service**: Non-profit registration, cause selection, entity details
+- **Analytics Service**: KPI tracking, session monitoring, funnel analysis
 
----
+### Technology Stack
 
-## 🔐 AWS Cognito Configuration
+**Frontend:**
+- React 18 with hooks
+- Material-UI components
+- gRPC-Web for API communication
+- AWS Cognito SDK for authentication
+- Cookie-based session management
 
-The app uses AWS Cognito for authentication with the following configuration:
+**Backend:**
+- Python 3.8+ with asyncio
+- gRPC & Protocol Buffers
+- SQLAlchemy ORM
+- PostgreSQL 14+
+- CQRS vertical slices pattern
 
-See TJs message
-
-**Frontend environment variables are in:** `registration-flow-client/.env.local` (create if missing)
-
-**Backend configuration is in:** `new-grpc-api/src/config/` or environment variables
-
-> ⚠️ **Important:** These config files contain sensitive credentials and are in `.gitignore`. Do not commit them to source control.
-
----
-
-## 🧪 Testing the Application
-
-### Sign Up Flow
-
-1. Go to `http://localhost:3000`
-2. Click "Create Account"
-3. Select "Business" or "Non-Profit"
-4. Enter email and password (use email aliases for testing: `your.email+b01@gmail.com`)
-5. Check email for verification code
-6. Enter verification code
-7. Select causes (minimum 3 for business, or 1 primary + up to 2 supporting for non-profit)
-8. Select business/non-profit size
-9. Fill out business/non-profit information
-10. Click "Access Portal"
-
-### Sign In Flow
-
-1. Go to `http://localhost:3000`
-2. Click "Log In"
-3. Enter registered email and password
-4. Should redirect to portal (or registration if incomplete)
-
-### Testing Email Aliases
-
-Use Gmail's `+` feature to create multiple test accounts with one email:
-- `yourname+b01@gmail.com` (business #1)
-- `yourname+b02@gmail.com` (business #2)
-- `yourname+np01@gmail.com` (non-profit #1)
-
-All verification emails go to `yourname@gmail.com`.
+**Infrastructure:**
+- Docker & Docker Compose
+- Envoy proxy for gRPC-Web transcoding
+- AWS Cognito for user authentication
+- pgAdmin for database management
 
 ---
 
-## 🗄️ Database Access
+## 📂 Project Structure
 
-### Using pgAdmin (Already Configured in Step 3.1)
+```
+asante-platform/
+│
+├── 📱 registration-flow-client/    # React Frontend
+│   ├── src/
+│   │   ├── api/                    # gRPC service clients
+│   │   ├── components/             # React components
+│   │   │   ├── signup/             # Registration flow
+│   │   │   ├── analytics/          # Dashboard components
+│   │   │   └── common/             # Shared components
+│   │   ├── user-auth/              # Cognito integration
+│   │   └── proto/                  # Generated gRPC-Web files
+│   ├── scripts/
+│   │   └── generate-proto.sh       # Proto generation script
+│   ├── .env.local                  # Local config (not in git)
+│   └── package.json
+│
+├── 🔧 new-grpc-api/                # Python gRPC Backend
+│   ├── src/
+│   │   ├── services/               # Service implementations
+│   │   │   ├── user/               # User service
+│   │   │   ├── business/           # Business service
+│   │   │   ├── beneficiary/        # Beneficiary service
+│   │   │   └── analytics/          # Analytics service
+│   │   ├── codegen/                # Generated Python gRPC
+│   │   ├── domain/                 # Domain models
+│   │   ├── converters/             # DTO converters
+│   │   ├── database/               # DB connection
+│   │   └── config/                 # Configuration
+│   ├── scripts/
+│   │   └── generate-proto.sh       # Proto generation script
+│   ├── .env                        # Environment config (not in git)
+│   ├── requirements.txt            # Python dependencies
+│   └── run_all_services.sh         # Start all services
+│
+├── 🗄️ database_schema_sqlalchemy/  # Database Layer
+│   ├── _dev/
+│   │   ├── compose.yaml            # Docker Compose config
+│   │   ├── .env                    # DB credentials (not in git)
+│   │   └── setup-postgres-dev.sh   # Database setup script
+│   ├── migrations/
+│   │   └── initial_schema/
+│   │       └── populate_data.py    # Schema population
+│   └── src/
+│       └── public/tables/          # SQLAlchemy models
+│
+├── 🌐 envoy_proxy/                 # Envoy Configuration
+│   ├── envoy.yaml                  # Proxy configuration
+│   └── docker-compose.yml          # Envoy container setup
+│
+├── .gitignore                      # Git ignore rules
+└── README.md                       # This file
+```
 
+---
+
+## ⚙️ Configuration
+
+### Frontend Environment (.env.local)
+
+Create `registration-flow-client/.env.local`:
+
+```env
+# AWS Cognito Configuration
+REACT_APP_USER_POOL_ID=your_user_pool_id
+REACT_APP_CLIENT_ID=your_client_id
+REACT_APP_REGION=your_aws_region
+
+# API Endpoints
+REACT_APP_GRPC_ENDPOINT=http://localhost:8080
+```
+
+### Backend Environment (.env)
+
+Create `new-grpc-api/.env`:
+
+```env
+# Database Configuration
+# PostgreSQL Configuration
+POSTGRES_USER=your_username
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_DB=localhost (your hostname & its not effected by docker DNS)
+PORT =5432
+
+# pgAdmin Configuration
+PGADMIN_DEFAULT_EMAIL=admin_email_
+PGADMIN_DEFAULT_PASSWORD=your_admin_password
+
+# Service Ports
+USER_SERVICE_PORT=50051
+BUSINESS_SERVICE_PORT=50052
+BENEFICIARY_SERVICE_PORT=50053
+ANALYTICS_SERVICE_PORT=50054
+```
+
+### Database Environment (.env)
+
+Create `database_schema_sqlalchemy/_dev/.env`:
+
+```env
+# PostgreSQL Configuration
+POSTGRES_USER=your_username
+PORT=5432
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_DB=localhost(hostname or docker service name if using docker)
+
+# pgAdmin Configuration
+PGADMIN_DEFAULT_EMAIL=admin_email_
+PGADMIN_DEFAULT_PASSWORD=your_admin_password
+```
+
+> ⚠️ **Security Note**: Never commit `.env` files to version control. They contain sensitive credentials and are already in `.gitignore`.
+
+### AWS Cognito Setup
+
+1. Create a User Pool in AWS Cognito
+2. Configure app client with no client secret
+3. Enable email verification
+4. Note your User Pool ID, Client ID, and Region
+5. Add these to your frontend `.env.local` file
+
+For detailed Cognito setup, see: [AWS Cognito Documentation](https://docs.aws.amazon.com/cognito/)
+
+---
+
+## 🧪 Testing
+
+### Access the Application
+
+1. Navigate to `http://localhost:3000`
+2. Click "Create Account" to test registration flow
+3. Try both Business and Non-Profit registration paths
+
+### Test User Aliases (Gmail)
+
+Use Gmail's `+` feature to create multiple test accounts:
+```
+yourname+business1@gmail.com
+yourname+business2@gmail.com
+yourname+nonprofit1@gmail.com
+```
+
+All verification emails arrive at `yourname@gmail.com`.
+
+### Database Access
+
+**pgAdmin Web Interface:**
 1. Open `http://localhost:5050`
-2. Login with credentials from step 3
-3. Expand: **Servers → Local Development → Databases → postgres → Schemas → public → Tables**
+2. Login with credentials from `.env`
+3. Navigate to: Servers → Local Development → Databases → postgres
 
-### Using Command Line (Quick Check)
-
+**Command Line:**
 ```bash
-# Connect to database
 docker exec -it asante-postgres-dev psql -U asante_dev -d postgres
 
-# List all tables
+# List tables
 \dt
 
-# View table data (example)
+# Query users
 SELECT * FROM users;
 
 # Exit
 \q
 ```
 
-### Key Tables
+### Service Health Checks
 
-- **users** - User accounts from Cognito
-- **businesses** - Registered businesses
-- **beneficiaries** - Registered non-profits
-- **business_causes** - Business cause selections
-- **beneficiary_causes** - Non-profit cause selections
+```bash
+# Check Envoy proxy
+curl http://localhost:9901/ready
 
----
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────┐
-│   React     │ :3000
-│  Frontend   │
-└──────┬──────┘
-       │
-       ↓ gRPC-Web
-┌─────────────┐
-│    Envoy    │ :8080
-│    Proxy    │
-└──────┬──────┘
-       │
-       ↓ gRPC
-┌─────────────────────────────┐
-│  Python gRPC Services       │
-│  • UserService      :50051  │
-│  • BusinessService  :50052  │
-│  • BeneficiaryService :50053│
-└──────┬──────────────────────┘
-       │
-       ↓
-┌─────────────┐
-│ PostgreSQL  │ :5432
-│  Database   │
-└─────────────┘
-
-Authentication: AWS Cognito
+# Test gRPC services (requires grpcurl)
+grpcurl -plaintext localhost:50051 list
+grpcurl -plaintext localhost:50052 list
+grpcurl -plaintext localhost:50053 list
+grpcurl -plaintext localhost:50054 list
 ```
 
 ---
@@ -352,15 +480,14 @@ Authentication: AWS Cognito
 
 ```bash
 cd database_schema_sqlalchemy/_dev
-docker compose down
-docker compose up -d
-sleep 30  # Wait for startup
+docker-compose down
+docker-compose up -d
+sleep 30  # Wait for containers to initialize
 ```
 
 ### Database Has No Tables
 
 ```bash
-# Populate the database
 cd database_schema_sqlalchemy/migrations/initial_schema
 python populate_data.py
 
@@ -377,204 +504,151 @@ docker logs envoy_proxy
 # Restart
 docker restart envoy_proxy
 
-# If port conflict, stop and remove
-docker stop envoy_proxy
-docker rm envoy_proxy
-# Then run the start command again from step 4
+# Rebuild if needed
+cd envoy_proxy
+docker-compose down
+docker-compose up -d
 ```
 
-### Python Proto Generation Issues
+### gRPC Service Errors
 
-**Error:** `ModuleNotFoundError: No module named 'error'`
+**Error**: `ModuleNotFoundError: No module named 'codegen'`
 
-**Solution:**
+**Solution**: Regenerate protobuf files
 ```bash
 cd new-grpc-api
-
-# Regenerate proto files with fixed imports
 ./scripts/generate-proto.sh
-
-# Use the runner scripts (not direct python commands)
-./run_user_service.sh  # ✅ Correct
-# NOT: python src/services/user/server.py  # ❌ Wrong
 ```
 
-**Why this happens:**
-- The `protoc` compiler generates imports like `from error import error_pb2`
-- Our script fixes them to `from codegen.error import error_pb2`
-- The runner scripts set `PYTHONPATH` correctly for module resolution
+**Error**: `503 Service Unavailable`
 
-### gRPC Service Won't Start
-
-**Error:** `Permission denied`
-
-**Solution:**
+**Solution**: Ensure all backend services are running
 ```bash
+# Check running services
+lsof -i :50051
+lsof -i :50052
+lsof -i :50053
+lsof -i :50054
+
+# Restart services if needed
 cd new-grpc-api
-chmod +x run_user_service.sh
-chmod +x run_business_service.sh
-chmod +x run_beneficiary_service.sh
+./run_all_services.sh
 ```
 
-**Check if services are running:**
-```bash
-lsof -i :50051  # User Service
-lsof -i :50052  # Business Service  
-lsof -i :50053  # Beneficiary Service
-```
-
-### Python Dependencies Missing
+### Frontend Build Issues
 
 ```bash
-# Install required packages
-cd new-grpc-api
-pip install grpcio grpcio-tools psycopg2-binary sqlalchemy
-```
-
-### Frontend Issues
-
-```bash
-# Clear cache and reinstall
 cd registration-flow-client
+
+# Clear cache and reinstall
 rm -rf node_modules package-lock.json
 npm install
-npm start
+
+# Regenerate proto files
+./scripts/generate-proto.sh
 ```
 
-### "User not found" Error After Sign-In
+### Common Issues
 
-This was fixed by creating the user in the database after Cognito sign-up. If you still see this:
-1. Check that UserService is running on port 50051: `lsof -i :50051`
-2. Verify database connection in Python service
-3. Check Python service logs in the terminal
-
-### Session/Cookie Issues
-
-If logged-in users are redirected to registration:
-1. Check browser cookies for `asanteApp`
-2. Verify `userApiService.js` correctly reads from cookies
-3. Check console for relationship detection logs
-
----
-
-## 📁 Project Structure
-
-```
-project-root/
-├── registration-flow-client/     # React frontend
-│   ├── src/
-│   │   ├── api/                  # gRPC service clients
-│   │   ├── components/           # React components
-│   │   ├── user-auth/           # Cognito authentication
-│   │   └── proto/               # Generated gRPC files
-│   ├── scripts/
-│   │   └── generate-proto.sh    # JS proto generation
-│   ├── .env.local               # Local config (not committed)
-│   └── package.json
-│
-├── new-grpc-api/                # Python gRPC backend
-│   ├── src/
-│   │   ├── services/
-│   │   │   ├── user/server.py
-│   │   │   ├── business/server.py
-│   │   │   └── beneficiary/server.py
-│   │   └── protos/              # Proto definitions
-│   ├── scripts/
-│   │   └── generate-proto.sh    # Python proto generation
-│   ├── run_user_service.sh
-│   ├── run_business_service.sh
-│   ├── run_beneficiary_service.sh
-│   └── requirements.txt         # Python dependencies
-│
-├── database_schema_sqlalchemy/  # Database setup
-│   ├── _dev/
-│   │   ├── compose.yaml         # Docker Compose config
-│   │   ├── .env                 # DB credentials
-│   │   └── setup-postgres-dev.sh
-│   └── migrations/
-│       └── initial_schema/
-│           └── populate_data.py
-│
-└── envoy-proxy/
-    └── envoy.yaml              # Proxy configuration
-```
+| Issue | Solution |
+|-------|----------|
+| Port already in use | Find and kill process: `lsof -ti:PORT \| xargs kill -9` |
+| Docker network error | Recreate network: `docker network create asante-network` |
+| Proto import errors | Regenerate with `./scripts/generate-proto.sh` |
+| Database connection failed | Check Docker containers: `docker ps` |
+| Cognito errors | Verify credentials in `.env.local` |
 
 ---
 
 ## 🛑 Stopping Services
 
-### Stop Everything
+### Stop All Services
 
 ```bash
 # Stop Docker containers
-docker stop envoy_proxy
-cd database_schema_sqlalchemy/_dev
-docker compose down
+docker stop envoy_proxy asante-postgres-dev asante-pgadmin
 
 # Stop Python services (Ctrl+C in each terminal)
+
 # Stop React app (Ctrl+C in terminal)
 ```
 
-### Stop Without Losing Data
+### Stop and Clean Up
 
 ```bash
-# Keeps database data in volumes
+# Stop containers
 cd database_schema_sqlalchemy/_dev
-docker compose stop
+docker-compose down
+
+cd ../../envoy_proxy
+docker-compose down
+
+# Remove Docker network
+docker network rm asante-network
 ```
 
-### Stop and Remove All Data
+### Nuclear Option (Remove All Data)
 
 ```bash
 # WARNING: This deletes all database data
 cd database_schema_sqlalchemy/_dev
-docker compose down -v
+docker-compose down -v
+
+# Remove all containers and images
+docker system prune -a
 ```
 
 ---
 
-## 🔐 Security Notes
+## 📚 Documentation
 
-**Never commit these files:**
-- `registration-flow-client/.env.local`
-- `new-grpc-api/src/config/*.json` (if they contain credentials)
-- `database_schema_sqlalchemy/_dev/.env`
+Detailed documentation for each component:
 
-They are already in `.gitignore` and contain sensitive credentials.
-
----
-
-## ✅ Success Checklist
-
-- [ ] Docker network created (`asante-network`)
-- [ ] PostgreSQL running and accessible at `localhost:5432`
-- [ ] pgAdmin configured and connected to database at `http://localhost:5050`
-- [ ] Database populated with 26 tables
-- [ ] Envoy proxy running on port 8080
-- [ ] **Backend protobuf files generated** (`./scripts/generate-proto.sh` in `new-grpc-api`)
-- [ ] **Frontend protobuf files generated** (`./scripts/generate-proto.sh` in `registration-flow-client`)
-- [ ] All 3 Python gRPC services running (50051, 50052, 50053)
-- [ ] React app running on port 3000
-- [ ] Can sign up with new email
-- [ ] Receive and enter verification code
-- [ ] Can complete registration flow
-- [ ] Business/non-profit saved to database
-- [ ] Can log in with registered account
-- [ ] Redirects to portal (or shows portal URL)
+- **[Frontend README](registration-flow-client/README.md)** - React app setup and development
+- **[Backend README](new-grpc-api/README.md)** - gRPC services and API reference
+- **[Database README](database_schema_sqlalchemy/README.md)** - Database schema and migrations
+- **[Envoy Proxy README](envoy_proxy/README.md)** - Proxy configuration and routing
 
 ---
 
-## 📞 Need Help?
+## 🤝 Contributing
 
-Common issues and solutions are in the Troubleshooting section above. 
+We welcome contributions! Please follow these steps:
 
-**Check logs:**
-- Browser Console: Press F12
-- Docker logs: `docker logs <container-name>`
-- Backend logs: Check terminals where Python services are running
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow existing code style and patterns
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation as needed
+- Ensure all services pass health checks
 
 ---
 
-## 🎉 You're Ready!
+## 📄 License
 
-Once all services are running and the checklist is complete, your development environment is ready for testing the complete business registration flow.
+This project is proprietary and confidential.
+
+---
+
+## 👥 Team
+
+Developed by Asante-CU Boulder Capstone Team
+
+---
+
+## 🙏 Acknowledgments
+
+- AWS Cognito for authentication services
+- Envoy Proxy for gRPC-Web transcoding
+- SQLAlchemy for ORM capabilities
+- Material-UI for React components
+
+---
+

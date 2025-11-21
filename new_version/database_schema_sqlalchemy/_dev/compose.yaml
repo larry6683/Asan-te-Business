@@ -2,7 +2,7 @@ name: postgres_dev
 
 services:
   postgres:
-    image: postgres:17
+    image: postgres:17  #change this if you need a different hostname for database only when using docker
     container_name: asante-postgres-dev
     restart: always
     ports:
