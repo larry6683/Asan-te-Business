@@ -1,43 +1,34 @@
 /*
   FILENAME: new_version/registration-flow-client/src/components/HomePage.js
-  DESCRIPTION: Added a useEffect hook to fire an analytics event on load.
-               This immediately links the user_id (from login) to the
-               session_id.
+  DESCRIPTION: 
+    - Implements a "Dashboard" background view.
+    - "Welcome" screen is now an overlay (Modal style) that can be dismissed.
+    - Added "Profile" button navigating to /profile.
 */
 import React, { useEffect, useState } from "react";
 import styles from "./HomePage.module.css";
-import { styled } from "@mui/material/styles";
-import { Box, Typography, Button, Paper, useTheme, Link } from "@mui/material";
+import { Box, Typography, Button, IconButton, AppBar, Toolbar } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import MenuIcon from "@mui/icons-material/Menu";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import businessWelcome from "../assets/HomeScreen-Confetti.svg";
 import welcomePortal from "../assets/WelcomePortal.svg";
 import { AppCookieService } from "../cookies/appCookieService";
-import { redirectUrls } from "../web-data/redirectUrls";
-// ✅ CHANGED: Import analyticsService
 import { analyticsService } from "../api/analyticsService";
+import { logoutUser } from "../authentication/logoutUser";
+import { AsanteUsersUserPool } from "../user-auth/asanteUsersUserPool"; 
 
 const HomePage = () => {
-  const selectedOption = useSelector((state) => state.selectedOption);
-  const [selectedType, setSelectedType] = useState(
-    sessionStorage.getItem("asante:selectedOption") || "Business",
-  );
   const [userData, setUserData] = useState(null);
   const [entityData, setEntityData] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(true); // ✅ Controls the popup visibility
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // ✅ CHANGED: Fire analytics event for Step 6 (Welcome Page)
-    // Because analyticsService.trackStep() now reads user_id from
-    // sessionStorage, this call will successfully link the user to the session.
-    // We use 0 for previous step since we could get here from login OR step 5.
     analyticsService.trackStep(6, 0, 0);
 
-    const selectedOption = sessionStorage.getItem("asante:selectedOption");
-    if (selectedOption) {
-      setSelectedType(selectedOption);
-    }
-
-    // Load user data
     try {
       const userStr = sessionStorage.getItem("asante:user");
       if (userStr) {
@@ -45,7 +36,6 @@ const HomePage = () => {
         setUserData(user);
       }
 
-      // Load entity data
       const businessId = sessionStorage.getItem("asante:businessId");
       const beneficiaryId = sessionStorage.getItem("asante:beneficiaryId");
 
@@ -58,39 +48,94 @@ const HomePage = () => {
       console.error('Error loading user data:', error);
     }
 
-    // Log cookie for debugging
     const appCookie = AppCookieService.getAppCookie();
     console.log('HomePage loaded - Cookie:', appCookie);
-  }, []); // <-- This empty array ensures the effect runs only ONCE when the page loads
+  }, []);
 
-  const backgroundImageUrl = businessWelcome;
-  const portalImageUrl = welcomePortal;
-
-  const navigate = useNavigate();
-  
-  const handleNext = () => {
-    console.log("Navigating to portal...");
-    setTimeout(() => {
-      window.location.href = `${redirectUrls.portal}`;
-    }, 500);
+  const handleDismiss = () => {
+    console.log("Dismissing welcome screen -> Showing Dashboard");
+    setShowWelcome(false); // ✅ Just hide the popup, don't redirect
   };
 
+  const handleProfile = () => {
+    console.log("Navigating to Profile...");
+    navigate('/profile');
+  };
+
+  const handleLogout = () => {
+    console.log("Logging out...");
+    const email = userData?.email || JSON.parse(sessionStorage.getItem("asante:user") || '{}').email;
+    
+    const performLocalLogout = () => {
+      sessionStorage.clear();
+      navigate("/");
+    };
+
+    if (email) {
+      logoutUser(
+        AsanteUsersUserPool, 
+        email, 
+        (msg) => {
+          console.log("Cognito Logout Success:", msg);
+          performLocalLogout();
+        },
+        (err) => {
+          console.error("Cognito Logout Error:", err);
+          performLocalLogout();
+        }
+      );
+    } else {
+      performLocalLogout();
+    }
+  };
+
+  // --- RENDER ---
+
   return (
-    <React.Fragment>
-      <Box>
+    <Box sx={{ height: "100vh", width: "100vw", overflow: "hidden", position: "relative", backgroundColor: "#F4F6F8" }}>
+      
+      {/* ✅ BACKGROUND DASHBOARD CONTENT (Visible when popup is closed) */}
+      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+        {/* Simple Header */}
+        <AppBar position="static" sx={{ backgroundColor: "white", color: "black", boxShadow: 1 }}>
+          <Toolbar>
+            <IconButton edge="start" color="inherit" aria-label="menu" sx={{ mr: 2 }}>
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" sx={{ flexGrow: 1, color: "#6271AE", fontWeight: "bold" }}>
+              AsanTe Dashboard
+            </Typography>
+            {userData && <Typography variant="body2" sx={{ mr: 2 }}>{userData.email}</Typography>}
+            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+          </Toolbar>
+        </AppBar>
+
+        {/* Main Content Area */}
+        <Box sx={{ p: 4, flexGrow: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <Typography variant="h4" color="textSecondary">
+            Dashboard Content Goes Here
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* ✅ WELCOME POPUP OVERLAY */}
+      {showWelcome && (
         <Box
           sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            height: "100%",
+            width: "100%",
+            zIndex: 1200, // High z-index to sit on top
             display: "flex",
-            flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            height: "100vh",
-            width: "100vw",
-            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundImage: `url(${businessWelcome})`,
             backgroundSize: "cover",
             backgroundPosition: "center center",
             backgroundRepeat: "no-repeat",
-            overflow: "hidden",
+            backdropFilter: "blur(5px)" // Optional: blur the background slightly
           }}
         >
           <Box
@@ -102,9 +147,20 @@ const HomePage = () => {
               alignItems: "center",
               alignContent: "flex-end",
               minWidth: 500,
-              minHeight: 650
+              minHeight: 650,
+              position: "relative",
+              backgroundColor: "white",
+              borderRadius: "25px",
+              boxShadow: "0px 10px 30px rgba(0,0,0,0.1)"
             }}
           >
+            {/* Dismiss Button */}
+            <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
+              <IconButton onClick={handleDismiss} aria-label="dismiss">
+                <CloseIcon sx={{ color: "#999", fontSize: "1.5rem" }} />
+              </IconButton>
+            </Box>
+
             {userData && (
               <Typography
                 sx={{
@@ -112,7 +168,7 @@ const HomePage = () => {
                   fontFamily: "Helvetica Neue",
                   fontSize: "18px",
                   fontWeight: 500,
-                  marginTop: "20px",
+                  marginTop: "30px",
                 }}
               >
                 {userData.email}
@@ -123,21 +179,17 @@ const HomePage = () => {
               height="15%"
               variant="body1"
               gutterBottom
-              marginTop={userData ? "5%" : "15%"}
+              marginTop={userData ? "2%" : "10%"}
               sx={{
                 marginBottom: 0,
                 color: "#000",
                 fontFamily: "Helvetica Neue",
                 fontSize: "30px",
-                fontStyle: "normal",
                 fontWeight: 400,
-                lineHeight: "normal",
               }}
             >
               Welcome to your portal on {' '}
-              <span className={styles.highlight}>
-                AsanTe
-              </span>
+              <span className={styles.highlight}>AsanTe</span>
             </Typography>
 
             {entityData && (
@@ -146,7 +198,7 @@ const HomePage = () => {
                   color: "#999",
                   fontFamily: "Helvetica Neue",
                   fontSize: "14px",
-                  marginTop: "10px",
+                  marginTop: "5px",
                 }}
               >
                 {entityData.type === 'business' ? '🏢 Business' : '💚 Non-Profit'} Account
@@ -157,42 +209,68 @@ const HomePage = () => {
               width="85%"
               height="85%"
               sx={{
-                background: `url(${portalImageUrl})`,
+                background: `url(${welcomePortal})`,
                 backgroundSize: "contain",
                 backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
                 flexGrow: "1",
-                marginTop: "4vh"
+                marginTop: "2vh",
+                marginBottom: "2vh"
               }}
             />
 
+            {/* ✅ ADDED: Profile Button */}
             <Button
               fullWidth
               variant="contained"
               sx={{
                 width: "13vw",
-                height: "56px",
-                fontSize: "24px",
+                height: "50px",
+                fontSize: "18px",
                 fontWeight: 500,
                 borderRadius: "28px",
                 textTransform: "none",
                 background: "linear-gradient(to right, #6271AE, #9ACDDA)",
-                opacity: 1,
-                color: "var(--barcolor, #FFF)",
+                color: "#FFF",
+                marginBottom: "2vh", // Spacing between buttons
+                minWidth: 200,
                 "&:hover": {
-                  opacity: 1,
                   background: "linear-gradient(to right, #5B6BB0, #8ACDDB)",
                 },
-                marginBottom: "8vh",
-                minWidth: 200
               }}
-              onClick={handleNext}
+              onClick={handleProfile}
             >
-              Next
+              Profile
+            </Button>
+
+            {/* Logout Button */}
+            <Button
+              fullWidth
+              variant="outlined"
+              sx={{
+                width: "13vw",
+                height: "50px",
+                fontSize: "18px",
+                fontWeight: 500,
+                borderRadius: "28px",
+                textTransform: "none",
+                borderColor: "#6271AE",
+                color: "#6271AE",
+                marginBottom: "5vh",
+                minWidth: 200,
+                "&:hover": {
+                  backgroundColor: "#F5F5F5",
+                  borderColor: "#5B6BB0",
+                },
+              }}
+              onClick={handleLogout}
+            >
+              Logout
             </Button>
           </Box>
         </Box>
-      </Box>
-    </React.Fragment>
+      )}
+    </Box>
   );
 };
 

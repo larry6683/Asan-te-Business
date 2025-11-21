@@ -10,16 +10,15 @@ import SizeOptionSelection from "./components/SizeOptionSelection";
 import RegistrationForm from "./components/CombinedForm";
 import HomePage from "./components/HomePage";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
-import { analyticsService } from "./api/analyticsService"; // ✅ Import Analytics Service
+import PublicRoute from "./components/PublicRoute";
+import UserProfile from "./components/UserProfile"; // ✅ IMPORT THIS
+import { analyticsService } from "./api/analyticsService";
 
 const App = () => {
   
-  // ✅ ADDED: Track initial session on app load
   useEffect(() => {
     const initSession = async () => {
       try {
-        // Track Step 1 (Welcome/Signup) immediately as Anonymous
-        // This creates the session in the database with "In Progress" status
         console.log("🚀 App loaded - Initializing Analytics Session...");
         await analyticsService.trackStep(1);
       } catch (error) {
@@ -33,24 +32,23 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Login route */}
-        <Route path="/" element={<Login />} />
-        
-        {/* Registration flow routes */}
-        <Route path="/register">
-          <Route index element={<RegisteringAsComponent />} />
-          <Route path="signup" element={<SignUp />} />
-          <Route path="verification" element={<VerificationComponent />} />
-          <Route path="causes" element={<CausesComponent />} />
-          <Route path="sizeoptionselection" element={<SizeOptionSelection />} />
-          <Route path="registrationform" element={<RegistrationForm />} />
+        <Route element={<PublicRoute />}>
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<RegisteringAsComponent />} />
+            <Route path="/register/signup" element={<SignUp />} />
         </Route>
+        
+        <Route path="/register/verification" element={<VerificationComponent />} />
+        <Route path="/register/causes" element={<CausesComponent />} />
+        <Route path="/register/sizeoptionselection" element={<SizeOptionSelection />} />
+        <Route path="/register/registrationform" element={<RegistrationForm />} />
 
-        {/* /home route */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/analytics" element={<AnalyticsDashboard />}/>
+        
+        {/* ✅ ADDED PROFILE ROUTE */}
+        <Route path="/profile" element={<UserProfile />} />
 
-        {/* Catch-all redirect to login */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

@@ -24,7 +24,6 @@ import { CookieFactory } from "../cookies/cookieFactory";
 import { redirectUrls } from "../web-data/redirectUrls"
 
 const Login = () => {
-  clearStore(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
