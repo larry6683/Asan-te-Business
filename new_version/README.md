@@ -143,7 +143,8 @@ docker network create asante-network
 ### 4️⃣ Start PostgreSQL Database
 
 ```bash
-cd database_schema_sqlalchemy/_dev
+cd database_schema_sqlalchemy/
+cd _dev
 
 # Start database containers
 bash setup-postgres-dev.sh
