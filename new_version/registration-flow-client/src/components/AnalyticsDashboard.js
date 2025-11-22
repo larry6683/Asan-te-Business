@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./AnalyticsDashboard.module.css";
 import { analyticsService } from "../api/analyticsService";
 
@@ -16,6 +16,17 @@ const AnalyticsDashboard = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // --- Snapshot & Automation State ---
+  const [showSnapshotModal, setShowSnapshotModal] = useState(false);
+  const [isAutoActive, setIsAutoActive] = useState(false);
+  const [snapshotConfig, setSnapshotConfig] = useState({
+    fileName: 'analytics_report',
+    frequency: 1, // minutes
+    mode: 'full' // 'full' or 'incremental'
+  });
+  const [lastSnapshotTime, setLastSnapshotTime] = useState(null);
+  const autoTimerRef = useRef(null);
+
   useEffect(() => {
     loadAnalyticsData();
   }, []);
@@ -24,6 +35,25 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     setPage(0);
   }, [statusFilter, typeFilter, searchTerm]);
+
+  // --- Automation Effect ---
+  useEffect(() => {
+    if (isAutoActive) {
+      const intervalMs = snapshotConfig.frequency * 60 * 1000;
+      
+      // Initial run logic or wait for first interval? 
+      // Usually wait for interval.
+      autoTimerRef.current = setInterval(() => {
+        performAutoSnapshot();
+      }, intervalMs);
+    } else {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    }
+
+    return () => {
+      if (autoTimerRef.current) clearInterval(autoTimerRef.current);
+    };
+  }, [isAutoActive, snapshotConfig, sessions]); // Re-bind if sessions/config update
 
   const loadAnalyticsData = async () => {
     setLoading(true);
@@ -48,6 +78,97 @@ const AnalyticsDashboard = () => {
         setSessions(sessionsData);
     } catch (err) {
         setSessions([]);
+    }
+  };
+
+  // --- CSV Generation & Download Logic ---
+  const convertToCSV = (data) => {
+    const headers = [
+      "Session ID", "User ID", "Email", "Type", 
+      "Entity Name", "Size", "State", "Website", 
+      "Status", "Started At", "Last Activity", "Duration (s)"
+    ];
+
+    const rows = data.map(s => [
+      s.sessionId,
+      s.appUserId || 'Anonymous',
+      s.userEmail || '-',
+      s.userType || 'Guest',
+      `"${s.entityName || '-'}"`, // Quote to handle commas in names
+      s.entitySize || '-',
+      s.entityState || '-',
+      s.website || '-',
+      s.appUserId ? 'Complete' : 'Incomplete',
+      s.startedAt,
+      s.lastActivity,
+      s.durationSeconds
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+
+    return csvContent;
+  };
+
+  const triggerDownload = (csvData, filename) => {
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('button'); // using generic element logic
+    const url = URL.createObjectURL(blob);
+    
+    const downloadLink = document.createElement("a");
+    downloadLink.href = url;
+    downloadLink.setAttribute("download", `${filename}.csv`);
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  const handleManualSnapshot = () => {
+    const filtered = getFilteredSessions(); // Respect current filters
+    const csv = convertToCSV(filtered);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    triggerDownload(csv, `Analytics_Snapshot_${timestamp}`);
+  };
+
+  const performAutoSnapshot = () => {
+    // Refresh data first to ensure we have latest
+    loadSessionsData().then(() => {
+        // We must use functional state or a ref for 'sessions' if inside closure, 
+        // but here we rely on the useEffect dependency re-binding.
+        
+        let dataToExport = [...sessions];
+        
+        // Apply "Append" logic (Incremental)
+        if (snapshotConfig.mode === 'incremental' && lastSnapshotTime) {
+            dataToExport = dataToExport.filter(s => new Date(s.startedAt) > lastSnapshotTime);
+        }
+
+        if (dataToExport.length === 0 && snapshotConfig.mode === 'incremental') {
+            console.log("Auto-Snapshot: No new data found.");
+            return;
+        }
+
+        const csv = convertToCSV(dataToExport);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        // Simulate "New Folder" by using a prefix that groups them when sorted
+        const folderPrefix = "AutoSnapshot_"; 
+        const filename = `${folderPrefix}${snapshotConfig.fileName}_${timestamp}`;
+        
+        triggerDownload(csv, filename);
+        setLastSnapshotTime(new Date());
+        console.log(`Auto-Snapshot triggered: ${filename}`);
+    });
+  };
+
+  const toggleAutoSnapshot = () => {
+    if (isAutoActive) {
+        setIsAutoActive(false);
+    } else {
+        setLastSnapshotTime(new Date()); // Set start time marks
+        setIsAutoActive(true);
+        setShowSnapshotModal(false);
     }
   };
 
@@ -77,7 +198,6 @@ const AnalyticsDashboard = () => {
   const getFilteredSessions = () => {
     let filtered = [...sessions];
     
-    // Filter logic matches "Complete/Incomplete" based on appUserId
     if (statusFilter !== 'all') {
         if (statusFilter === 'Complete') {
             filtered = filtered.filter(s => s.appUserId);
@@ -111,8 +231,26 @@ const AnalyticsDashboard = () => {
       {/* Header */}
       <div className={styles.header}>
         <h1 className={styles.title}>📊 Registration Logs</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className={styles.refreshButton} onClick={loadAnalyticsData} title="Refresh">↻</button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          
+          {/* Snapshot Controls */}
+          <button 
+            className={`${styles.actionButton} ${styles.primaryBtn}`} 
+            onClick={handleManualSnapshot}
+            title="Download CSV of current view"
+          >
+            📥 Snapshot CSV
+          </button>
+          
+          <button 
+            className={`${styles.actionButton} ${isAutoActive ? styles.activeBtn : styles.secondaryBtn}`} 
+            onClick={() => setShowSnapshotModal(true)}
+            title="Configure automated snapshots"
+          >
+            {isAutoActive ? '⚙️ Auto: ON' : '⚙️ Auto Snapshot'}
+          </button>
+
+          <button className={styles.refreshButton} onClick={loadAnalyticsData} title="Refresh Data">↻</button>
         </div>
       </div>
 
@@ -161,16 +299,14 @@ const AnalyticsDashboard = () => {
           <button className={styles.searchButton} onClick={() => {setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all');}}>Clear</button>
         </div>
       </div>
-{/* Row count shown */}
- <div className={styles.resultCount}>
+
+      {/* Result Count */}
+      <div className={styles.resultCount}>
             Showing <strong className={styles.showingNumberofRows}>{filteredSessions.length}</strong> sessions out of <strong>{sessions.length}</strong>
-        </div>
+      </div>
 
       {/* Table Section */}
       <div className={styles.tableContainer}>
-        {/* ✅ NEW: Results Count Display */}
-       
-
         <div className={styles.tableScrollArea}>
           <table className={styles.table}>
             <thead className={styles.tableHead}>
@@ -229,13 +365,85 @@ const AnalyticsDashboard = () => {
           </table>
         </div>
         
-        {/* Pagination Footer */}
         <div className={styles.pagination}>
              <button disabled={page===0} onClick={() => setPage(page-1)}>Previous</button>
              <span>Page {page+1} of {totalPages || 1}</span>
              <button disabled={page>=totalPages-1} onClick={() => setPage(page+1)}>Next</button>
         </div>
       </div>
+
+      {/* --- Configuration Modal --- */}
+      {showSnapshotModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>⚙️ Configure Auto-Snapshot</h3>
+              <button className={styles.closeBtn} onClick={() => setShowSnapshotModal(false)}>×</button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label>Base File Name</label>
+                <input 
+                  type="text" 
+                  value={snapshotConfig.fileName} 
+                  onChange={(e) => setSnapshotConfig({...snapshotConfig, fileName: e.target.value})}
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Frequency (Minutes)</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  value={snapshotConfig.frequency} 
+                  onChange={(e) => setSnapshotConfig({...snapshotConfig, frequency: parseInt(e.target.value) || 1})}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Export Mode</label>
+                <div className={styles.radioGroup}>
+                    <label>
+                        <input 
+                            type="radio" 
+                            checked={snapshotConfig.mode === 'full'} 
+                            onChange={() => setSnapshotConfig({...snapshotConfig, mode: 'full'})}
+                        />
+                        Full Snapshot (Overwrite)
+                    </label>
+                    <label>
+                        <input 
+                            type="radio" 
+                            checked={snapshotConfig.mode === 'incremental'} 
+                            onChange={() => setSnapshotConfig({...snapshotConfig, mode: 'incremental'})}
+                        />
+                        Incremental (New data only - "Append")
+                    </label>
+                </div>
+                <p className={styles.hint}>
+                    * Incremental mode will download a new CSV containing only rows created since the last snapshot.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button className={styles.secondaryBtn} onClick={() => setShowSnapshotModal(false)}>Cancel</button>
+              
+              {isAutoActive ? (
+                <button className={`${styles.actionButton} ${styles.dangerBtn}`} onClick={toggleAutoSnapshot}>
+                    Stop Automation
+                </button>
+              ) : (
+                <button className={`${styles.actionButton} ${styles.primaryBtn}`} onClick={toggleAutoSnapshot}>
+                    Start Automation
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
