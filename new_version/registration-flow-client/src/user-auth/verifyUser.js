@@ -10,11 +10,11 @@ export const verifyUser = (email, code, successCallback, errorCallback) => {
 
     cognitoUser.confirmRegistration(code, true, (err, result) => {
       if (err) {
-        if (successCallback) successCallback();
-
+        // ✅ FIXED: Only call error callback, NOT success callback
+        console.error("Verification failed:", err);
         if (errorCallback) errorCallback(err);
       } else {
-        // console.log("Verification successful:", result);
+        console.log("Verification successful:", result);
         if (successCallback) successCallback();
       }
     });

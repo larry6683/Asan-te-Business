@@ -1,22 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Box, Typography, TextField, Link, Button } from "@mui/material";
+import { Box, Typography, TextField, Link } from "@mui/material";
 import styles from "./VerificationComponent.module.css";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { verifyUser } from "../user-auth/verifyUser";
 import { resendUserVerificationCode } from "../user-auth/resendUserAuthenticationCode";
-import { USER_TYPE } from "../types/userType";
 import { analyticsService } from "../api/analyticsService";
 
 const VerificationComponent = () => {
   const email = useSelector((state) => state.email.address);
-  const selectedOption = useSelector((state) => state.selectedOption);
   const [verificationCode, setVerificationCode] = useState(Array(6).fill(""));
-  const [successMessage, setSuccessMessage] = useState(""); // New state for feedback
+  
+  // ✅ ADDED: State for success/error feedback
+  const [successMessage, setSuccessMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState(""); 
+  
   const refs = useRef([]);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   useEffect(() => {
     refs.current = verificationCode.map(
@@ -24,19 +24,25 @@ const VerificationComponent = () => {
     );
   }, [verificationCode]);
 
-  // Shared logic to handle successful verification
+  // ✅ SUCCESS HANDLER
   const handleVerificationSuccess = () => {
-    // 1. Track analytics
     analyticsService.completeStep(2, 3);
-
-    // 2. Show feedback
+    setErrorMessage(""); // Clear any errors
     setSuccessMessage("Verification Successful! Redirecting to login...");
 
-    // 3. Navigate to Login after a short delay
-    // CRITICAL FIX: User MUST log in to generate Session Data and DB Record
+    // Navigate to Login
     setTimeout(() => {
         navigate("/"); 
     }, 1500);
+  };
+
+  // ✅ ERROR HANDLER
+  const handleVerificationError = (err) => {
+    // Clear code for retry
+    // setVerificationCode(Array(6).fill("")); 
+    
+    // Show error message
+    setErrorMessage(err.message || "Invalid code. Please try again.");
   };
 
   const handleChange = (e, index) => {
@@ -45,6 +51,9 @@ const VerificationComponent = () => {
       const newCode = [...verificationCode];
       newCode[index] = value;
       setVerificationCode(newCode);
+      
+      // Reset error when user starts typing again
+      if (errorMessage) setErrorMessage("");
 
       if (value !== "" && index < 5 && refs.current[index + 1]) {
         refs.current[index + 1].focus();
@@ -55,10 +64,8 @@ const VerificationComponent = () => {
         verifyUser(
           email,
           codeStr,
-          handleVerificationSuccess, // Use the fixed handler
-          (err) => {
-            console.error("error callback", err);
-          },
+          handleVerificationSuccess, 
+          handleVerificationError // ✅ Pass error handler
         );
       }
     }
@@ -74,6 +81,7 @@ const VerificationComponent = () => {
 
   const handleResendCode = () => {
     resendUserVerificationCode(email);
+    setErrorMessage(""); // Clear error on resend
   };
 
   const handleUseDifferentEmail = () => {
@@ -90,10 +98,8 @@ const VerificationComponent = () => {
       verifyUser(
         email,
         codeStr,
-        handleVerificationSuccess, // Use the fixed handler
-        (err) => {
-          console.error("error callback", err);
-        },
+        handleVerificationSuccess,
+        handleVerificationError // ✅ Pass error handler
       );
     }
     event.preventDefault();
@@ -125,6 +131,7 @@ const VerificationComponent = () => {
             >
                 Check your inbox
             </Typography>
+            
             <Typography
                 variant="body2"
                 sx={{
@@ -142,6 +149,21 @@ const VerificationComponent = () => {
                 your email: {email}
             </Typography>
             
+            {/* ✅ Error Message Display */}
+            {errorMessage && (
+                <Typography 
+                    variant="body1" 
+                    sx={{ 
+                        color: "#FF5151", 
+                        textAlign: 'center', 
+                        marginBottom: '15px',
+                        fontWeight: 500 
+                    }}
+                >
+                    {errorMessage}
+                </Typography>
+            )}
+            
             <Box className={styles.codeInputContainer}>
                 {verificationCode.map((digit, index) => (
                 <TextField
@@ -150,6 +172,8 @@ const VerificationComponent = () => {
                     onChange={(e) => handleChange(e, index)}
                     onKeyDown={(e) => handleKeyDown(e, index)}
                     onPaste={handlePaste}
+                    // Add error styling to input if there is an error
+                    error={!!errorMessage} 
                     inputProps={{
                     maxLength: 1,
                     autoComplete: "one-time-code",
@@ -162,6 +186,8 @@ const VerificationComponent = () => {
                     borderRadius: "8px",
                     "& .MuiOutlinedInput-root": {
                         borderRadius: "8px",
+                        // Highlight red on error
+                        borderColor: errorMessage ? "#FF5151" : "inherit" 
                     },
                     marginBottom: "12px",
                     }}
