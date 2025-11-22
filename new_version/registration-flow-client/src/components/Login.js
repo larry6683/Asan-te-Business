@@ -269,12 +269,12 @@ const Login = () => {
   return (
     <div className={styles.loginContainer}>
       <Box className={styles.loginBox}>
-        <Typography className={styles.asanteTitle}>
+        <div className={styles.asanteTitle}>
           AsanTe
-        </Typography>
-        <Typography className={styles.welcomeText}>
+        </div>
+        <div className={styles.welcomeText}>
           Welcome!
-        </Typography>
+        </div>
         <Box
           component="form"
           className={styles.formContainer}

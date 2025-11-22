@@ -4,14 +4,13 @@
   align-items: center;
   min-height: 80vh;
   width: 100vw;
-  background: url("../assets/image1.png") no-repeat;
   padding: 20px;
   box-sizing: border-box;
 }
 
 .loginBox {
   width: 580px;
-  min-height: 770px;
+  min-height: 570px;
   background-color: white;
   border-radius: 25px;
   background: var(--barcolor, white);
@@ -25,13 +24,6 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.imageContainer {
-  width: 210px;
-  height: 195px;
-  margin-top: 20px;
-  background: white url("../assets/business.png") no-repeat center;
-  background-size: contain;
-}
 
 .asanteTitle {
   margin-top: 50px;
@@ -39,7 +31,7 @@
   color: #6d7cb0;
   font-family: "Helvetica Neue", sans-serif;
   font-size: 72px;
-  font-weight: 700;
+  font-weight: bolder;
   font-style: normal;
 }
 
@@ -60,7 +52,6 @@
   color: black;
   font-family: "Helvetica Neue", sans-serif;
   font-size: 30px;
-  font-style: normal;
   font-weight: 400;
 }
 

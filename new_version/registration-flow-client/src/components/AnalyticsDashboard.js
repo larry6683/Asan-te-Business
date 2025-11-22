@@ -428,7 +428,7 @@ const AnalyticsDashboard = () => {
             </div>
 
             <div className={styles.modalFooter}>
-              <button className={styles.secondaryBtn} onClick={() => setShowSnapshotModal(false)}>Cancel</button>
+              <button className={styles.secondaryBtn} onClick={() => setShowSnapshotModal(false)}>Close</button>
               
               {isAutoActive ? (
                 <button className={`${styles.actionButton} ${styles.dangerBtn}`} onClick={toggleAutoSnapshot}>

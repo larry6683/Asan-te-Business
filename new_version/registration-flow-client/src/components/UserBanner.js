@@ -35,7 +35,7 @@ const UserBanner = () => {
         zIndex: 1000 // Ensure it sits above other elements
       }}
     >
-      <PersonIcon sx={{ fontSize: 16, color: '#6271AE' }} />
+      <PersonIcon sx={{ fontSize: 20, color: '#6271AE' }} />
       <Typography variant="caption" sx={{ color: '#6271AE', fontWeight: 500 }}>
         Logged in as: {email}
       </Typography>

@@ -1,14 +1,9 @@
-body{
-    background:#eaeff1;
+.pageContainer {
+  display: flex;             /* Optional: helps center if needed, or keep standard flow */
+  justify-content: center;
+  padding-top: 2rem;         /* Add some spacing from top */
+  box-sizing: border-box;
 }
-
-/* Responsive padding for mobile */
-@media (max-width: 900px) {
-  .pageContainer {
-    padding: 1rem;
-  }
-}
-
 .profileCard {
   max-width: 850px; /* Diminished size from 1000px */
   width: 100%;
@@ -54,7 +49,10 @@ body{
   gap: 1.5rem;
 }
 
-.emailTag {
+.userEmailTag{
+font-size: 1.5rem;
+}
+.entityEmailTag {
   background-color: rgba(255, 255, 255, 0.2);
   padding: 4px 12px;
   border-radius: 8px;

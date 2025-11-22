@@ -93,12 +93,12 @@ const UserProfile = () => {
               </Avatar>
             </Grid>
             <Grid item xs>
-              <Typography variant={isMobile ? "h5" : "h3"} fontWeight="800" sx={{ letterSpacing: "-0.5px" }}>
+              <div className={styles.userEmailTag} variant={isMobile ? "h5" : "h3"} fontWeight="800" sx={{ letterSpacing: "-0.5px" }}>
                 {user.email || "User Profile"}
-              </Typography>
+              </div>
               
               {entityData?.email && (
-                <div className={styles.emailTag}>
+                <div className={styles.entityEmailTag}>
                   <ContactMailIcon fontSize="small" />
                   <Typography variant="body2" fontWeight="500">
                     {entityData.type}: {entityData.email}
