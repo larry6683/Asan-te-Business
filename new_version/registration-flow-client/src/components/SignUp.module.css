@@ -1,68 +1,92 @@
+/* src/components/SignUp.module.css */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%), 
+    radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
 .box {
-  width: 580px;
-  height: 901px;
-  background-color: lightgrey;
-  border-radius: 25px;
-  background: var(--barcolor, white);
+  width: 100%;
+  max-width: 550px;
+  padding: 50px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
   position: relative;
 }
 
 .backContainer {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  top: 40px;
+  left: 40px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  transition: color 0.2s;
+  font-weight: 500;
 }
 
-.imageContainer {
-  padding: 1px;
-  width: 210px;
-  height: 180px;
-  margin-top: 20px;
-  background: white;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+.backContainer:hover {
+  color: #64748b;
 }
 
-.textSecondary {
-  margin-top: 20px;
+.logo {
+  width: 90px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 2rem !important;
+  color: #1e293b;
+  margin-bottom: 12px !important;
   text-align: center;
-  color: black;
-  font-family: "Helvetica Neue", sans-serif;
-  font-size: 30px;
-  font-style: normal;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
 }
 
-.highlight {
-  text-transform: uppercase;
+.subtitle {
+  color: #64748b;
+  margin-bottom: 40px;
+  font-size: 1.1rem;
 }
 
-.highlight-business {
-  color: #5d6aab;
+.formContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.highlight-consumer {
-  color: #9e5fc6;
+.signupButton {
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 30px;
+  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+  transition: all 0.2s;
 }
 
-.highlight-non-profit {
-  color: #80be10;
-}
-
-.customPlaceholder::placeholder {
-  color: #000;
-  font-family: "Helvetica Neue";
-  font-size: 22px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  opacity: 0.1148;
+.signupButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.4);
 }

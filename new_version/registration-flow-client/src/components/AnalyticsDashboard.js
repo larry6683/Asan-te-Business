@@ -20,7 +20,7 @@ const AnalyticsDashboard = () => {
     loadAnalyticsData();
   }, []);
 
-  // ✅ NEW: Reset pagination when filters change
+  // Reset pagination when filters change
   useEffect(() => {
     setPage(0);
   }, [statusFilter, typeFilter, searchTerm]);
@@ -76,8 +76,18 @@ const AnalyticsDashboard = () => {
   // --- Filtering ---
   const getFilteredSessions = () => {
     let filtered = [...sessions];
-    if (statusFilter !== 'all') filtered = filtered.filter(s => s.status === statusFilter);
+    
+    // Filter logic matches "Complete/Incomplete" based on appUserId
+    if (statusFilter !== 'all') {
+        if (statusFilter === 'Complete') {
+            filtered = filtered.filter(s => s.appUserId);
+        } else if (statusFilter === 'Incomplete') {
+            filtered = filtered.filter(s => !s.appUserId);
+        }
+    }
+
     if (typeFilter !== 'all') filtered = filtered.filter(s => s.userType === typeFilter);
+    
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(s => 
@@ -139,8 +149,8 @@ const AnalyticsDashboard = () => {
           />
           <select className={styles.filterSelect} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="all">All Statuses</option>
-            <option value="Completed">Completed</option>
-            <option value="In Progress">In Progress</option>
+            <option value="Complete">Complete</option>
+            <option value="Incomplete">Incomplete</option>
           </select>
           <select className={styles.filterSelect} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
              <option value="all">All Types</option>
@@ -151,14 +161,20 @@ const AnalyticsDashboard = () => {
           <button className={styles.searchButton} onClick={() => {setSearchTerm(''); setStatusFilter('all'); setTypeFilter('all');}}>Clear</button>
         </div>
       </div>
+{/* Row count shown */}
+ <div className={styles.resultCount}>
+            Showing <strong className={styles.showingNumberofRows}>{filteredSessions.length}</strong> sessions out of <strong>{sessions.length}</strong>
+        </div>
 
       {/* Table Section */}
       <div className={styles.tableContainer}>
+        {/* ✅ NEW: Results Count Display */}
+       
+
         <div className={styles.tableScrollArea}>
           <table className={styles.table}>
             <thead className={styles.tableHead}>
               <tr>
-                {/* ✅ NEW: S.No Column Header */}
                 <th className={styles.tableHeaderCell} style={{ width: '60px' }}>S.No</th>
                 <th className={styles.tableHeaderCell}>Session ID</th>
                 <th className={styles.tableHeaderCell}>User ID</th>
@@ -176,7 +192,6 @@ const AnalyticsDashboard = () => {
             <tbody>
               {paginatedSessions.map((session, index) => (
                 <tr key={session.sessionId} className={styles.tableRow}>
-                  {/* ✅ NEW: S.No Calculation */}
                   <td className={styles.tableCell}>
                     <strong>{(page * rowsPerPage) + index + 1}</strong>
                   </td>

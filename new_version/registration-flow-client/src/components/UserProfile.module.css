@@ -1,0 +1,156 @@
+body{
+    background:#eaeff1;
+}
+
+/* Responsive padding for mobile */
+@media (max-width: 900px) {
+  .pageContainer {
+    padding: 1rem;
+  }
+}
+
+.profileCard {
+  max-width: 850px; /* Diminished size from 1000px */
+  width: 100%;
+  border-radius: 24px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+}
+
+.header {
+  background: linear-gradient(to right, #6271AE, #9ACDDA);
+  padding: 3rem 2.5rem;
+  color: white;
+  position: relative;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 1.5rem;
+  }
+}
+
+.avatarContainer {
+  width: 80px;
+  height: 80px;
+  background-color: white !important;
+  color: #6271AE !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 600px) {
+  .avatarContainer {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.emailTag {
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.contentSection {
+  padding: 2.5rem;
+}
+
+@media (max-width: 600px) {
+  .contentSection {
+    padding: 1.5rem;
+  }
+}
+
+.entityHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.entityAvatar {
+  width: 56px;
+  height: 56px;
+}
+
+.descriptionCard {
+  border-radius: 20px !important;
+  border: 1px solid #eaeff1 !important;
+  background-color: #fafafa !important;
+  box-shadow: none !important;
+}
+
+.chipCustom {
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+}
+
+.sidebar {
+  background-color: #fff;
+  border-radius: 20px;
+  border: 1px solid #f0f0f0;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.linkButton {
+  justify-content: flex-start !important;
+  text-transform: none !important;
+  border-radius: 10px !important;
+  color: #555 !important;
+  padding: 10px !important;
+}
+
+.linkButton:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.shopButton {
+  justify-content: flex-start !important;
+  text-transform: none !important;
+  border-radius: 10px !important;
+  background-color: #2e7d32 !important;
+  color: white !important;
+}
+
+.shopButton:hover {
+  background-color: #1b5e20 !important;
+}
+
+.actionButton {
+  border-radius: 12px !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.headerActions {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(4px);
+}
+
+.headerActions:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.logoutButton {
+  background-color: #ff5252 !important;
+  color: white !important;
+}
+
+.logoutButton:hover {
+  background-color: #d32f2f !important;
+}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { 
   Box, Typography, Button, Paper, Avatar, Divider, CircularProgress, 
-  Card, CardContent, Grid, Chip, Link as MuiLink, Stack
+  Card, CardContent, Grid, Chip, Stack, useTheme, useMediaQuery
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -14,12 +14,16 @@ import LanguageIcon from '@mui/icons-material/Language';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShareIcon from '@mui/icons-material/Share';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
 import { grpcService } from "../api/grpcService";
-import { logoutUser } from "../authentication/logoutUser";
-import { AsanteUsersUserPool } from "../user-auth/asanteUsersUserPool"; 
+import styles from "./UserProfile.module.css";
 
 const UserProfile = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const user = useSelector((state) => state.user) || JSON.parse(sessionStorage.getItem("asante:user") || "{}");
   const [entityData, setEntityData] = useState(null);
@@ -49,20 +53,18 @@ const UserProfile = () => {
         }
 
         if (entity) {
-          // Helper to safely get list
           const causesList = entity.getCausesList ? entity.getCausesList() : [];
           const socialsList = entity.getSocialMediaLinksList ? entity.getSocialMediaLinksList() : [];
 
           setEntityData({
             type: type,
             name: type === "Business" ? entity.getBusinessName() : entity.getBeneficiaryName(),
+            email: entity.getEmail(),
             description: type === "Business" ? entity.getBusinessDescription() : entity.getBeneficiaryDescription(),
             city: entity.getLocationCity(),
             state: entity.getLocationState(),
             website: entity.getWebsiteUrl(),
             size: type === "Business" ? entity.getBusinessSize() : entity.getBeneficiarySize(),
-            
-            // ✅ NEW FIELDS
             shopUrl: entity.getShopUrl(),
             socialMedia: socialsList,
             causes: causesList.map(c => ({ name: c.getName(), rank: c.getRank() }))
@@ -79,141 +81,213 @@ const UserProfile = () => {
   }, []);
 
   return (
-    <Box sx={{ p: 4, display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "#F4F6F8", minHeight: "100vh" }}>
-      <Paper elevation={3} sx={{ maxWidth: 900, width: "100%", borderRadius: "20px", overflow: "hidden", mb: 4 }}>
+    <div className={styles.pageContainer}>
+      <Paper elevation={0} className={styles.profileCard}>
         
-        {/* Header */}
-        <Box sx={{ background: "linear-gradient(to right, #6271AE, #9ACDDA)", p: 4, display: "flex", alignItems: "center", color: "white" }}>
-          <Avatar sx={{ width: 80, height: 80, bgcolor: "white", color: "#6271AE", mr: 3 }}>
-            <PersonIcon sx={{ fontSize: 50 }} />
-          </Avatar>
-          <Box>
-            <Typography variant="h4" fontWeight="bold">{user.email ? user.email.split('@')[0] : "User Profile"}</Typography>
-            <Typography variant="subtitle1" sx={{ opacity: 0.9, display: "flex", alignItems: "center", gap: 1 }}>
-              <EmailIcon fontSize="small" /> {user.email}
-            </Typography>
-          </Box>
-        </Box>
+        {/* Header Section */}
+        <div className={styles.header}>
+          <Grid container alignItems="center" spacing={3}>
+            <Grid item>
+              <Avatar className={styles.avatarContainer}>
+                <PersonIcon sx={{ fontSize: { xs: 40, md: 60 } }} />
+              </Avatar>
+            </Grid>
+            <Grid item xs>
+              <Typography variant={isMobile ? "h5" : "h3"} fontWeight="800" sx={{ letterSpacing: "-0.5px" }}>
+                {user.email || "User Profile"}
+              </Typography>
+              
+              {entityData?.email && (
+                <div className={styles.emailTag}>
+                  <ContactMailIcon fontSize="small" />
+                  <Typography variant="body2" fontWeight="500">
+                    {entityData.type}: {entityData.email}
+                  </Typography>
+                </div>
+              )}
+            </Grid>
+            
+            {/* Desktop Buttons */}
+            {!isMobile && (
+              <Grid item>
+                <Stack direction="row" spacing={2}>
+                  <Button 
+                    variant="contained" 
+                    startIcon={<ArrowBackIcon />}
+                    onClick={() => navigate('/home')}
+                    className={`${styles.actionButton} ${styles.headerActions}`}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    className={`${styles.actionButton} ${styles.logoutButton}`}
+                  >
+                    Logout
+                  </Button>
+                </Stack>
+              </Grid>
+            )}
+          </Grid>
+        </div>
 
-        <Box sx={{ p: 4 }}>
+        <Box className={styles.contentSection}>
           {loading ? (
-            <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>
+            <Box display="flex" justifyContent="center" p={8}>
+              <CircularProgress size={60} thickness={4} sx={{ color: "#6271AE" }} />
+            </Box>
           ) : entityData ? (
             <Grid container spacing={4}>
-              <Grid item xs={12}>
-                <Card variant="outlined" sx={{ borderRadius: "15px" }}>
-                  <CardContent>
-                    {/* Name & Type */}
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                      <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar sx={{ bgcolor: entityData.type === 'Business' ? '#e3f2fd' : '#e8f5e9', color: entityData.type === 'Business' ? '#1976d2' : '#2e7d32' }}>
-                          {entityData.type === 'Business' ? <BusinessIcon /> : <VolunteerActivismIcon />}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="h5" fontWeight="bold">{entityData.name}</Typography>
-                          <Chip label={entityData.type} size="small" color={entityData.type === 'Business' ? "primary" : "success"} variant="outlined" />
-                        </Box>
-                      </Box>
+              {/* Main Content Column */}
+              <Grid item xs={12} md={8}>
+                <Box mb={4}>
+                  <div className={styles.entityHeader}>
+                    <Avatar 
+                      className={styles.entityAvatar}
+                      sx={{ 
+                        bgcolor: entityData.type === 'Business' ? '#e3f2fd' : '#e8f5e9', 
+                        color: entityData.type === 'Business' ? '#1976d2' : '#2e7d32' 
+                      }}
+                    >
+                      {entityData.type === 'Business' ? <BusinessIcon fontSize="large" /> : <VolunteerActivismIcon fontSize="large" />}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h4" fontWeight="bold" color="#333">{entityData.name}</Typography>
+                      <Chip 
+                        label={entityData.type} 
+                        size="small" 
+                        sx={{ mt: 0.5, fontWeight: 600, bgcolor: entityData.type === 'Business' ? '#e3f2fd' : '#e8f5e9', color: entityData.type === 'Business' ? '#1976d2' : '#2e7d32' }} 
+                      />
                     </Box>
-                    <Divider sx={{ my: 2 }} />
+                  </div>
+                  
+                  <Card variant="outlined" className={styles.descriptionCard}>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" gutterBottom fontWeight="600" color="text.primary">About</Typography>
+                      <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                        {entityData.description || "No description provided for this organization."}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
 
-                    <Grid container spacing={4}>
-                      {/* Left Column: Description & Location */}
-                      <Grid item xs={12} md={7}>
-                        <Typography variant="subtitle2" color="textSecondary" gutterBottom>Description</Typography>
-                        <Typography variant="body1" paragraph>
-                          {entityData.description || "No description provided."}
-                        </Typography>
+                {entityData.causes && entityData.causes.length > 0 && (
+                  <Box mb={4}>
+                    <Typography variant="h6" gutterBottom fontWeight="600" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <FavoriteIcon color="error" fontSize="small"/> Causes & Categories
+                    </Typography>
+                    <Box display="flex" flexWrap="wrap" gap={1.5}>
+                      {entityData.causes.map((cause, idx) => (
+                        <Chip 
+                          key={idx} 
+                          label={cause.name} 
+                          className={styles.chipCustom}
+                          sx={{ 
+                            bgcolor: cause.rank === "PRIMARY" ? "rgba(98, 113, 174, 0.1)" : "transparent",
+                            border: "1px solid",
+                            borderColor: cause.rank === "PRIMARY" ? "#6271AE" : "#e0e0e0",
+                            color: cause.rank === "PRIMARY" ? "#6271AE" : "text.secondary"
+                          }} 
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+              </Grid>
 
-                        <Typography variant="subtitle2" color="textSecondary" gutterBottom sx={{ mt: 2 }}>Location</Typography>
-                        <Typography variant="body1" display="flex" alignItems="center" gap={1}>
-                          <LocationOnIcon fontSize="small" color="action"/> {entityData.city}, {entityData.state}
-                        </Typography>
+              {/* Sidebar Info Column */}
+              <Grid item xs={12} md={4}>
+                <div className={styles.sidebar}>
+                  <Typography variant="h6" fontWeight="700" mb={3} color="#6271AE">Details</Typography>
+                  
+                  <Stack spacing={3}>
+                    <Box>
+                      <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase">Location</Typography>
+                      <Typography variant="body1" fontWeight="500" display="flex" alignItems="center" gap={1} mt={0.5}>
+                        <LocationOnIcon fontSize="small" sx={{ color: "#6271AE" }}/> {entityData.city}, {entityData.state}
+                      </Typography>
+                    </Box>
 
-                        {/* ✅ Causes Section */}
-                        {entityData.causes && entityData.causes.length > 0 && (
-                          <Box mt={3}>
-                            <Typography variant="subtitle2" color="textSecondary" gutterBottom>Causes & Categories</Typography>
-                            <Box display="flex" flexWrap="wrap" gap={1}>
-                              {entityData.causes.map((cause, idx) => (
-                                <Chip 
-                                  key={idx} 
-                                  icon={<FavoriteIcon fontSize="small" />} 
-                                  label={cause.name} 
-                                  size="small" 
-                                  color="secondary" 
-                                  variant={cause.rank === "PRIMARY" ? "filled" : "outlined"} 
-                                />
-                              ))}
-                            </Box>
-                          </Box>
+                    <Divider light />
+
+                    <Box>
+                      <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase">Organization Size</Typography>
+                      <Typography variant="body1" fontWeight="500" mt={0.5}>
+                        {entityData.size}
+                      </Typography>
+                    </Box>
+
+                    <Divider light />
+
+                    {/* Links Section */}
+                    <Box>
+                      <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase">Connect</Typography>
+                      <Stack spacing={1.5} mt={1}>
+                        {entityData.website && (
+                          <Button 
+                            href={entityData.website} 
+                            target="_blank" 
+                            startIcon={<LanguageIcon />}
+                            className={styles.linkButton}
+                          >
+                            Website
+                          </Button>
                         )}
-                      </Grid>
-                      
-                      {/* Right Column: Links & Contact */}
-                      <Grid item xs={12} md={5}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          
-                          {/* Website */}
-                          {entityData.website && (
-                            <Box>
-                              <Typography variant="subtitle2" color="textSecondary">Website</Typography>
-                              <MuiLink href={entityData.website} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <LanguageIcon fontSize="small" /> {entityData.website}
-                              </MuiLink>
-                            </Box>
-                          )}
+                        
+                        {entityData.shopUrl && (
+                          <Button 
+                            href={entityData.shopUrl} 
+                            target="_blank" 
+                            variant="contained"
+                            startIcon={<StorefrontIcon />}
+                            className={styles.shopButton}
+                          >
+                            Visit Shop
+                          </Button>
+                        )}
 
-                          {/* ✅ Store Link */}
-                          {entityData.shopUrl && (
-                            <Box>
-                              <Typography variant="subtitle2" color="textSecondary">Online Store</Typography>
-                              <MuiLink href={entityData.shopUrl} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold", color: "#2e7d32" }}>
-                                <StorefrontIcon fontSize="small" /> Visit Shop
-                              </MuiLink>
-                            </Box>
-                          )}
-
-                          {/* ✅ Social Media Links */}
-                          {entityData.socialMedia && entityData.socialMedia.length > 0 && (
-                            <Box>
-                              <Typography variant="subtitle2" color="textSecondary">Social Media</Typography>
-                              <Stack spacing={1}>
-                                {entityData.socialMedia.map((link, idx) => (
-                                  <MuiLink key={idx} href={link} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <ShareIcon fontSize="small" /> {link}
-                                  </MuiLink>
-                                ))}
-                              </Stack>
-                            </Box>
-                          )}
-
-                          <Box>
-                            <Typography variant="subtitle2" color="textSecondary">Size</Typography>
-                            <Typography variant="body1">{entityData.size}</Typography>
-                          </Box>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+                        {entityData.socialMedia && entityData.socialMedia.map((link, idx) => (
+                          <Button 
+                            key={idx}
+                            href={link} 
+                            target="_blank" 
+                            startIcon={<ShareIcon />}
+                            className={styles.linkButton}
+                          >
+                            Social Media
+                          </Button>
+                        ))}
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </div>
               </Grid>
             </Grid>
           ) : (
-            <Typography variant="body1" color="textSecondary" align="center">No organization linked.</Typography>
+            <Paper sx={{ p: 6, textAlign: "center", borderRadius: "20px", bgcolor: "#fafafa", border: "2px dashed #e0e0e0" }}>
+              <Typography variant="h6" color="textSecondary">No organization profile linked yet.</Typography>
+              <Button variant="contained" sx={{ mt: 2, borderRadius: "20px" }} onClick={() => navigate('/home')}>
+                Go to Dashboard
+              </Button>
+            </Paper>
           )}
 
-          <Box mt={4} display="flex" justifyContent="center" gap={2}>
-            <Button variant="contained" onClick={() => navigate('/home')} sx={{ borderRadius: "28px", textTransform: "none", px: 4 }}>
-              Back to Dashboard
-            </Button>
-            <Button variant="outlined" onClick={handleLogout} sx={{ borderRadius: "28px", textTransform: "none", px: 4 }}>
-              Logout
-            </Button>
-          </Box>
+          {/* Mobile Action Buttons */}
+          {isMobile && (
+            <Box mt={4} display="flex" flexDirection="column" gap={2}>
+              <Button variant="outlined" fullWidth onClick={() => navigate('/home')} className={styles.actionButton}>
+                Back to Dashboard
+              </Button>
+              <Button variant="contained" fullWidth onClick={handleLogout} className={`${styles.actionButton} ${styles.logoutButton}`}>
+                Logout
+              </Button>
+            </Box>
+          )}
         </Box>
       </Paper>
-    </Box>
+    </div>
   );
 };
 
