@@ -1,11 +1,9 @@
-# new-grpc-api/src/services/business/business_service.py
-# UPDATED VERSION with GetBusinessByUserEmail method
-
 from config.config import Config
 from sqlalchemy import func
 from src.public.tables import (
     Business, BusinessSize, AppUser, BusinessUser, BusinessUserPermissionRole,
-    Cause, BusinessCausePreference, CausePreferenceRank
+    Cause, BusinessCausePreference, CausePreferenceRank,
+    BusinessShop, BusinessSocialMedia  # ✅ ADDED TABLES
 )
 from database.db_manager import DatabaseManager
 from converters.business_converter import BusinessConverter
@@ -14,14 +12,62 @@ from utils.validator import Validator
 from utils.cause_mapper import CauseMapper
 from codegen.business.business_pb2 import (
     GetBusinessRequest, GetBusinessResponse,
-    GetBusinessByUserEmailRequest, GetBusinessByUserEmailResponse,  # NEW
+    GetBusinessByUserEmailRequest, GetBusinessByUserEmailResponse,
     CreateBusinessRequest, CreateBusinessResponse,
-    Business as ProtoBusiness
+    Business as ProtoBusiness, Cause as ProtoCause # ✅ ADDED Cause Alias
 )
 from codegen.business.business_pb2_grpc import BusinessServiceServicer
 
 class BusinessService(BusinessServiceServicer):
     
+    # ✅ HELPER: Map Database Object -> Proto Message (Including new fields)
+    def _map_to_proto(self, session, domain_business):
+        # 1. Get Shop URL
+        shop = session.query(BusinessShop).filter(
+            BusinessShop.business_id == domain_business.id
+        ).first()
+        shop_url = shop.shop_url if shop else ""
+
+        # 2. Get Social Media Links
+        socials = session.query(BusinessSocialMedia).filter(
+            BusinessSocialMedia.business_id == domain_business.id
+        ).all()
+        social_links = [s.social_media_link for s in socials] if socials else []
+
+        # 3. Get Causes with Ranks
+        cause_prefs = session.query(BusinessCausePreference).filter(
+            BusinessCausePreference.business_id == domain_business.id
+        ).all()
+        
+        proto_causes = []
+        for pref in cause_prefs:
+            cause_rec = session.query(Cause).filter(Cause.cause_id == pref.cause_id).first()
+            rank_rec = session.query(CausePreferenceRank).filter(
+                CausePreferenceRank.cause_preference_rank_id == pref.cause_preference_rank_id
+            ).first()
+            
+            if cause_rec:
+                proto_causes.append(ProtoCause(
+                    name=cause_rec.cause_name,
+                    rank=rank_rec.cause_preference_rank_name if rank_rec else "UNRANKED"
+                ))
+
+        return ProtoBusiness(
+            id=domain_business.id,
+            business_name=domain_business.business_name,
+            email=domain_business.email,
+            website_url=domain_business.website_url,
+            phone_number=domain_business.phone_number,
+            location_city=domain_business.location_city,
+            location_state=domain_business.location_state,
+            ein=domain_business.ein,
+            business_description=domain_business.business_description,
+            business_size=BusinessConverter.size_to_string(domain_business.business_size),
+            shop_url=shop_url,              # ✅ New Field
+            social_media_links=social_links, # ✅ New Field
+            causes=proto_causes             # ✅ New Field
+        )
+
     def GetBusiness(self, request: GetBusinessRequest, context):
         response = GetBusinessResponse()
         
@@ -42,18 +88,8 @@ class BusinessService(BusinessServiceServicer):
                     return response
                 
                 domain_business = BusinessConverter.to_domain(db_business)
-                response.business.CopyFrom(ProtoBusiness(
-                    id=domain_business.id,
-                    business_name=domain_business.business_name,
-                    email=domain_business.email,
-                    website_url=domain_business.website_url,
-                    phone_number=domain_business.phone_number,
-                    location_city=domain_business.location_city,
-                    location_state=domain_business.location_state,
-                    ein=domain_business.ein,
-                    business_description=domain_business.business_description,
-                    business_size=BusinessConverter.size_to_string(domain_business.business_size)
-                ))
+                # ✅ Use Helper
+                response.business.CopyFrom(self._map_to_proto(session, domain_business))
                 
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
@@ -63,10 +99,9 @@ class BusinessService(BusinessServiceServicer):
         
         return response
     
-    # NEW METHOD: Get business by user email
     def GetBusinessByUserEmail(self, request: GetBusinessByUserEmailRequest, context):
         response = GetBusinessByUserEmailResponse()
-        response.has_business = False  # Default to False
+        response.has_business = False
         
         try:
             if not Validator.is_valid_email(request.user_email):
@@ -74,8 +109,6 @@ class BusinessService(BusinessServiceServicer):
                 return response
             
             with DatabaseManager.get_session() as session:
-                # Query: Find business linked to this user's email
-                # Join: app_user -> business_user -> business
                 db_business = session.query(Business).join(
                     BusinessUser, Business.business_id == BusinessUser.business_id
                 ).join(
@@ -85,24 +118,12 @@ class BusinessService(BusinessServiceServicer):
                 ).first()
                 
                 if db_business:
-                    # Business found!
                     response.has_business = True
                     domain_business = BusinessConverter.to_domain(db_business)
-                    response.business.CopyFrom(ProtoBusiness(
-                        id=domain_business.id,
-                        business_name=domain_business.business_name,
-                        email=domain_business.email,
-                        website_url=domain_business.website_url,
-                        phone_number=domain_business.phone_number,
-                        location_city=domain_business.location_city,
-                        location_state=domain_business.location_state,
-                        ein=domain_business.ein,
-                        business_description=domain_business.business_description,
-                        business_size=BusinessConverter.size_to_string(domain_business.business_size)
-                    ))
+                    # ✅ Use Helper
+                    response.business.CopyFrom(self._map_to_proto(session, domain_business))
                     print(f"✅ Found business for user {request.user_email}: {db_business.business_name}")
                 else:
-                    # No business found - this is OK, not an error
                     response.has_business = False
                     print(f"ℹ️ No business found for user {request.user_email}")
                 
@@ -183,23 +204,38 @@ class BusinessService(BusinessServiceServicer):
 
                 print(f"✅ Business Record Created: {new_business.business_id}")
 
-                # --- 🔍 DEBUGGING / FIX SECTION START ---
-                print(f"🔍 LINKING USER: Request email is '{request.user_email}'")
-                
-                # Link user if provided
+                # ✅ SAVE SHOP URL
+                if request.shop_url:
+                    new_shop = BusinessShop(
+                        business_id=new_business.business_id,
+                        shop_url=request.shop_url
+                    )
+                    session.add(new_shop)
+                    print(f"🛍️ Shop URL saved: {request.shop_url}")
+
+                # ✅ SAVE SOCIAL MEDIA
+                if request.social_media_links:
+                    for link in request.social_media_links:
+                        if link.strip():
+                            new_social = BusinessSocialMedia(
+                                business_id=new_business.business_id,
+                                social_media_link=link.strip()
+                            )
+                            session.add(new_social)
+                    print(f"📱 Saved {len(request.social_media_links)} social media links")
+
+                # Link user
                 if request.user_email:
                     user = session.query(AppUser).filter(
                         func.lower(AppUser.email) == func.lower(request.user_email)
                     ).first()
                     
                     if user:
-                        print(f"✅ User Found: ID={user.app_user_id} (Email: {user.email})")
                         admin_role = session.query(BusinessUserPermissionRole).filter(
                             BusinessUserPermissionRole.code == 1
                         ).first()
                         
                         if admin_role:
-                            print(f"✅ Admin Role Found: ID={admin_role.business_user_permission_role_id}")
                             business_user = BusinessUser(
                                 business_id=new_business.business_id,
                                 app_user_id=user.app_user_id,
@@ -207,73 +243,27 @@ class BusinessService(BusinessServiceServicer):
                             )
                             session.add(business_user)
                 
-                # CREATE CAUSE PREFERENCES
-                if request.cause_codes:
-                    print(f"📥 Received {len(request.cause_codes)} cause codes from frontend")
+                # Create Cause Preferences
+                if hasattr(request, 'cause_codes') and request.cause_codes:
+                    print(f"📥 Received {len(request.cause_codes)} cause codes")
+                    default_rank = session.query(CausePreferenceRank).filter(CausePreferenceRank.code == 1).first()
                     
-                    # Get default rank (unranked for businesses)
-                    default_rank = session.query(CausePreferenceRank).filter(
-                        CausePreferenceRank.code == 1
-                    ).first()
-                    
-                    if not default_rank:
-                        print("❌ ERROR: No unranked cause preference rank found")
-                        response.errors.append(
-                            ErrorHandler.internal_error("No unranked cause preference rank found")
-                        )
-                        session.rollback()
-                        return response
-                    
-                    print(f"✅ Using rank: {default_rank.cause_preference_rank_name} (code={default_rank.code})")
-                    
-                    # Process each cause code from frontend
-                    causes_saved = 0
-                    causes_failed = []
-                    
-                    for enum_value in request.cause_codes:
-                        # Convert enum to database name
-                        db_cause_name = CauseMapper.enum_to_db_name(enum_value)
-                        print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
-                        
-                        # Look up cause by database name
-                        cause = session.query(Cause).filter(
-                            Cause.cause_name == db_cause_name
-                        ).first()
-                        
-                        if cause:
-                            print(f"✅ Found cause in DB: '{cause.cause_name}' (ID={cause.cause_id})")
+                    if default_rank:
+                        for enum_value in request.cause_codes:
+                            db_cause_name = CauseMapper.enum_to_db_name(enum_value)
+                            cause = session.query(Cause).filter(Cause.cause_name == db_cause_name).first()
                             
-                            # Create preference record
-                            cause_pref = BusinessCausePreference(
-                                business_id=new_business.business_id,
-                                cause_id=cause.cause_id,
-                                cause_preference_rank_id=default_rank.cause_preference_rank_id
-                            )
-                            session.add(cause_pref)
-                            causes_saved += 1
-                            print(f"💾 Saved preference for '{cause.cause_name}'")
-                        else:
-                            print(f"⚠️ Cause not found in database: '{db_cause_name}'")
-                            causes_failed.append(db_cause_name)
-                    
-                    print(f"\n📊 Summary: {causes_saved} causes saved, {len(causes_failed)} failed")
-                    if causes_failed:
-                        print(f"❌ Failed causes: {', '.join(causes_failed)}")
+                            if cause:
+                                cause_pref = BusinessCausePreference(
+                                    business_id=new_business.business_id,
+                                    cause_id=cause.cause_id,
+                                    cause_preference_rank_id=default_rank.cause_preference_rank_id
+                                )
+                                session.add(cause_pref)
                 
-                # Convert to response
+                # Convert to response using Helper
                 domain_business = BusinessConverter.to_domain(new_business)
-                response.business.CopyFrom(ProtoBusiness(
-                    id=domain_business.id,
-                    business_name=domain_business.business_name,
-                    email=domain_business.email,
-                    website_url=domain_business.website_url,
-                    phone_number=domain_business.phone_number,
-                    location_city=domain_business.location_city,
-                    location_state=domain_business.location_state,
-                    ein=domain_business.ein,
-                    business_description=domain_business.business_description,
-                    business_size=BusinessConverter.size_to_string(domain_business.business_size)
-                ))
+                response.business.CopyFrom(self._map_to_proto(session, domain_business))
                 
                 print(f"✅ Business created successfully with ID: {new_business.business_id}")
                 

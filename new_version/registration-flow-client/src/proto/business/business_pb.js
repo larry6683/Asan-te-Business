@@ -42,7 +42,7 @@ goog.exportSymbol('proto.business.GetBusinessResponse', null, global);
  * @constructor
  */
 proto.business.Business = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.business.Business.repeatedFields_, null);
 };
 goog.inherits(proto.business.Business, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -200,6 +200,13 @@ if (goog.DEBUG && !COMPILED) {
   proto.business.CreateBusinessResponse.displayName = 'proto.business.CreateBusinessResponse';
 }
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.business.Business.repeatedFields_ = [12,13];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -240,7 +247,11 @@ locationCity: jspb.Message.getFieldWithDefault(msg, 6, ""),
 locationState: jspb.Message.getFieldWithDefault(msg, 7, ""),
 ein: jspb.Message.getFieldWithDefault(msg, 8, ""),
 businessDescription: jspb.Message.getFieldWithDefault(msg, 9, ""),
-businessSize: jspb.Message.getFieldWithDefault(msg, 10, "")
+businessSize: jspb.Message.getFieldWithDefault(msg, 10, ""),
+shopUrl: jspb.Message.getFieldWithDefault(msg, 11, ""),
+socialMediaLinksList: (f = jspb.Message.getRepeatedField(msg, 12)) == null ? undefined : f,
+causesList: jspb.Message.toObjectList(msg.getCausesList(),
+    proto.business.Cause.toObject, includeInstance)
   };
 
   if (includeInstance) {
@@ -316,6 +327,19 @@ proto.business.Business.deserializeBinaryFromReader = function(msg, reader) {
     case 10:
       var value = /** @type {string} */ (reader.readString());
       msg.setBusinessSize(value);
+      break;
+    case 11:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setShopUrl(value);
+      break;
+    case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addSocialMediaLinks(value);
+      break;
+    case 13:
+      var value = new proto.business.Cause;
+      reader.readMessage(value,proto.business.Cause.deserializeBinaryFromReader);
+      msg.addCauses(value);
       break;
     default:
       reader.skipField();
@@ -414,6 +438,28 @@ proto.business.Business.serializeBinaryToWriter = function(message, writer) {
     writer.writeString(
       10,
       f
+    );
+  }
+  f = message.getShopUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
+      f
+    );
+  }
+  f = message.getSocialMediaLinksList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      12,
+      f
+    );
+  }
+  f = message.getCausesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      13,
+      f,
+      proto.business.Cause.serializeBinaryToWriter
     );
   }
 };
@@ -596,6 +642,99 @@ proto.business.Business.prototype.getBusinessSize = function() {
  */
 proto.business.Business.prototype.setBusinessSize = function(value) {
   return jspb.Message.setProto3StringField(this, 10, value);
+};
+
+
+/**
+ * optional string shop_url = 11;
+ * @return {string}
+ */
+proto.business.Business.prototype.getShopUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.business.Business} returns this
+ */
+proto.business.Business.prototype.setShopUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * repeated string social_media_links = 12;
+ * @return {!Array<string>}
+ */
+proto.business.Business.prototype.getSocialMediaLinksList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 12));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.business.Business} returns this
+ */
+proto.business.Business.prototype.setSocialMediaLinksList = function(value) {
+  return jspb.Message.setField(this, 12, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.business.Business} returns this
+ */
+proto.business.Business.prototype.addSocialMediaLinks = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 12, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.business.Business} returns this
+ */
+proto.business.Business.prototype.clearSocialMediaLinksList = function() {
+  return this.setSocialMediaLinksList([]);
+};
+
+
+/**
+ * repeated Cause causes = 13;
+ * @return {!Array<!proto.business.Cause>}
+ */
+proto.business.Business.prototype.getCausesList = function() {
+  return /** @type{!Array<!proto.business.Cause>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.business.Cause, 13));
+};
+
+
+/**
+ * @param {!Array<!proto.business.Cause>} value
+ * @return {!proto.business.Business} returns this
+*/
+proto.business.Business.prototype.setCausesList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
+};
+
+
+/**
+ * @param {!proto.business.Cause=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.business.Cause}
+ */
+proto.business.Business.prototype.addCauses = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.business.Cause, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.business.Business} returns this
+ */
+proto.business.Business.prototype.clearCausesList = function() {
+  return this.setCausesList([]);
 };
 
 
@@ -1477,7 +1616,7 @@ proto.business.Cause.prototype.setRank = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.business.CreateBusinessRequest.repeatedFields_ = [11];
+proto.business.CreateBusinessRequest.repeatedFields_ = [11,13];
 
 
 
@@ -1520,7 +1659,9 @@ ein: jspb.Message.getFieldWithDefault(msg, 7, ""),
 businessDescription: jspb.Message.getFieldWithDefault(msg, 8, ""),
 businessSize: jspb.Message.getFieldWithDefault(msg, 9, ""),
 userEmail: jspb.Message.getFieldWithDefault(msg, 10, ""),
-causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f
+causeCodesList: (f = jspb.Message.getRepeatedField(msg, 11)) == null ? undefined : f,
+shopUrl: jspb.Message.getFieldWithDefault(msg, 12, ""),
+socialMediaLinksList: (f = jspb.Message.getRepeatedField(msg, 13)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -1600,6 +1741,14 @@ proto.business.CreateBusinessRequest.deserializeBinaryFromReader = function(msg,
     case 11:
       var value = /** @type {string} */ (reader.readString());
       msg.addCauseCodes(value);
+      break;
+    case 12:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setShopUrl(value);
+      break;
+    case 13:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addSocialMediaLinks(value);
       break;
     default:
       reader.skipField();
@@ -1704,6 +1853,20 @@ proto.business.CreateBusinessRequest.serializeBinaryToWriter = function(message,
   if (f.length > 0) {
     writer.writeRepeatedString(
       11,
+      f
+    );
+  }
+  f = message.getShopUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      12,
+      f
+    );
+  }
+  f = message.getSocialMediaLinksList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      13,
       f
     );
   }
@@ -1924,6 +2087,61 @@ proto.business.CreateBusinessRequest.prototype.addCauseCodes = function(value, o
  */
 proto.business.CreateBusinessRequest.prototype.clearCauseCodesList = function() {
   return this.setCauseCodesList([]);
+};
+
+
+/**
+ * optional string shop_url = 12;
+ * @return {string}
+ */
+proto.business.CreateBusinessRequest.prototype.getShopUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.business.CreateBusinessRequest} returns this
+ */
+proto.business.CreateBusinessRequest.prototype.setShopUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * repeated string social_media_links = 13;
+ * @return {!Array<string>}
+ */
+proto.business.CreateBusinessRequest.prototype.getSocialMediaLinksList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 13));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.business.CreateBusinessRequest} returns this
+ */
+proto.business.CreateBusinessRequest.prototype.setSocialMediaLinksList = function(value) {
+  return jspb.Message.setField(this, 13, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.business.CreateBusinessRequest} returns this
+ */
+proto.business.CreateBusinessRequest.prototype.addSocialMediaLinks = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 13, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.business.CreateBusinessRequest} returns this
+ */
+proto.business.CreateBusinessRequest.prototype.clearSocialMediaLinksList = function() {
+  return this.setSocialMediaLinksList([]);
 };
 
 

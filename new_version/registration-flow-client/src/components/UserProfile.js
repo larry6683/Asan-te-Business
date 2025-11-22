@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { 
-  Box, 
-  Typography, 
-  Button, 
-  Paper, 
-  Avatar, 
-  Divider, 
-  CircularProgress, 
-  Card, 
-  CardContent, 
-  Grid,
-  Chip
+  Box, Typography, Button, Paper, Avatar, Divider, CircularProgress, 
+  Card, CardContent, Grid, Chip, Link as MuiLink, Stack
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -20,9 +11,10 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import EmailIcon from '@mui/icons-material/Email';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import LanguageIcon from '@mui/icons-material/Language';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShareIcon from '@mui/icons-material/Share';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import { grpcService } from "../api/grpcService";
-
-// ✅ Import Logout Dependencies
 import { logoutUser } from "../authentication/logoutUser";
 import { AsanteUsersUserPool } from "../user-auth/asanteUsersUserPool"; 
 
@@ -33,31 +25,9 @@ const UserProfile = () => {
   const [entityData, setEntityData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ ADDED: Handle Logout Logic
   const handleLogout = () => {
-    console.log("Logging out from Profile...");
-    
-    const performLocalLogout = () => {
-      sessionStorage.clear(); // Clear all session data
-      navigate("/"); // Redirect to Login
-    };
-
-    if (user.email) {
-      logoutUser(
-        AsanteUsersUserPool, 
-        user.email, 
-        (msg) => {
-          console.log("Cognito Logout Success:", msg);
-          performLocalLogout();
-        },
-        (err) => {
-          console.error("Cognito Logout Error:", err);
-          performLocalLogout(); // Force logout locally even if API fails
-        }
-      );
-    } else {
-      performLocalLogout();
-    }
+    sessionStorage.clear();
+    window.location.href = "/";
   };
 
   useEffect(() => {
@@ -67,37 +37,39 @@ const UserProfile = () => {
       const beneficiaryId = sessionStorage.getItem("asante:beneficiaryId");
 
       try {
+        let response, entity, type;
         if (businessId) {
-          const response = await grpcService.getBusiness(businessId, token);
-          const business = response.getBusiness();
-          
-          setEntityData({
-            type: "Business",
-            role: "Administrator",
-            name: business.getBusinessName(),
-            description: business.getBusinessDescription(),
-            city: business.getLocationCity(),
-            state: business.getLocationState(),
-            website: business.getWebsiteUrl(),
-            size: business.getBusinessSize()
-          });
+          response = await grpcService.getBusiness(businessId, token);
+          entity = response.getBusiness();
+          type = "Business";
         } else if (beneficiaryId) {
-          const response = await grpcService.getBeneficiary(beneficiaryId, token);
-          const beneficiary = response.getBeneficiary();
-          
+          response = await grpcService.getBeneficiary(beneficiaryId, token);
+          entity = response.getBeneficiary();
+          type = "Non-Profit";
+        }
+
+        if (entity) {
+          // Helper to safely get list
+          const causesList = entity.getCausesList ? entity.getCausesList() : [];
+          const socialsList = entity.getSocialMediaLinksList ? entity.getSocialMediaLinksList() : [];
+
           setEntityData({
-            type: "Non-Profit",
-            role: "Administrator",
-            name: beneficiary.getBeneficiaryName(),
-            description: beneficiary.getBeneficiaryDescription(),
-            city: beneficiary.getLocationCity(),
-            state: beneficiary.getLocationState(),
-            website: beneficiary.getWebsiteUrl(),
-            size: beneficiary.getBeneficiarySize()
+            type: type,
+            name: type === "Business" ? entity.getBusinessName() : entity.getBeneficiaryName(),
+            description: type === "Business" ? entity.getBusinessDescription() : entity.getBeneficiaryDescription(),
+            city: entity.getLocationCity(),
+            state: entity.getLocationState(),
+            website: entity.getWebsiteUrl(),
+            size: type === "Business" ? entity.getBusinessSize() : entity.getBeneficiarySize(),
+            
+            // ✅ NEW FIELDS
+            shopUrl: entity.getShopUrl(),
+            socialMedia: socialsList,
+            causes: causesList.map(c => ({ name: c.getName(), rank: c.getRank() }))
           });
         }
       } catch (error) {
-        console.error("Error fetching entity details:", error);
+        console.error("Error fetching details:", error);
       } finally {
         setLoading(false);
       }
@@ -108,51 +80,32 @@ const UserProfile = () => {
 
   return (
     <Box sx={{ p: 4, display: "flex", flexDirection: "column", alignItems: "center", backgroundColor: "#F4F6F8", minHeight: "100vh" }}>
-      
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          maxWidth: 800, 
-          width: "100%", 
-          borderRadius: "20px", 
-          overflow: "hidden",
-          mb: 4 
-        }}
-      >
-        {/* Header Section */}
-        <Box sx={{ 
-          background: "linear-gradient(to right, #6271AE, #9ACDDA)", 
-          p: 4, 
-          display: "flex", 
-          alignItems: "center",
-          color: "white"
-        }}>
+      <Paper elevation={3} sx={{ maxWidth: 900, width: "100%", borderRadius: "20px", overflow: "hidden", mb: 4 }}>
+        
+        {/* Header */}
+        <Box sx={{ background: "linear-gradient(to right, #6271AE, #9ACDDA)", p: 4, display: "flex", alignItems: "center", color: "white" }}>
           <Avatar sx={{ width: 80, height: 80, bgcolor: "white", color: "#6271AE", mr: 3 }}>
             <PersonIcon sx={{ fontSize: 50 }} />
           </Avatar>
           <Box>
-            <Typography variant="h4" fontWeight="bold">
-              {user.email ? user.email.split('@')[0] : "User Profile"}
-            </Typography>
+            <Typography variant="h4" fontWeight="bold">{user.email ? user.email.split('@')[0] : "User Profile"}</Typography>
             <Typography variant="subtitle1" sx={{ opacity: 0.9, display: "flex", alignItems: "center", gap: 1 }}>
               <EmailIcon fontSize="small" /> {user.email}
             </Typography>
           </Box>
         </Box>
 
-        {/* Content Section */}
         <Box sx={{ p: 4 }}>
           {loading ? (
-            <Box display="flex" justifyContent="center" p={4}>
-              <CircularProgress />
-            </Box>
+            <Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>
           ) : entityData ? (
             <Grid container spacing={4}>
               <Grid item xs={12}>
                 <Card variant="outlined" sx={{ borderRadius: "15px" }}>
                   <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                      <Box display="flex" alignItems="center" gap={2} mb={2}>
+                    {/* Name & Type */}
+                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                      <Box display="flex" alignItems="center" gap={2}>
                         <Avatar sx={{ bgcolor: entityData.type === 'Business' ? '#e3f2fd' : '#e8f5e9', color: entityData.type === 'Business' ? '#1976d2' : '#2e7d32' }}>
                           {entityData.type === 'Business' ? <BusinessIcon /> : <VolunteerActivismIcon />}
                         </Avatar>
@@ -162,41 +115,81 @@ const UserProfile = () => {
                         </Box>
                       </Box>
                     </Box>
-
                     <Divider sx={{ my: 2 }} />
 
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={6}>
-                        <Typography variant="body2" color="textSecondary">Description</Typography>
+                    <Grid container spacing={4}>
+                      {/* Left Column: Description & Location */}
+                      <Grid item xs={12} md={7}>
+                        <Typography variant="subtitle2" color="textSecondary" gutterBottom>Description</Typography>
                         <Typography variant="body1" paragraph>
                           {entityData.description || "No description provided."}
                         </Typography>
+
+                        <Typography variant="subtitle2" color="textSecondary" gutterBottom sx={{ mt: 2 }}>Location</Typography>
+                        <Typography variant="body1" display="flex" alignItems="center" gap={1}>
+                          <LocationOnIcon fontSize="small" color="action"/> {entityData.city}, {entityData.state}
+                        </Typography>
+
+                        {/* ✅ Causes Section */}
+                        {entityData.causes && entityData.causes.length > 0 && (
+                          <Box mt={3}>
+                            <Typography variant="subtitle2" color="textSecondary" gutterBottom>Causes & Categories</Typography>
+                            <Box display="flex" flexWrap="wrap" gap={1}>
+                              {entityData.causes.map((cause, idx) => (
+                                <Chip 
+                                  key={idx} 
+                                  icon={<FavoriteIcon fontSize="small" />} 
+                                  label={cause.name} 
+                                  size="small" 
+                                  color="secondary" 
+                                  variant={cause.rank === "PRIMARY" ? "filled" : "outlined"} 
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
                       </Grid>
                       
-                      <Grid item xs={12} sm={6}>
+                      {/* Right Column: Links & Contact */}
+                      <Grid item xs={12} md={5}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          <Box>
-                            <Typography variant="body2" color="textSecondary">Location</Typography>
-                            <Typography variant="body1" display="flex" alignItems="center" gap={1}>
-                              <LocationOnIcon fontSize="small" color="action"/> 
-                              {entityData.city}, {entityData.state}
-                            </Typography>
-                          </Box>
                           
+                          {/* Website */}
                           {entityData.website && (
                             <Box>
-                              <Typography variant="body2" color="textSecondary">Website</Typography>
-                              <Typography variant="body1" display="flex" alignItems="center" gap={1}>
-                                <LanguageIcon fontSize="small" color="action"/> 
-                                <a href={entityData.website} target="_blank" rel="noreferrer" style={{ color: "#6271AE", textDecoration: "none" }}>
-                                  {entityData.website}
-                                </a>
-                              </Typography>
+                              <Typography variant="subtitle2" color="textSecondary">Website</Typography>
+                              <MuiLink href={entityData.website} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <LanguageIcon fontSize="small" /> {entityData.website}
+                              </MuiLink>
+                            </Box>
+                          )}
+
+                          {/* ✅ Store Link */}
+                          {entityData.shopUrl && (
+                            <Box>
+                              <Typography variant="subtitle2" color="textSecondary">Online Store</Typography>
+                              <MuiLink href={entityData.shopUrl} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1, fontWeight: "bold", color: "#2e7d32" }}>
+                                <StorefrontIcon fontSize="small" /> Visit Shop
+                              </MuiLink>
+                            </Box>
+                          )}
+
+                          {/* ✅ Social Media Links */}
+                          {entityData.socialMedia && entityData.socialMedia.length > 0 && (
+                            <Box>
+                              <Typography variant="subtitle2" color="textSecondary">Social Media</Typography>
+                              <Stack spacing={1}>
+                                {entityData.socialMedia.map((link, idx) => (
+                                  <MuiLink key={idx} href={link} target="_blank" rel="noreferrer" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <ShareIcon fontSize="small" /> {link}
+                                  </MuiLink>
+                                ))}
+                              </Stack>
                             </Box>
                           )}
 
                           <Box>
-                            <Typography variant="body2" color="textSecondary">Organization Size</Typography>
+                            <Typography variant="subtitle2" color="textSecondary">Size</Typography>
                             <Typography variant="body1">{entityData.size}</Typography>
                           </Box>
                         </Box>
@@ -207,44 +200,14 @@ const UserProfile = () => {
               </Grid>
             </Grid>
           ) : (
-            <Typography variant="body1" color="textSecondary" align="center">
-              No organization linked to this account.
-            </Typography>
+            <Typography variant="body1" color="textSecondary" align="center">No organization linked.</Typography>
           )}
 
-          {/* ✅ Action Buttons */}
           <Box mt={4} display="flex" justifyContent="center" gap={2}>
-            <Button 
-              variant="contained" 
-              onClick={() => navigate('/home')}
-              sx={{ 
-                borderRadius: "28px", 
-                textTransform: "none",
-                px: 4,
-                py: 1,
-                background: "linear-gradient(to right, #6271AE, #9ACDDA)"
-              }}
-            >
+            <Button variant="contained" onClick={() => navigate('/home')} sx={{ borderRadius: "28px", textTransform: "none", px: 4 }}>
               Back to Dashboard
             </Button>
-
-            {/* Logout Button */}
-            <Button 
-              variant="outlined" 
-              onClick={handleLogout}
-              sx={{ 
-                borderRadius: "28px", 
-                textTransform: "none",
-                px: 4,
-                py: 1,
-                borderColor: "#6271AE",
-                color: "#6271AE",
-                "&:hover": {
-                  backgroundColor: "#F5F5F5",
-                  borderColor: "#5B6BB0",
-                },
-              }}
-            >
+            <Button variant="outlined" onClick={handleLogout} sx={{ borderRadius: "28px", textTransform: "none", px: 4 }}>
               Logout
             </Button>
           </Box>

@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from codegen.error import error_pb2 as error_dot_error__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x62usiness/business.proto\x12\x08\x62usiness\x1a\x11\x65rror/error.proto\"\xd8\x01\n\x08\x42usiness\x12\n\n\x02id\x18\x01 \x01(\t\x12\x15\n\rbusiness_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x04 \x01(\t\x12\x14\n\x0cphone_number\x18\x05 \x01(\t\x12\x15\n\rlocation_city\x18\x06 \x01(\t\x12\x16\n\x0elocation_state\x18\x07 \x01(\t\x12\x0b\n\x03\x65in\x18\x08 \x01(\t\x12\x1c\n\x14\x62usiness_description\x18\t \x01(\t\x12\x15\n\rbusiness_size\x18\n \x01(\t\")\n\x12GetBusinessRequest\x12\x13\n\x0b\x62usiness_id\x18\x01 \x01(\t\"Y\n\x13GetBusinessResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error\"3\n\x1dGetBusinessByUserEmailRequest\x12\x12\n\nuser_email\x18\x01 \x01(\t\"z\n\x1eGetBusinessByUserEmailResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x14\n\x0chas_business\x18\x02 \x01(\x08\x12\x1c\n\x06\x65rrors\x18\x03 \x03(\x0b\x32\x0c.error.Error\"#\n\x05\x43\x61use\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04rank\x18\x02 \x01(\t\"\x82\x02\n\x15\x43reateBusinessRequest\x12\x15\n\rbusiness_name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x03 \x01(\t\x12\x14\n\x0cphone_number\x18\x04 \x01(\t\x12\x15\n\rlocation_city\x18\x05 \x01(\t\x12\x16\n\x0elocation_state\x18\x06 \x01(\t\x12\x0b\n\x03\x65in\x18\x07 \x01(\t\x12\x1c\n\x14\x62usiness_description\x18\x08 \x01(\t\x12\x15\n\rbusiness_size\x18\t \x01(\t\x12\x12\n\nuser_email\x18\n \x01(\t\x12\x13\n\x0b\x63\x61use_codes\x18\x0b \x03(\t\"\\\n\x16\x43reateBusinessResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error2\x9f\x02\n\x0f\x42usinessService\x12J\n\x0bGetBusiness\x12\x1c.business.GetBusinessRequest\x1a\x1d.business.GetBusinessResponse\x12k\n\x16GetBusinessByUserEmail\x12\'.business.GetBusinessByUserEmailRequest\x1a(.business.GetBusinessByUserEmailResponse\x12S\n\x0e\x43reateBusiness\x12\x1f.business.CreateBusinessRequest\x1a .business.CreateBusinessResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x17\x62usiness/business.proto\x12\x08\x62usiness\x1a\x11\x65rror/error.proto\"\xa7\x02\n\x08\x42usiness\x12\n\n\x02id\x18\x01 \x01(\t\x12\x15\n\rbusiness_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x04 \x01(\t\x12\x14\n\x0cphone_number\x18\x05 \x01(\t\x12\x15\n\rlocation_city\x18\x06 \x01(\t\x12\x16\n\x0elocation_state\x18\x07 \x01(\t\x12\x0b\n\x03\x65in\x18\x08 \x01(\t\x12\x1c\n\x14\x62usiness_description\x18\t \x01(\t\x12\x15\n\rbusiness_size\x18\n \x01(\t\x12\x10\n\x08shop_url\x18\x0b \x01(\t\x12\x1a\n\x12social_media_links\x18\x0c \x03(\t\x12\x1f\n\x06\x63\x61uses\x18\r \x03(\x0b\x32\x0f.business.Cause\")\n\x12GetBusinessRequest\x12\x13\n\x0b\x62usiness_id\x18\x01 \x01(\t\"Y\n\x13GetBusinessResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error\"3\n\x1dGetBusinessByUserEmailRequest\x12\x12\n\nuser_email\x18\x01 \x01(\t\"z\n\x1eGetBusinessByUserEmailResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x14\n\x0chas_business\x18\x02 \x01(\x08\x12\x1c\n\x06\x65rrors\x18\x03 \x03(\x0b\x32\x0c.error.Error\"#\n\x05\x43\x61use\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04rank\x18\x02 \x01(\t\"\xb0\x02\n\x15\x43reateBusinessRequest\x12\x15\n\rbusiness_name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x03 \x01(\t\x12\x14\n\x0cphone_number\x18\x04 \x01(\t\x12\x15\n\rlocation_city\x18\x05 \x01(\t\x12\x16\n\x0elocation_state\x18\x06 \x01(\t\x12\x0b\n\x03\x65in\x18\x07 \x01(\t\x12\x1c\n\x14\x62usiness_description\x18\x08 \x01(\t\x12\x15\n\rbusiness_size\x18\t \x01(\t\x12\x12\n\nuser_email\x18\n \x01(\t\x12\x13\n\x0b\x63\x61use_codes\x18\x0b \x03(\t\x12\x10\n\x08shop_url\x18\x0c \x01(\t\x12\x1a\n\x12social_media_links\x18\r \x03(\t\"\\\n\x16\x43reateBusinessResponse\x12$\n\x08\x62usiness\x18\x01 \x01(\x0b\x32\x12.business.Business\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error2\x9f\x02\n\x0f\x42usinessService\x12J\n\x0bGetBusiness\x12\x1c.business.GetBusinessRequest\x1a\x1d.business.GetBusinessResponse\x12k\n\x16GetBusinessByUserEmail\x12\'.business.GetBusinessByUserEmailRequest\x1a(.business.GetBusinessByUserEmailResponse\x12S\n\x0e\x43reateBusiness\x12\x1f.business.CreateBusinessRequest\x1a .business.CreateBusinessResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,21 +33,21 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'business.business_pb2', _gl
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_BUSINESS']._serialized_start=57
-  _globals['_BUSINESS']._serialized_end=273
-  _globals['_GETBUSINESSREQUEST']._serialized_start=275
-  _globals['_GETBUSINESSREQUEST']._serialized_end=316
-  _globals['_GETBUSINESSRESPONSE']._serialized_start=318
-  _globals['_GETBUSINESSRESPONSE']._serialized_end=407
-  _globals['_GETBUSINESSBYUSEREMAILREQUEST']._serialized_start=409
-  _globals['_GETBUSINESSBYUSEREMAILREQUEST']._serialized_end=460
-  _globals['_GETBUSINESSBYUSEREMAILRESPONSE']._serialized_start=462
-  _globals['_GETBUSINESSBYUSEREMAILRESPONSE']._serialized_end=584
-  _globals['_CAUSE']._serialized_start=586
-  _globals['_CAUSE']._serialized_end=621
-  _globals['_CREATEBUSINESSREQUEST']._serialized_start=624
-  _globals['_CREATEBUSINESSREQUEST']._serialized_end=882
-  _globals['_CREATEBUSINESSRESPONSE']._serialized_start=884
-  _globals['_CREATEBUSINESSRESPONSE']._serialized_end=976
-  _globals['_BUSINESSSERVICE']._serialized_start=979
-  _globals['_BUSINESSSERVICE']._serialized_end=1266
+  _globals['_BUSINESS']._serialized_end=352
+  _globals['_GETBUSINESSREQUEST']._serialized_start=354
+  _globals['_GETBUSINESSREQUEST']._serialized_end=395
+  _globals['_GETBUSINESSRESPONSE']._serialized_start=397
+  _globals['_GETBUSINESSRESPONSE']._serialized_end=486
+  _globals['_GETBUSINESSBYUSEREMAILREQUEST']._serialized_start=488
+  _globals['_GETBUSINESSBYUSEREMAILREQUEST']._serialized_end=539
+  _globals['_GETBUSINESSBYUSEREMAILRESPONSE']._serialized_start=541
+  _globals['_GETBUSINESSBYUSEREMAILRESPONSE']._serialized_end=663
+  _globals['_CAUSE']._serialized_start=665
+  _globals['_CAUSE']._serialized_end=700
+  _globals['_CREATEBUSINESSREQUEST']._serialized_start=703
+  _globals['_CREATEBUSINESSREQUEST']._serialized_end=1007
+  _globals['_CREATEBUSINESSRESPONSE']._serialized_start=1009
+  _globals['_CREATEBUSINESSRESPONSE']._serialized_end=1101
+  _globals['_BUSINESSSERVICE']._serialized_start=1104
+  _globals['_BUSINESSSERVICE']._serialized_end=1391
 # @@protoc_insertion_point(module_scope)

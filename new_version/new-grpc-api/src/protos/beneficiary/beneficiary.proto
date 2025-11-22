@@ -1,12 +1,10 @@
-// new-grpc-api/src/protos/beneficiary/beneficiary.proto
-// UPDATED VERSION - Add cause_codes field
-
 syntax = "proto3";
 
 package beneficiary;
 
 import "error/error.proto";
 
+// ✅ UPDATED: Added detailed fields
 message Beneficiary {
     string id = 1;
     string beneficiary_name = 2;
@@ -18,6 +16,15 @@ message Beneficiary {
     string ein = 8;
     string beneficiary_description = 9;
     string beneficiary_size = 10;
+    string shop_url = 11;                   // 🆕 Added
+    repeated string social_media_links = 12; // 🆕 Added
+    repeated Cause causes = 13;             // 🆕 Added
+}
+
+// 🆕 Added Cause message definition for Beneficiary
+message Cause {
+    string name = 1;
+    string rank = 2; 
 }
 
 message GetBeneficiaryRequest {
@@ -35,7 +42,7 @@ message GetBeneficiaryByUserEmailRequest {
 
 message GetBeneficiaryByUserEmailResponse {
     Beneficiary beneficiary = 1;
-    bool has_beneficiary = 2;  // Critical for Login.js logic
+    bool has_beneficiary = 2;
     repeated error.Error errors = 3;
 }
 
@@ -50,7 +57,9 @@ message CreateBeneficiaryRequest {
     string beneficiary_description = 8;
     string beneficiary_size = 9;
     string user_email = 10;
-    repeated string cause_codes = 11;  // 🆕 ADD THIS LINE
+    repeated string cause_codes = 11;
+    string shop_url = 12;                   // 🆕 Added
+    repeated string social_media_links = 13; // 🆕 Added
 }
 
 message CreateBeneficiaryResponse {

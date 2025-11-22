@@ -26,7 +26,7 @@ class ErrorHandler:
     def already_exists(entity_type: str, field: str, value: str) -> Error:
         return ErrorHandler.create_error(
             ErrorCode.ERROR_ALREADY_EXISTS,
-            f'{entity_type} already exists',
+            f'{entity_type} email already exists',
             f'{entity_type} with {field} "{value}" already exists'
         )
     

@@ -2,7 +2,8 @@ from config.config import Config
 from sqlalchemy import func
 from src.public.tables import (
     Beneficiary, BeneficiarySize, AppUser, BeneficiaryUser, BeneficiaryUserPermissionRole,
-    Cause, BeneficiaryCausePreference, CausePreferenceRank
+    Cause, BeneficiaryCausePreference, CausePreferenceRank,
+    BeneficiaryShop, BeneficiarySocialMedia  # ✅ ADDED TABLES
 )
 from database.db_manager import DatabaseManager
 from converters.beneficiary_converter import BeneficiaryConverter
@@ -11,14 +12,62 @@ from utils.validator import Validator
 from utils.cause_mapper import CauseMapper
 from codegen.beneficiary.beneficiary_pb2 import (
     GetBeneficiaryRequest, GetBeneficiaryResponse,
-    GetBeneficiaryByUserEmailRequest, GetBeneficiaryByUserEmailResponse, # ✅ Added these imports
+    GetBeneficiaryByUserEmailRequest, GetBeneficiaryByUserEmailResponse,
     CreateBeneficiaryRequest, CreateBeneficiaryResponse,
-    Beneficiary as ProtoBeneficiary
+    Beneficiary as ProtoBeneficiary, Cause as ProtoCause # ✅ ADDED Cause Alias
 )
 from codegen.beneficiary.beneficiary_pb2_grpc import BeneficiaryServiceServicer
 
 class BeneficiaryService(BeneficiaryServiceServicer):
     
+    # ✅ HELPER: Map Database Object -> Proto Message
+    def _map_to_proto(self, session, domain_beneficiary):
+        # 1. Shop URL
+        shop = session.query(BeneficiaryShop).filter(
+            BeneficiaryShop.beneficiary_id == domain_beneficiary.id
+        ).first()
+        shop_url = shop.shop_url if shop else ""
+
+        # 2. Social Media Links
+        socials = session.query(BeneficiarySocialMedia).filter(
+            BeneficiarySocialMedia.beneficiary_id == domain_beneficiary.id
+        ).all()
+        social_links = [s.social_media_link for s in socials] if socials else []
+
+        # 3. Causes with Ranks
+        cause_prefs = session.query(BeneficiaryCausePreference).filter(
+            BeneficiaryCausePreference.beneficiary_id == domain_beneficiary.id
+        ).all()
+        
+        proto_causes = []
+        for pref in cause_prefs:
+            cause_rec = session.query(Cause).filter(Cause.cause_id == pref.cause_id).first()
+            rank_rec = session.query(CausePreferenceRank).filter(
+                CausePreferenceRank.cause_preference_rank_id == pref.cause_preference_rank_id
+            ).first()
+            
+            if cause_rec:
+                proto_causes.append(ProtoCause(
+                    name=cause_rec.cause_name,
+                    rank=rank_rec.cause_preference_rank_name if rank_rec else "UNRANKED"
+                ))
+
+        return ProtoBeneficiary(
+            id=domain_beneficiary.id,
+            beneficiary_name=domain_beneficiary.beneficiary_name,
+            email=domain_beneficiary.email,
+            website_url=domain_beneficiary.website_url,
+            phone_number=domain_beneficiary.phone_number,
+            location_city=domain_beneficiary.location_city,
+            location_state=domain_beneficiary.location_state,
+            ein=domain_beneficiary.ein,
+            beneficiary_description=domain_beneficiary.beneficiary_description,
+            beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size),
+            shop_url=shop_url,              # ✅ New Field
+            social_media_links=social_links, # ✅ New Field
+            causes=proto_causes             # ✅ New Field
+        )
+
     def GetBeneficiary(self, request: GetBeneficiaryRequest, context):
         response = GetBeneficiaryResponse()
         
@@ -39,18 +88,8 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                     return response
                 
                 domain_beneficiary = BeneficiaryConverter.to_domain(db_beneficiary)
-                response.beneficiary.CopyFrom(ProtoBeneficiary(
-                    id=domain_beneficiary.id,
-                    beneficiary_name=domain_beneficiary.beneficiary_name,
-                    email=domain_beneficiary.email,
-                    website_url=domain_beneficiary.website_url,
-                    phone_number=domain_beneficiary.phone_number,
-                    location_city=domain_beneficiary.location_city,
-                    location_state=domain_beneficiary.location_state,
-                    ein=domain_beneficiary.ein,
-                    beneficiary_description=domain_beneficiary.beneficiary_description,
-                    beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size)
-                ))
+                # ✅ Use Helper
+                response.beneficiary.CopyFrom(self._map_to_proto(session, domain_beneficiary))
                 
         except Exception as e:
             response.errors.append(ErrorHandler.internal_error(str(e)))
@@ -60,10 +99,9 @@ class BeneficiaryService(BeneficiaryServiceServicer):
         
         return response
 
-    # ✅ NEW METHOD ADDED HERE
     def GetBeneficiaryByUserEmail(self, request: GetBeneficiaryByUserEmailRequest, context):
         response = GetBeneficiaryByUserEmailResponse()
-        response.has_beneficiary = False  # Default
+        response.has_beneficiary = False
         
         try:
             if not Validator.is_valid_email(request.user_email):
@@ -71,7 +109,6 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                 return response
             
             with DatabaseManager.get_session() as session:
-                # Find beneficiary linked to user email
                 db_beneficiary = session.query(Beneficiary).join(
                     BeneficiaryUser, Beneficiary.beneficiary_id == BeneficiaryUser.beneficiary_id
                 ).join(
@@ -83,18 +120,8 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                 if db_beneficiary:
                     response.has_beneficiary = True
                     domain_beneficiary = BeneficiaryConverter.to_domain(db_beneficiary)
-                    response.beneficiary.CopyFrom(ProtoBeneficiary(
-                        id=domain_beneficiary.id,
-                        beneficiary_name=domain_beneficiary.beneficiary_name,
-                        email=domain_beneficiary.email,
-                        website_url=domain_beneficiary.website_url,
-                        phone_number=domain_beneficiary.phone_number,
-                        location_city=domain_beneficiary.location_city,
-                        location_state=domain_beneficiary.location_state,
-                        ein=domain_beneficiary.ein,
-                        beneficiary_description=domain_beneficiary.beneficiary_description,
-                        beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size)
-                    ))
+                    # ✅ Use Helper
+                    response.beneficiary.CopyFrom(self._map_to_proto(session, domain_beneficiary))
                     print(f"✅ Found beneficiary for user {request.user_email}")
                 else:
                     print(f"ℹ️ No beneficiary found for user {request.user_email}")
@@ -173,6 +200,26 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                 
                 session.add(new_beneficiary)
                 session.flush()
+
+                # ✅ SAVE SHOP URL
+                if request.shop_url:
+                    new_shop = BeneficiaryShop(
+                        beneficiary_id=new_beneficiary.beneficiary_id,
+                        shop_url=request.shop_url
+                    )
+                    session.add(new_shop)
+                    print(f"🛍️ Shop URL saved: {request.shop_url}")
+
+                # ✅ SAVE SOCIAL MEDIA
+                if request.social_media_links:
+                    for link in request.social_media_links:
+                        if link.strip():
+                            new_social = BeneficiarySocialMedia(
+                                beneficiary_id=new_beneficiary.beneficiary_id,
+                                social_media_link=link.strip()
+                            )
+                            session.add(new_social)
+                    print(f"📱 Saved {len(request.social_media_links)} social media links")
                 
                 # Link user if provided
                 if request.user_email:
@@ -193,66 +240,27 @@ class BeneficiaryService(BeneficiaryServiceServicer):
                             )
                             session.add(beneficiary_user)
                 
-                # CREATE CAUSE PREFERENCES FOR BENEFICIARY
+                # Create Cause Preferences
                 if hasattr(request, 'cause_codes') and request.cause_codes:
                     print(f"📥 Received {len(request.cause_codes)} cause codes for beneficiary")
+                    primary_rank = session.query(CausePreferenceRank).filter(CausePreferenceRank.code == 2).first()
                     
-                    # Get primary rank for beneficiaries
-                    primary_rank = session.query(CausePreferenceRank).filter(
-                        CausePreferenceRank.code == 2  # PRIMARY rank
-                    ).first()
-                    
-                    if not primary_rank:
-                        print("❌ ERROR: No primary cause preference rank found")
-                        response.errors.append(
-                            ErrorHandler.internal_error("No primary cause preference rank found")
-                        )
-                        session.rollback()
-                        return response
-                    
-                    print(f"✅ Using rank: {primary_rank.cause_preference_rank_name} (code={primary_rank.code})")
-                    
-                    # Process each cause code
-                    causes_saved = 0
-                    causes_failed = []
-                    
-                    for enum_value in request.cause_codes:
-                        db_cause_name = CauseMapper.enum_to_db_name(enum_value)
-                        print(f"🔄 Mapping: '{enum_value}' → '{db_cause_name}'")
-                        
-                        cause = session.query(Cause).filter(
-                            Cause.cause_name == db_cause_name
-                        ).first()
-                        
-                        if cause:
-                            print(f"✅ Found cause: '{cause.cause_name}' (ID={cause.cause_id})")
-                            cause_pref = BeneficiaryCausePreference(
-                                beneficiary_id=new_beneficiary.beneficiary_id,
-                                cause_id=cause.cause_id,
-                                cause_preference_rank_id=primary_rank.cause_preference_rank_id
-                            )
-                            session.add(cause_pref)
-                            causes_saved += 1
-                        else:
-                            print(f"⚠️ Cause not found: '{db_cause_name}'")
-                            causes_failed.append(db_cause_name)
-                    
-                    print(f"📊 Summary: {causes_saved} causes saved, {len(causes_failed)} failed")
+                    if primary_rank:
+                        for enum_value in request.cause_codes:
+                            db_cause_name = CauseMapper.enum_to_db_name(enum_value)
+                            cause = session.query(Cause).filter(Cause.cause_name == db_cause_name).first()
+                            
+                            if cause:
+                                cause_pref = BeneficiaryCausePreference(
+                                    beneficiary_id=new_beneficiary.beneficiary_id,
+                                    cause_id=cause.cause_id,
+                                    cause_preference_rank_id=primary_rank.cause_preference_rank_id
+                                )
+                                session.add(cause_pref)
                 
-                # Convert to response
+                # Convert to response using Helper
                 domain_beneficiary = BeneficiaryConverter.to_domain(new_beneficiary)
-                response.beneficiary.CopyFrom(ProtoBeneficiary(
-                    id=domain_beneficiary.id,
-                    beneficiary_name=domain_beneficiary.beneficiary_name,
-                    email=domain_beneficiary.email,
-                    website_url=domain_beneficiary.website_url,
-                    phone_number=domain_beneficiary.phone_number,
-                    location_city=domain_beneficiary.location_city,
-                    location_state=domain_beneficiary.location_state,
-                    ein=domain_beneficiary.ein,
-                    beneficiary_description=domain_beneficiary.beneficiary_description,
-                    beneficiary_size=BeneficiaryConverter.size_to_string(domain_beneficiary.beneficiary_size)
-                ))
+                response.beneficiary.CopyFrom(self._map_to_proto(session, domain_beneficiary))
                 
                 print(f"✅ Beneficiary created successfully with ID: {new_beneficiary.beneficiary_id}")
                 

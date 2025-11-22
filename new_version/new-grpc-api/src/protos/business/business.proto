@@ -4,6 +4,7 @@ package business;
 
 import "error/error.proto";
 
+// ✅ UPDATED: Added detailed fields
 message Business {
     string id = 1;
     string business_name = 2;
@@ -15,6 +16,9 @@ message Business {
     string ein = 8;
     string business_description = 9;
     string business_size = 10;
+    string shop_url = 11;                  // 🆕 Added
+    repeated string social_media_links = 12; // 🆕 Added
+    repeated Cause causes = 13;            // 🆕 Added
 }
 
 message GetBusinessRequest {
@@ -26,21 +30,19 @@ message GetBusinessResponse {
     repeated error.Error errors = 2;
 }
 
-// NEW: Request to get business by user email
 message GetBusinessByUserEmailRequest {
     string user_email = 1;
 }
 
-// NEW: Response for getting business by user email
 message GetBusinessByUserEmailResponse {
     Business business = 1;
-    bool has_business = 2;  // true if business exists, false if not found
+    bool has_business = 2;
     repeated error.Error errors = 3;
 }
 
 message Cause {
     string name = 1;
-    string rank = 2;  // "PRIMARY", "SUPPORTING", or "UNRANKED"
+    string rank = 2; // "PRIMARY", "SUPPORTING", or "UNRANKED"
 }
 
 message CreateBusinessRequest {
@@ -55,6 +57,8 @@ message CreateBusinessRequest {
     string business_size = 9;
     string user_email = 10;
     repeated string cause_codes = 11;
+    string shop_url = 12;                   // 🆕 Added
+    repeated string social_media_links = 13; // 🆕 Added
 }
 
 message CreateBusinessResponse {
@@ -64,6 +68,6 @@ message CreateBusinessResponse {
 
 service BusinessService {
     rpc GetBusiness(GetBusinessRequest) returns (GetBusinessResponse);
-    rpc GetBusinessByUserEmail(GetBusinessByUserEmailRequest) returns (GetBusinessByUserEmailResponse);  // NEW METHOD
+    rpc GetBusinessByUserEmail(GetBusinessByUserEmailRequest) returns (GetBusinessByUserEmailResponse);
     rpc CreateBusiness(CreateBusinessRequest) returns (CreateBusinessResponse);
 }

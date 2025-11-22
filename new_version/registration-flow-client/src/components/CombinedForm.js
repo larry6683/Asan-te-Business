@@ -13,7 +13,6 @@ import {
   IconButton,
   styled,
   Avatar,
-  Tooltip,
 } from "@mui/material";
 import styles from "./CombinedForm.module.css";
 import logo from "../assets/TE-Logo.svg";
@@ -21,9 +20,8 @@ import { ReactComponent as ArrowBackIcon } from "../assets/ionic-ios-arrow-back.
 import CloseIcon from "@mui/icons-material/Close";
 import { Stepper, Step, StepLabel } from "@mui/material";
 import { US_STATE } from "../types/UsState";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setProfileForm } from "../redux/profileFormSlice";
-import { clearStore } from "../redux/store";
 import { logoutCurrentUser } from "../user-auth/logoutUser";
 import { EntityRegistrationDtoFactory } from "../api/models/EntityRegistrationDtoFactory";
 import { RegistrationApiService } from "../api/registrationApiService";
@@ -45,24 +43,25 @@ const getUserFromStorage = () => {
         email: "",
         userType: "",
       };
-  // console.log("user from storage: ", user);
   return user;
 };
 
 const RegistrationForm = () => {
   const [activeStep, setActiveStep] = useState(2);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
-  // for apiErrors
+  
+  // Backend Error States
   const [nameNotUnique, setNameNotUnique] = useState(false);
   const [emailNotUnique, setEmailNotUnique] = useState(false);
   const [unhandledError, setUnhandledError] = useState(false);
-  const [entityType, setEntityType] = useState("Business"); // or "Non-Profit"
+  const [errorMessage, setErrorMessage] = useState(""); 
+
+  const [entityType, setEntityType] = useState("Business");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get entity type from storage
     const storedType = sessionStorage.getItem("asante:selectedOption"); 
     if (storedType) {
       setEntityType(storedType);
@@ -88,6 +87,8 @@ const RegistrationForm = () => {
   };
 
   const [formData, setFormData] = useState(loadForm());
+  
+  // Client-side validity
   const [formValidity, setFormValidity] = useState({
     name: true,
     email: true,
@@ -102,40 +103,35 @@ const RegistrationForm = () => {
 
   const handleNext = () => {
     if (formIsValid()) {
-      // clearStore(false);
       registerAndNavigate();
-    } // else {
-    //   highlight invalid fields
-    // }
+    }
   };
 
   const registerAndNavigate = () => {
-const userFromStorage = getUserFromStorage();
+    const userFromStorage = getUserFromStorage();
     const size = sessionStorage.getItem("asante:selectedSize", "");
     const causesString = sessionStorage.getItem("asante:selectedCauses") || "[]";
     const causes = JSON.parse(causesString);
 
-    // ✅ UPDATED CALL: Passing 'userFromStorage' instead of 'userFromStorage.id'
     const registrationDto = EntityRegistrationDtoFactory.createOrganizationRegistrationDto(
         entityType,
-        userFromStorage, // 👈 Pass the full object here
+        userFromStorage,
         size,
         causes,
         formData,
     );
 
-    console.log('Sending registration data:', {
-      entityType,
-      userId: userFromStorage.id,
-      userEmail: userFromStorage.email, // You should see the correct login email here now
-      size,
-      causes,
-      formData,
-      registrationDto
-    });
-    // console.log(businessRegistrationDto);
+    console.log('Sending registration data:', registrationDto);
+    
     const registrationApiService = new RegistrationApiService();
     
+    // Reset error states before request
+    setNameNotUnique(false);
+    setEmailNotUnique(false);
+    setAlreadyRegistered(false);
+    setUnhandledError(false);
+    setErrorMessage("");
+
     if (entityType === "Business" || entityType === "business") {
       registrationApiService.registerBusiness(registrationDto, handleSuccess, handleError);
     } else if (entityType === "Non-Profit" || entityType === "nonprofit") {
@@ -143,67 +139,78 @@ const userFromStorage = getUserFromStorage();
     }
   };
 
-    const handleSuccess = (jsonResponse) => {
-      console.log('🎉 Registration successful:', jsonResponse);
-      
-      // Determine entity type and save ID
-      const entityKey = entityType === "Business" ? "business" : "beneficiary";
-      const entityId = jsonResponse.data.id;
-      
-      sessionStorage.setItem(`asante:${entityKey}Id`, entityId);
-      
-      // Get user from storage and create cookie
-      const user = getUserFromStorage();
-      CookieFactory.createAppCookieFromDataOrStorage(
-        user,
-        { entityType: entityKey, entityId: entityId }
-      );
-      
-      // Navigate to home page
-      console.log('✅ Registration complete - navigating to /home');
-      navigate('/home');
-    };
+  const handleSuccess = (jsonResponse) => {
+    console.log('🎉 Registration successful:', jsonResponse);
+    const entityKey = entityType === "Business" ? "business" : "beneficiary";
+    const entityId = jsonResponse.data.id;
+    
+    sessionStorage.setItem(`asante:${entityKey}Id`, entityId);
+    
+    const user = getUserFromStorage();
+    CookieFactory.createAppCookieFromDataOrStorage(
+      user,
+      { entityType: entityKey, entityId: entityId }
+    );
+    
+    console.log('✅ Registration complete - navigating to /home');
+    navigate('/home');
+  };
 
+  // ✅ FIXED: Improved Error Parsing logic to use 'detail'
   const handleError = (error) => {
+    console.error("Registration Error Raw:", error);
     try {
-      const errorJson = JSON.parse(error.message);
-      setUnhandledError(false);
-      if (errorJson.errors) {
-        errorJson.errors.forEach((value) => {
-          if (value.errorCode === 102) {
-            setAlreadyRegistered(true);
-          } else if (value.errorCode === 108) {
-            setEmailNotUnique(true);
-          } else if (value.errorCode === 105) {
-            setNameNotUnique(true);
-          } else {
-            setUnhandledError(true);
+      let errorData = error;
+      
+      // Handle case where error is a stringified JSON (common in some gRPC-web setups)
+      if (typeof error.message === 'string' && error.message.startsWith('{')) {
+          try {
+            errorData = JSON.parse(error.message);
+          } catch (e) {
+            console.warn("Could not parse error message JSON");
           }
-        });
-      } else if (errorJson.message === "Unauthorized") {
-        navigate(`/`);
-      } else {
-        setUnhandledError(true);
       }
-    } catch (error) {
+
+      // Extract the specific error object
+      // The backend sends `errors` list in the response
+      const errorsList = errorData.errors || [];
+      const mainError = errorsList.length > 0 ? errorsList[0] : errorData;
+      
+      // Code 3 = ERROR_ALREADY_EXISTS (from error.proto)
+      if (mainError.code === 3) {
+         // The 'detail' field usually contains "Business with email 'x' already exists"
+         // The 'message' field usually contains just "Business already exists"
+         const detailText = mainError.detail || "";
+         const messageText = mainError.message || "";
+         
+         const combinedText = (detailText + " " + messageText).toLowerCase();
+         
+         // Set specific flags based on content
+         if (combinedText.includes("email")) {
+             setEmailNotUnique(true);
+             setErrorMessage(detailText || "This email is already associated with an account.");
+         } else if (combinedText.includes("name")) {
+             setNameNotUnique(true);
+             setErrorMessage(detailText || "This name is already registered.");
+         } else {
+             setAlreadyRegistered(true);
+             setErrorMessage(detailText || "This entity is already registered.");
+         }
+      } else {
+        // Handle other errors
+        setUnhandledError(true);
+        setErrorMessage(mainError.detail || mainError.message || "An unexpected error occurred.");
+      }
+    } catch (parseError) {
+      console.error("Error parsing failure:", parseError);
       setUnhandledError(true);
+      setErrorMessage("Registration failed due to a network or server error.");
     }
   };
 
   const formIsValid = () => {
-    // iterate over formValidity values and set validity to false if invalid
     const email = formData["email"];
     let emailValid = email.length > 7 && email.includes("@") && email.includes(".");
-    // let emailValid = false;
-    // // idk why i have to do this but /shrug
-    // // email > 7  && email.includes('@') && email.includes('.') does not work ???
-    // if (email.length > 7) {
-    //   if (email.includes("@")) {
-    //     if (email.includes(".")) {
-    //       emailValid = true;
-    //     }
-    //   }
-    // }
 
     const newValidationState = {
       ["name"]: formData["name"].length > 2,
@@ -217,7 +224,6 @@ const userFromStorage = getUserFromStorage();
       ...newValidationState,
     });
 
-    // return Object.values(newValidationState).every(Boolean);
     for (const key in newValidationState) {
       if (!newValidationState[key]) {
         return false;
@@ -228,25 +234,21 @@ const userFromStorage = getUserFromStorage();
 
   const handleChange = (prop) => (event) => {
     setFormData({ ...formData, [prop]: event.target.value });
+    
+    // Reset client-side validation error
     if (prop === "locationCity" || prop === "locationState") {
       if (!formValidity["locationCity"] || !formValidity["locationState"]) {
-        const newState = {
-          ["locationCity"]: true,
-          ["locationState"]: true,
-        };
-        setFormValidity({ ...formValidity, ...newState });
+        setFormValidity({ ...formValidity, ["locationCity"]: true, ["locationState"]: true });
       }
     } else if (!formValidity[prop]) {
       setFormValidity({ ...formValidity, [prop]: true });
     }
 
-    if (prop === "name" && nameNotUnique) {
-      setNameNotUnique(false);
-    } else if (prop === "email" && emailNotUnique) {
-      setEmailNotUnique(false);
-    } else if (unhandledError) {
-      setUnhandledError(false);
-    }
+    // Reset backend error flags immediately when user starts typing to fix it
+    if (prop === "name") setNameNotUnique(false);
+    if (prop === "email") setEmailNotUnique(false);
+    setAlreadyRegistered(false);
+    setUnhandledError(false);
   };
 
   const handleBackClick = () => {
@@ -255,11 +257,7 @@ const userFromStorage = getUserFromStorage();
   };
 
   const handleClose = () => {
-    // setIsVisible(false);
-    const navigateToLogin = () =>
-      setTimeout(() => {
-        navigate(`/`);
-      }, 300);
+    const navigateToLogin = () => setTimeout(() => { navigate(`/`); }, 300);
     logoutCurrentUser(navigateToLogin, navigateToLogin);
   };
 
@@ -272,7 +270,6 @@ const userFromStorage = getUserFromStorage();
     alignItems: "center",
   });
 
-
   const highlightClass = entityType === "Business" ? styles["highlight-business"] : styles["highlight-nonprofit"];
   const steps = entityType === "Business" 
     ? ["Causes", "Size", "Basics"]
@@ -280,80 +277,29 @@ const userFromStorage = getUserFromStorage();
 
   return (
     <Box className={styles.formContainer}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "16px",
-          transform: "translateY(-40px)",
-        }}
-      >
-        <Box
-          onClick={handleBackClick}
-          className={styles.backContainer}
-          sx={{ transform: "translateY(-25px) translateX(-25px)" }}
-        >
+      {/* Header Section */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", transform: "translateY(-40px)" }}>
+        <Box onClick={handleBackClick} className={styles.backContainer} sx={{ transform: "translateY(-25px) translateX(-25px)" }}>
           <ArrowBackIcon />
           <BackButton>Back</BackButton>
         </Box>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <Avatar
-            alt="Company Logo"
-            src={logo}
-            sx={{
-              width: 88,
-              height: 88,
-            }}
-          />
-          <Typography
-            variant="body1"
-            sx={{
-              color: "#000",
-              fontFamily: "Helvetica Neue",
-              fontSize: "30px",
-              fontStyle: "normal",
-              fontWeight: 400,
-              lineHeight: "normal",
-            }}
-          >
-            You are registering as a{" "}
-            <span className={highlightClass}>
-                {entityType === "Business" ? "Business" : "Non-Profit"}
-            </span>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Avatar alt="Company Logo" src={logo} sx={{ width: 88, height: 88 }} />
+          <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "30px", fontWeight: 400 }}>
+            You are registering as a <span className={highlightClass}>{entityType === "Business" ? "Business" : "Non-Profit"}</span>
           </Typography>
         </Box>
-        <IconButton
-          sx={{
-            color: "#000",
-            transform: "translateY(-30px) translateX(35px)",
-          }}
-          onClick={handleClose}
-        >
+        <IconButton sx={{ color: "#000", transform: "translateY(-30px) translateX(35px)" }} onClick={handleClose}>
           <CloseIcon />
         </IconButton>
       </Box>
 
-      <Box
-        sx={{ width: "100%", maxWidth: 400, margin: "0 auto", mb: 2, mt: -5 }}
-      >
+      <Box sx={{ width: "100%", maxWidth: 400, margin: "0 auto", mb: 2, mt: -5 }}>
         <Stepper activeStep={activeStep} alternativeLabel>
           {steps.map((label, index) => (
             <Step key={label} active={index === 2}>
               <StepLabel>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontSize: index === 2 ? "16px" : "14px",
-                    fontWeight: index === 2 ? 700 : 400,
-                    color: index === 2 ? "#000" : "#A0A0A0",
-                  }}
-                >
+                <Typography variant="body1" sx={{ fontSize: index === 2 ? "16px" : "14px", fontWeight: index === 2 ? 700 : 400, color: index === 2 ? "#000" : "#A0A0A0" }}>
                   {label}
                 </Typography>
               </StepLabel>
@@ -361,148 +307,80 @@ const userFromStorage = getUserFromStorage();
           ))}
         </Stepper>
       </Box>
-      <Box
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-        mb={4}
-        mt={4}
-      >
-        <Typography
-          variant="body1"
-          sx={{
-            color: "#4E4E4E",
-            fontFamily: "Helvetica Neue",
-            fontSize: "22px",
-            fontStyle: "normal",
-            fontWeight: 400,
-            lineHeight: "normal",
-            opacity: 0.57,
-          }}
-        >
+
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }} mb={4} mt={4}>
+        <Typography variant="body1" sx={{ color: "#4E4E4E", fontFamily: "Helvetica Neue", fontSize: "22px", fontWeight: 400, opacity: 0.57 }}>
           You can edit this information in your PROFILE
         </Typography>
       </Box>
+
+      {/* Global Error Message Display (for unhandled errors) */}
+      {unhandledError && (
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+            <Typography sx={{ color: "#FF5151", fontSize: "18px", fontWeight: 500 }}>
+                {errorMessage}
+            </Typography>
+        </Box>
+      )}
+      {alreadyRegistered && (
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+            <Typography sx={{ color: "#FF5151", fontSize: "18px", fontWeight: 500 }}>
+                {errorMessage || "This entity is already registered."}
+            </Typography>
+        </Box>
+      )}
+
       <Grid container spacing={2}>
         <Grid item xs={12} md={6} sx={{ transform: "translateX(175px)" }}>
+          
+          {/* NAME FIELD */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: " #000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
               <span>{entityType === "Business" ? "Business Name *" : "Non-Profit Name *"}</span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${!formValidity.name}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {formValidity.name ? "" : " Name is required!"}
-              </span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${alreadyRegistered}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {alreadyRegistered ? ' You already belong to a ${entityType === "Business" ? "Business" : "Non-Profit"} !' : ""}
-              </span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${nameNotUnique}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {nameNotUnique ? ' ${entityType === "Business" ? "Business" : "Non-Profit"} name already in use!' : ""}
-              </span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${unhandledError}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {unhandledError ? " Unknown error. Contact Admin." : ""}
-              </span>
+              
+              {!formValidity.name && (
+                  <span style={{ color: "#FF5151", display: "block", fontSize: "16px", marginTop: "5px" }}>
+                      Name is required (min 3 chars).
+                  </span>
+              )}
+              {/* ✅ SPECIFIC DB ERROR FOR NAME */}
+              {nameNotUnique && (
+                  <span style={{ color: "#FF5151", display: "block", fontSize: "16px", marginTop: "5px" }}>
+                      {errorMessage || "This name is already registered."}
+                  </span>
+              )}
             </Typography>
             <TextField
               variant="outlined"
               required
               fullWidth
               id="name"
-              placeholder={`Enter the name of your ${entityType === "Business" ? "Business" : "Non-Profit"} here`}
+              placeholder={`Enter ${entityType} name`}
               name="name"
               value={formData.name}
               onChange={handleChange("name")}
-              sx={{
-                width: "100%", // Use 100% width for responsive design
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                  borderColor: `${formValidity.name ? "#000000" : "red"}`, // Add red border if invalid
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              error={!formValidity.name || nameNotUnique}
+              sx={{ width: "100%", height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
+
+          {/* EMAIL FIELD */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
               <span>{entityType === "Business" ? "Business Email *" : "Non-Profit Email *"}</span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${!formValidity.email}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {formValidity.email ? "" : " Email is required!"}
-              </span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${emailNotUnique}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {emailNotUnique ? " Email already in use!" : ""}
-              </span>
+              
+              {!formValidity.email && (
+                  <span style={{ color: "#FF5151", display: "block", fontSize: "16px", marginTop: "5px" }}>
+                      Valid email is required.
+                  </span>
+              )}
+              {/* ✅ SPECIFIC DB ERROR FOR EMAIL */}
+              {emailNotUnique && (
+                  <span style={{ color: "#FF5151", display: "block", fontSize: "16px", marginTop: "5px" }}>
+                      {errorMessage || "This email is already in use."}
+                  </span>
+              )}
             </Typography>
             <TextField
               variant="outlined"
@@ -510,108 +388,41 @@ const userFromStorage = getUserFromStorage();
               required
               fullWidth
               id="email"
-              placeholder={`Enter your ${entityType === "Business" ? "Business" : "Non-Profit"} email here`}
+              placeholder={`Enter ${entityType} email`}
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange("email")}
-              sx={{
-                width: "100%",
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              style={{
-                color: `${formValidity.email ? "#000000" : "red"}`,
-                marginTop: "9px",
-                visibility: `${!formValidity.email}`,
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                  borderColor: `${formValidity.email ? "#000000" : "red"}`, // Add red border if invalid
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              error={!formValidity.email || emailNotUnique}
+              sx={{ width: "100%", height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
+
+          {/* Website (Optional) */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
               <span>{entityType === "Business" ? "Business Website " : "Non-Profit Website "}</span>
-              <span
-                style={{
-                  fontSize: "21px",
-                  fontWeight: 380,
-                  color: "#000",
-                  opacity: 0.59,
-                }}
-              >
-                (optional for now)
-              </span>
+              <span style={{ fontSize: "21px", fontWeight: 380, color: "#000", opacity: 0.59 }}>(optional for now)</span>
             </Typography>
             <TextField
               variant="outlined"
               margin="normal"
-              required
               fullWidth
               id="website"
-              placeholder="Enter website link here "
+              placeholder="Enter website link"
               name="website"
               value={formData.website}
               onChange={handleChange("website")}
-              sx={{
-                width: "100%",
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              sx={{ width: "100%", height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
+
+          {/* Phone (Optional) */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
-              Phone number{" "}
-              <span
-                style={{
-                  fontSize: "21px",
-                  color: "#000",
-                  fontWeight: 380,
-                  opacity: 0.59,
-                }}
-              >
-                (optional for now)
-              </span>
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
+              Phone number <span style={{ fontSize: "21px", color: "#000", fontWeight: 380, opacity: 0.59 }}>(optional for now)</span>
             </Typography>
             <TextField
               variant="outlined"
@@ -619,271 +430,116 @@ const userFromStorage = getUserFromStorage();
               fullWidth
               type="number"
               id="phoneNumber"
-              placeholder="Enter phone number here"
+              placeholder="Enter phone number"
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange("phoneNumber")}
-              sx={{
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              sx={{ height: "49px", borderRadius: "9px", marginTop: "10px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
         </Grid>
+
         <Grid item xs={12} md={6}>
+          {/* Location */}
           <Box width="93%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
               <span>{entityType === "Business" ? "Business Location *" : "Non-Profit Location *"}</span>
-              <span
-                style={{
-                  color: "#FF5151",
-                  marginTop: "9px",
-                  visibility: `${!(formValidity.locationCity || formValidity.locationState)}`,
-                  fontSize: "20px",
-                  fontWeight: 380,
-                }}
-              >
-                {formValidity.locationCity && formValidity.locationState
-                  ? ""
-                  : " Location is required!"}
-              </span>
+              {!(formValidity.locationCity && formValidity.locationState) && (
+                  <span style={{ color: "#FF5151", display: "block", fontSize: "16px", marginTop: "5px" }}>
+                      City and State are required.
+                  </span>
+              )}
             </Typography>
-            <Box
-              width="75%"
-              sx={{ display: "flex", gap: 2.2, marginTop: "5px" }}
-            >
+            <Box width="75%" sx={{ display: "flex", gap: 2.2, marginTop: "5px" }}>
               <TextField
                 variant="outlined"
                 required
                 fullWidth
                 id="city-location"
-                placeholder="Enter city here"
+                placeholder="Enter city"
                 name="location-city"
                 value={formData.locationCity}
                 onChange={handleChange("locationCity")}
-                sx={{
-                  color: "#D6D6D6",
-                  fontFamily: "Helvetica Neue",
-                  fontSize: "22px",
-                  fontStyle: "normal",
-                  fontWeight: "400",
-                  lineHeight: "normal",
-                  opacity: 1,
-                }}
-                InputProps={{
-                  style: {
-                    borderRadius: "9px",
-                    borderColor: `${formValidity.locationCity ? "#000000" : "red"}`, // Add red border if invalid
-                  },
-                  classes: {
-                    input: styles.customPlaceholder,
-                  },
-                }}
+                error={!formValidity.locationCity}
+                sx={{ color: "#D6D6D6", fontFamily: "Helvetica Neue", fontSize: "22px", fontWeight: 400 }}
+                InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
               />
               <Box width="40%" mb={2}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel
-                    id="city-select-label"
-                    sx={{
-                      color: "#303030",
-                      fontFamily: "Helvetica Neue",
-                      fontSize: "22px",
-                      fontStyle: "normal",
-                      fontWeight: "500",
-                      lineHeight: "normal",
-                      opacity: 1,
-                      paddingRight: "10px",
-                    }}
-                  >
-                    State
-                  </InputLabel>
+                <FormControl fullWidth variant="outlined" error={!formValidity.locationState}>
+                  <InputLabel id="city-select-label" sx={{ color: "#303030", fontSize: "22px" }}>State</InputLabel>
                   <Select
                     value={formData.locationState}
                     onChange={handleChange("locationState")}
                     label="State"
-                    sx={{
-                      height: "55px",
-                      borderRadius: "9px",
-                      backgroundColor: "#fff",
-                    }}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          borderRadius: "9px",
-                          maxHeight: "330px",
-                        },
-                      },
-                    }}
+                    sx={{ height: "55px", borderRadius: "9px", backgroundColor: "#fff" }}
+                    MenuProps={{ PaperProps: { sx: { borderRadius: "9px", maxHeight: "330px" } } }}
                   >
-                    {Object.entries(US_STATE).map(([key, value], index) => (
-                      <MenuItem key={key} value={value}>
-                        {value}
-                      </MenuItem>
+                    {Object.entries(US_STATE).map(([key, value]) => (
+                      <MenuItem key={key} value={value}>{value}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Box>
             </Box>
           </Box>
+
+          {/* Social Media */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
-              Add Social Media{" "}
-              <span
-                style={{
-                  fontSize: "21px",
-                  fontWeight: 380,
-                  color: "#000",
-                  opacity: 0.59,
-                }}
-              >
-                (optional for now)
-              </span>
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
+              Add Social Media <span style={{ fontSize: "21px", fontWeight: 380, color: "#000", opacity: 0.59 }}>(optional for now)</span>
             </Typography>
             <TextField
               variant="outlined"
               margin="normal"
               fullWidth
-              placeholder="Enter Linkedln/Instagram or other link here"
+              placeholder="Enter Linkedln/Instagram link"
               value={formData.socialMedia}
               onChange={handleChange("socialMedia")}
-              sx={{
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              sx={{ height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
+
+          {/* Shop URL */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
-              Shop URL{" "}
-              <span
-                style={{
-                  fontSize: "21px",
-                  fontWeight: 380,
-                  color: "#000",
-                  opacity: 0.59,
-                }}
-              >
-                (optional for now)
-              </span>
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
+              Shop URL <span style={{ fontSize: "21px", fontWeight: 380, color: "#000", opacity: 0.59 }}>(optional for now)</span>
             </Typography>
             <TextField
               variant="outlined"
               margin="normal"
-              required
               fullWidth
               id="shopUrl"
-              placeholder="Enter link to your Shopify store here"
+              placeholder="Enter link to your store"
               name="shopUrl"
               value={formData.shopUrl}
               onChange={handleChange("shopUrl")}
-              sx={{
-                width: "100%",
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              sx={{ width: "100%", height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
+
+          {/* Team Member Invite */}
           <Box width="70%" mb={2}>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#000",
-                fontFamily: "Helvetica Neue",
-                fontSize: "23px",
-                fontStyle: "normal",
-                fontWeight: 400,
-                lineHeight: "normal",
-              }}
-            >
+            <Typography variant="body1" sx={{ color: "#000", fontFamily: "Helvetica Neue", fontSize: "23px", fontWeight: 400 }}>
               Invite Team Member? Email:
             </Typography>
             <TextField
               variant="outlined"
               margin="normal"
               fullWidth
-              placeholder="Enter team member email here"
+              placeholder="Enter team member email"
               value={formData.teamMemberEmail}
               onChange={handleChange("teamMemberEmail")}
-              sx={{
-                height: "49px",
-                borderRadius: "9px",
-                marginTop: "10px",
-                marginBottom: "20px",
-              }}
-              InputProps={{
-                style: {
-                  borderRadius: "9px",
-                },
-                classes: {
-                  input: styles.customPlaceholder,
-                },
-              }}
+              sx={{ height: "49px", borderRadius: "9px", marginTop: "10px", marginBottom: "20px" }}
+              InputProps={{ style: { borderRadius: "9px" }, classes: { input: styles.customPlaceholder } }}
             />
           </Box>
         </Grid>
       </Grid>
-      <Box
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
+
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Button
           variant="contained"
           sx={{
@@ -896,9 +552,6 @@ const userFromStorage = getUserFromStorage();
             width: "287px",
             height: "56px",
             textTransform: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
           }}
           onClick={handleNext}
         >

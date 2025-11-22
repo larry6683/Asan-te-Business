@@ -185,7 +185,7 @@ const formatDateTime = (dateTimeString) => {
         <div className={styles.statsGrid}>
           {/* Card 1: Total Sessions */}
           <div className={styles.statCard}>
-            <div className={styles.statLabel}>Real-Time Unique Sessions</div>
+            <div className={styles.statLabel}> Unique Sessions</div>
             <div className={styles.statValue}>{stats.totalSessions || 0}</div>
           </div>
           

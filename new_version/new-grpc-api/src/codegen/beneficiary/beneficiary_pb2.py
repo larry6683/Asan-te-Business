@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from codegen.error import error_pb2 as error_dot_error__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1d\x62\x65neficiary/beneficiary.proto\x12\x0b\x62\x65neficiary\x1a\x11\x65rror/error.proto\"\xe4\x01\n\x0b\x42\x65neficiary\x12\n\n\x02id\x18\x01 \x01(\t\x12\x18\n\x10\x62\x65neficiary_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x04 \x01(\t\x12\x14\n\x0cphone_number\x18\x05 \x01(\t\x12\x15\n\rlocation_city\x18\x06 \x01(\t\x12\x16\n\x0elocation_state\x18\x07 \x01(\t\x12\x0b\n\x03\x65in\x18\x08 \x01(\t\x12\x1f\n\x17\x62\x65neficiary_description\x18\t \x01(\t\x12\x18\n\x10\x62\x65neficiary_size\x18\n \x01(\t\"/\n\x15GetBeneficiaryRequest\x12\x16\n\x0e\x62\x65neficiary_id\x18\x01 \x01(\t\"e\n\x16GetBeneficiaryResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error\"6\n GetBeneficiaryByUserEmailRequest\x12\x12\n\nuser_email\x18\x01 \x01(\t\"\x89\x01\n!GetBeneficiaryByUserEmailResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x17\n\x0fhas_beneficiary\x18\x02 \x01(\x08\x12\x1c\n\x06\x65rrors\x18\x03 \x03(\x0b\x32\x0c.error.Error\"\x8e\x02\n\x18\x43reateBeneficiaryRequest\x12\x18\n\x10\x62\x65neficiary_name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x03 \x01(\t\x12\x14\n\x0cphone_number\x18\x04 \x01(\t\x12\x15\n\rlocation_city\x18\x05 \x01(\t\x12\x16\n\x0elocation_state\x18\x06 \x01(\t\x12\x0b\n\x03\x65in\x18\x07 \x01(\t\x12\x1f\n\x17\x62\x65neficiary_description\x18\x08 \x01(\t\x12\x18\n\x10\x62\x65neficiary_size\x18\t \x01(\t\x12\x12\n\nuser_email\x18\n \x01(\t\x12\x13\n\x0b\x63\x61use_codes\x18\x0b \x03(\t\"h\n\x19\x43reateBeneficiaryResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error2\xcf\x02\n\x12\x42\x65neficiaryService\x12Y\n\x0eGetBeneficiary\x12\".beneficiary.GetBeneficiaryRequest\x1a#.beneficiary.GetBeneficiaryResponse\x12z\n\x19GetBeneficiaryByUserEmail\x12-.beneficiary.GetBeneficiaryByUserEmailRequest\x1a..beneficiary.GetBeneficiaryByUserEmailResponse\x12\x62\n\x11\x43reateBeneficiary\x12%.beneficiary.CreateBeneficiaryRequest\x1a&.beneficiary.CreateBeneficiaryResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1d\x62\x65neficiary/beneficiary.proto\x12\x0b\x62\x65neficiary\x1a\x11\x65rror/error.proto\"\xb6\x02\n\x0b\x42\x65neficiary\x12\n\n\x02id\x18\x01 \x01(\t\x12\x18\n\x10\x62\x65neficiary_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x04 \x01(\t\x12\x14\n\x0cphone_number\x18\x05 \x01(\t\x12\x15\n\rlocation_city\x18\x06 \x01(\t\x12\x16\n\x0elocation_state\x18\x07 \x01(\t\x12\x0b\n\x03\x65in\x18\x08 \x01(\t\x12\x1f\n\x17\x62\x65neficiary_description\x18\t \x01(\t\x12\x18\n\x10\x62\x65neficiary_size\x18\n \x01(\t\x12\x10\n\x08shop_url\x18\x0b \x01(\t\x12\x1a\n\x12social_media_links\x18\x0c \x03(\t\x12\"\n\x06\x63\x61uses\x18\r \x03(\x0b\x32\x12.beneficiary.Cause\"#\n\x05\x43\x61use\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04rank\x18\x02 \x01(\t\"/\n\x15GetBeneficiaryRequest\x12\x16\n\x0e\x62\x65neficiary_id\x18\x01 \x01(\t\"e\n\x16GetBeneficiaryResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error\"6\n GetBeneficiaryByUserEmailRequest\x12\x12\n\nuser_email\x18\x01 \x01(\t\"\x89\x01\n!GetBeneficiaryByUserEmailResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x17\n\x0fhas_beneficiary\x18\x02 \x01(\x08\x12\x1c\n\x06\x65rrors\x18\x03 \x03(\x0b\x32\x0c.error.Error\"\xbc\x02\n\x18\x43reateBeneficiaryRequest\x12\x18\n\x10\x62\x65neficiary_name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x13\n\x0bwebsite_url\x18\x03 \x01(\t\x12\x14\n\x0cphone_number\x18\x04 \x01(\t\x12\x15\n\rlocation_city\x18\x05 \x01(\t\x12\x16\n\x0elocation_state\x18\x06 \x01(\t\x12\x0b\n\x03\x65in\x18\x07 \x01(\t\x12\x1f\n\x17\x62\x65neficiary_description\x18\x08 \x01(\t\x12\x18\n\x10\x62\x65neficiary_size\x18\t \x01(\t\x12\x12\n\nuser_email\x18\n \x01(\t\x12\x13\n\x0b\x63\x61use_codes\x18\x0b \x03(\t\x12\x10\n\x08shop_url\x18\x0c \x01(\t\x12\x1a\n\x12social_media_links\x18\r \x03(\t\"h\n\x19\x43reateBeneficiaryResponse\x12-\n\x0b\x62\x65neficiary\x18\x01 \x01(\x0b\x32\x18.beneficiary.Beneficiary\x12\x1c\n\x06\x65rrors\x18\x02 \x03(\x0b\x32\x0c.error.Error2\xcf\x02\n\x12\x42\x65neficiaryService\x12Y\n\x0eGetBeneficiary\x12\".beneficiary.GetBeneficiaryRequest\x1a#.beneficiary.GetBeneficiaryResponse\x12z\n\x19GetBeneficiaryByUserEmail\x12-.beneficiary.GetBeneficiaryByUserEmailRequest\x1a..beneficiary.GetBeneficiaryByUserEmailResponse\x12\x62\n\x11\x43reateBeneficiary\x12%.beneficiary.CreateBeneficiaryRequest\x1a&.beneficiary.CreateBeneficiaryResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,19 +33,21 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'beneficiary.beneficiary_pb2
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_BENEFICIARY']._serialized_start=66
-  _globals['_BENEFICIARY']._serialized_end=294
-  _globals['_GETBENEFICIARYREQUEST']._serialized_start=296
-  _globals['_GETBENEFICIARYREQUEST']._serialized_end=343
-  _globals['_GETBENEFICIARYRESPONSE']._serialized_start=345
-  _globals['_GETBENEFICIARYRESPONSE']._serialized_end=446
-  _globals['_GETBENEFICIARYBYUSEREMAILREQUEST']._serialized_start=448
-  _globals['_GETBENEFICIARYBYUSEREMAILREQUEST']._serialized_end=502
-  _globals['_GETBENEFICIARYBYUSEREMAILRESPONSE']._serialized_start=505
-  _globals['_GETBENEFICIARYBYUSEREMAILRESPONSE']._serialized_end=642
-  _globals['_CREATEBENEFICIARYREQUEST']._serialized_start=645
-  _globals['_CREATEBENEFICIARYREQUEST']._serialized_end=915
-  _globals['_CREATEBENEFICIARYRESPONSE']._serialized_start=917
-  _globals['_CREATEBENEFICIARYRESPONSE']._serialized_end=1021
-  _globals['_BENEFICIARYSERVICE']._serialized_start=1024
-  _globals['_BENEFICIARYSERVICE']._serialized_end=1359
+  _globals['_BENEFICIARY']._serialized_end=376
+  _globals['_CAUSE']._serialized_start=378
+  _globals['_CAUSE']._serialized_end=413
+  _globals['_GETBENEFICIARYREQUEST']._serialized_start=415
+  _globals['_GETBENEFICIARYREQUEST']._serialized_end=462
+  _globals['_GETBENEFICIARYRESPONSE']._serialized_start=464
+  _globals['_GETBENEFICIARYRESPONSE']._serialized_end=565
+  _globals['_GETBENEFICIARYBYUSEREMAILREQUEST']._serialized_start=567
+  _globals['_GETBENEFICIARYBYUSEREMAILREQUEST']._serialized_end=621
+  _globals['_GETBENEFICIARYBYUSEREMAILRESPONSE']._serialized_start=624
+  _globals['_GETBENEFICIARYBYUSEREMAILRESPONSE']._serialized_end=761
+  _globals['_CREATEBENEFICIARYREQUEST']._serialized_start=764
+  _globals['_CREATEBENEFICIARYREQUEST']._serialized_end=1080
+  _globals['_CREATEBENEFICIARYRESPONSE']._serialized_start=1082
+  _globals['_CREATEBENEFICIARYRESPONSE']._serialized_end=1186
+  _globals['_BENEFICIARYSERVICE']._serialized_start=1189
+  _globals['_BENEFICIARYSERVICE']._serialized_end=1524
 # @@protoc_insertion_point(module_scope)
