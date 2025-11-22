@@ -28,6 +28,7 @@ import { logoutCurrentUser } from "../user-auth/logoutUser";
 import { EntityRegistrationDtoFactory } from "../api/models/EntityRegistrationDtoFactory";
 import { RegistrationApiService } from "../api/registrationApiService";
 import { CookieFactory } from "../cookies/cookieFactory";
+import UserBanner from "./UserBanner"; // ✅ Import
 
 const getFormDataFromStorage = () => {
   let businessProfileForm = JSON.parse(
@@ -246,6 +247,7 @@ const BusinessRegistrationForm = () => {
 
   return (
     <Box className={styles.formContainer}>
+      <UserBanner /> {/* ✅ Add Banner Here */}
       <Box
         sx={{
           display: "flex",

@@ -26,6 +26,7 @@ import { logoutCurrentUser } from "../user-auth/logoutUser";
 import { EntityRegistrationDtoFactory } from "../api/models/EntityRegistrationDtoFactory";
 import { RegistrationApiService } from "../api/registrationApiService";
 import { CookieFactory } from "../cookies/cookieFactory";
+import UserBanner from "./UserBanner"; // ✅ Import
 
 const getFormDataFromStorage = () => {
   let profileForm = JSON.parse(
@@ -277,6 +278,7 @@ const RegistrationForm = () => {
 
   return (
     <Box className={styles.formContainer}>
+      <UserBanner /> {/* ✅ Add Banner Here */}
       {/* Header Section */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", transform: "translateY(-40px)" }}>
         <Box onClick={handleBackClick} className={styles.backContainer} sx={{ transform: "translateY(-25px) translateX(-25px)" }}>

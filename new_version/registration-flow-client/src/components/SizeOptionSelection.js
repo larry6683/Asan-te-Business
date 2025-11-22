@@ -29,6 +29,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setSelectedSize } from "../redux/selectedSizeSlice";
 import { logoutCurrentUser } from "../user-auth/logoutUser";
+import UserBanner from "./UserBanner"; // ✅ Import
 
 const SizeOptionSelection = () => {
   const [activeStep, setActiveStep] = useState(1);
@@ -141,9 +142,8 @@ const SizeOptionSelection = () => {
   const nonprofitSteps = ["Mission", "Size", "Basics"];
 
   return (
-    <Box 
-      className={styles.container}
-    >
+    <Box className={styles.container}>
+      <UserBanner /> {/* ✅ Add Banner Here */}
       <Box
         sx={{
           display: "flex",

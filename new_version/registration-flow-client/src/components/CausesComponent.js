@@ -32,6 +32,7 @@ import { setSelectedCauses } from "../redux/selectedCausesSlice";
 import { logoutCurrentUser } from "../user-auth/logoutUser";
 import { setSelectedOption } from "../redux/selectedOptionSlice";
 import { clearStore } from "../redux/store";
+import UserBanner from "./UserBanner"; // ✅ Import
 
 const getSelectedOptionOrSetIfNotPresent = () => {
   let selectedOption = sessionStorage.getItem("asante:selectedOption") || "";
@@ -448,6 +449,7 @@ useEffect(() => {
 
   return (
     <Box className={styles.container}>
+      <UserBanner /> {/* ✅ Add Banner Here */}
       <Box
         sx={{
           display: "flex",

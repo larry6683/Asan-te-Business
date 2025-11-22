@@ -29,6 +29,7 @@ import { clearStore } from "../redux/store";
 import { logoutCurrentUser } from "../user-auth/logoutUser";
 import { EntityRegistrationDtoFactory } from "../api/models/EntityRegistrationDtoFactory";
 import { RegistrationApiService } from "../api/registrationApiService";
+import UserBanner from "./UserBanner"; // ✅ Import
 
 const CustomIconButton = styled(IconButton)({
   margin: "0 10px",
@@ -143,6 +144,7 @@ const NonProfitRegistrationForm = () => {
 
   return (
     <Box className={styles.formContainer}>
+      <UserBanner /> {/* ✅ Add Banner Here */}
       <Box
         sx={{
           display: "flex",
