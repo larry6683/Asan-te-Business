@@ -57,6 +57,7 @@ const BackButton = styled(Typography)({
 const SignUp = () => {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [userExistsError, setUserExistsError] = useState(false); // New state for user exists error
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -128,7 +129,12 @@ const SignUp = () => {
         },
         (err) => {
           signupSuccess = false;
-          // console.error("sign-up error", err);
+          // Check if the error is because the user already exists
+          if (err && (err.name === "UsernameExistsException" || err.code === "UsernameExistsException")) {
+            setUserExistsError(true);
+          } else {
+            console.error("sign-up error", err);
+          }
         },
       );
     }
@@ -229,6 +235,7 @@ const SignUp = () => {
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (emailError) setEmailError(false);
+                if (userExistsError) setUserExistsError(false); // Clear error when user types
               }}
               sx={{ width: "450px", height: "49px", borderRadius: "21px" }}
               InputProps={{
@@ -239,8 +246,14 @@ const SignUp = () => {
                   input: styles.customPlaceholder,
                 },
               }}
-              error={emailError}
-              helperText={emailError ? "Must be an email address." : ""}
+              error={emailError || userExistsError}
+              helperText={
+                emailError
+                  ? "Must be an email address."
+                  : userExistsError
+                  ? "User exists already, please login or use different email."
+                  : ""
+              }
             />
           </Box>
           <Box width="100%" mt={2} mb={2}>
@@ -270,7 +283,10 @@ const SignUp = () => {
               id="password"
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (passwordError) setPasswordError(false); // Clear error when user types
+              }}
               sx={{ width: "450px", height: "49px", borderRadius: "21px" }}
               InputProps={{
                 style: {
@@ -325,7 +341,10 @@ const SignUp = () => {
                   type={showConfirmPassword ? "text" : "password"}
                   id="confirmPassword"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (passwordError) setPasswordError(false); // Clear error when user types
+                  }}
                   sx={{ width: "450px", height: "49px", borderRadius: "21px" }}
                   InputProps={{
                     style: {
