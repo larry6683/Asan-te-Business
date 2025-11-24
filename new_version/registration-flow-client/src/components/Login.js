@@ -4,7 +4,20 @@ import { useDispatch } from "react-redux";
 import Box from "@mui/material/Box";
 import Typography from '@mui/material/Typography';
 import styles from "./Login.module.css";
-import { TextField, Link, InputAdornment, IconButton } from "@mui/material";
+import { 
+  TextField, 
+  Link, 
+  InputAdornment, 
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+  CircularProgress,
+  Alert
+} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getUserAuthenticationTokenAndSaveInStorage } from "../user-auth/authenticateUser";
 import { setEmailID } from "../redux/emailSlice";
@@ -16,6 +29,9 @@ import { UserApiService } from "../api/userApiService";
 import { grpcService } from "../api/grpcService";
 // ✅ Import analytics service
 import { analyticsService } from "../api/analyticsService";
+
+// ✅ Import Forgot Password Logic
+import { initiateForgotPassword, confirmForgotPassword } from "../user-auth/forgotPassword";
 
 import BusinessImage from "../assets/business.png";
 import ConsumerImage from "../assets/consumer.png";
@@ -30,6 +46,17 @@ const Login = () => {
   const [invalidCredentials, setInvalidCredentials] = useState(false);
   const [emailEmpty, setEmailEmpty] = useState(false);
   const [passwordEmpty, setPasswordEmpty] = useState(false);
+
+  // --- Forgot Password State ---
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [fpStage, setFpStage] = useState("request"); // 'request' | 'reset' | 'success'
+  const [fpEmail, setFpEmail] = useState("");
+  const [fpCode, setFpCode] = useState("");
+  const [fpNewPassword, setFpNewPassword] = useState("");
+  const [fpConfirmPassword, setFpConfirmPassword] = useState("");
+  const [fpLoading, setFpLoading] = useState(false);
+  const [fpError, setFpError] = useState(null);
+  // -----------------------------
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -266,6 +293,83 @@ const Login = () => {
     );
   };
 
+  // --- Forgot Password Handlers ---
+  const handleOpenForgotPassword = () => {
+    setFpEmail(email); // Pre-fill email from login form
+    setFpStage("request");
+    setFpError(null);
+    setForgotPasswordOpen(true);
+  };
+
+  const handleCloseForgotPassword = () => {
+    setForgotPasswordOpen(false);
+    // Reset state after animation finishes
+    setTimeout(() => {
+      setFpStage("request");
+      setFpCode("");
+      setFpNewPassword("");
+      setFpConfirmPassword("");
+      setFpError(null);
+    }, 300);
+  };
+
+  const handleRequestCode = () => {
+    if (!fpEmail) {
+      setFpError("Please enter your email address.");
+      return;
+    }
+    setFpLoading(true);
+    setFpError(null);
+
+    initiateForgotPassword(
+      fpEmail,
+      () => {
+        setFpLoading(false);
+        setFpStage("reset");
+      },
+      (err) => {
+        setFpLoading(false);
+        setFpError(err.message || "Failed to send verification code.");
+      }
+    );
+  };
+
+  const handleResetPassword = () => {
+    if (!fpCode || !fpNewPassword || !fpConfirmPassword) {
+      setFpError("Please fill in all fields.");
+      return;
+    }
+    if (fpNewPassword !== fpConfirmPassword) {
+      setFpError("Passwords do not match.");
+      return;
+    }
+    // Basic length check, Cognito will enforce complexity
+    if (fpNewPassword.length < 8) {
+      setFpError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setFpLoading(true);
+    setFpError(null);
+
+    confirmForgotPassword(
+      fpEmail,
+      fpCode,
+      fpNewPassword,
+      () => {
+        setFpLoading(false);
+        setFpStage("success");
+        // Optional: Pre-fill password field on login
+        setPassword(fpNewPassword);
+      },
+      (err) => {
+        setFpLoading(false);
+        setFpError(err.message || "Failed to reset password.");
+      }
+    );
+  };
+  // --------------------------------
+
   return (
     <div className={styles.loginContainer}>
       <Box className={styles.loginBox}>
@@ -355,11 +459,133 @@ const Login = () => {
               Create Account
             </Link>
           </p>
-          <Link href="#" className={styles.forgotPasswordLink}>
+          <Link 
+            component="button" 
+            variant="body2" 
+            onClick={handleOpenForgotPassword}
+            className={styles.forgotPasswordLink}
+            sx={{ textDecoration: 'none', fontSize: '16px' }}
+          >
             Forgot Password?
           </Link>
         </Box>
       </Box>
+
+      {/* --- Forgot Password Dialog --- */}
+      <Dialog open={forgotPasswordOpen} onClose={handleCloseForgotPassword} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontFamily: '"Helvetica Neue", sans-serif', fontWeight: 'bold', color: '#5B6BB0' }}>
+          {fpStage === "request" && "Reset Password"}
+          {fpStage === "reset" && "Set New Password"}
+          {fpStage === "success" && "Success!"}
+        </DialogTitle>
+        <DialogContent>
+          {fpError && <Alert severity="error" sx={{ mb: 2 }}>{fpError}</Alert>}
+          
+          {fpStage === "request" && (
+            <>
+              <DialogContentText sx={{ mb: 2, fontFamily: '"Helvetica Neue", sans-serif' }}>
+                Enter your email address and we'll send you a verification code to reset your password.
+              </DialogContentText>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="fp-email"
+                label="Email Address"
+                type="email"
+                fullWidth
+                variant="outlined"
+                value={fpEmail}
+                onChange={(e) => setFpEmail(e.target.value)}
+              />
+            </>
+          )}
+
+          {fpStage === "reset" && (
+            <>
+              <DialogContentText sx={{ mb: 2, fontFamily: '"Helvetica Neue", sans-serif' }}>
+                Check your email for the verification code.
+              </DialogContentText>
+              <TextField
+                margin="dense"
+                id="fp-code"
+                label="Verification Code"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={fpCode}
+                onChange={(e) => setFpCode(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                margin="dense"
+                id="fp-new-password"
+                label="New Password"
+                type="password"
+                fullWidth
+                variant="outlined"
+                value={fpNewPassword}
+                onChange={(e) => setFpNewPassword(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                margin="dense"
+                id="fp-confirm-password"
+                label="Confirm New Password"
+                type="password"
+                fullWidth
+                variant="outlined"
+                value={fpConfirmPassword}
+                onChange={(e) => setFpConfirmPassword(e.target.value)}
+              />
+            </>
+          )}
+
+          {fpStage === "success" && (
+            <DialogContentText sx={{ fontFamily: '"Helvetica Neue", sans-serif', color: 'green', fontWeight: 500 }}>
+              Your password has been reset successfully. You can now log in with your new password.
+            </DialogContentText>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          {fpStage !== "success" && (
+            <Button onClick={handleCloseForgotPassword} sx={{ color: '#888' }}>
+              Cancel
+            </Button>
+          )}
+          
+          {fpStage === "request" && (
+            <Button 
+              onClick={handleRequestCode} 
+              variant="contained" 
+              disabled={fpLoading}
+              sx={{ bgcolor: '#5B6BB0', '&:hover': { bgcolor: '#4A5895' } }}
+            >
+              {fpLoading ? <CircularProgress size={24} color="inherit" /> : "Send Code"}
+            </Button>
+          )}
+
+          {fpStage === "reset" && (
+            <Button 
+              onClick={handleResetPassword} 
+              variant="contained"
+              disabled={fpLoading}
+              sx={{ bgcolor: '#5B6BB0', '&:hover': { bgcolor: '#4A5895' } }}
+            >
+              {fpLoading ? <CircularProgress size={24} color="inherit" /> : "Reset Password"}
+            </Button>
+          )}
+
+          {fpStage === "success" && (
+            <Button 
+              onClick={handleCloseForgotPassword} 
+              variant="contained"
+              sx={{ bgcolor: '#5B6BB0', '&:hover': { bgcolor: '#4A5895' } }}
+            >
+              Back to Login
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
