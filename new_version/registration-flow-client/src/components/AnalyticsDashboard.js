@@ -16,6 +16,9 @@ const AnalyticsDashboard = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState({ key: 'startedAt', direction: 'desc' });
+
   // --- Snapshot & Automation State ---
   const [showSnapshotModal, setShowSnapshotModal] = useState(false);
   const [isAutoActive, setIsAutoActive] = useState(false);
@@ -81,6 +84,48 @@ const AnalyticsDashboard = () => {
     }
   };
 
+  // --- Sorting Logic ---
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedSessions = (sessionsToSort) => {
+    if (!sortConfig.key) return sessionsToSort;
+
+    return [...sessionsToSort].sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      // Handle numeric sorting for duration
+      if (sortConfig.key === 'durationSeconds') {
+          aValue = Number(aValue) || 0;
+          bValue = Number(bValue) || 0;
+      } 
+      // Handle date strings
+      else if (sortConfig.key === 'startedAt' || sortConfig.key === 'lastActivity') {
+          aValue = aValue ? new Date(aValue).getTime() : 0;
+          bValue = bValue ? new Date(bValue).getTime() : 0;
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
+  const getSortIndicator = (key) => {
+    if (sortConfig.key !== key) return <span style={{ opacity: 0.3 }}> ↕</span>;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
+
   // --- CSV Generation & Download Logic ---
   const convertToCSV = (data) => {
     const headers = [
@@ -127,6 +172,8 @@ const AnalyticsDashboard = () => {
 
   const handleManualSnapshot = () => {
     const filtered = getFilteredSessions(); // Respect current filters
+    // Note: CSV export usually respects filter but maybe not sort for raw data dump, 
+    // but here we export filtered set.
     const csv = convertToCSV(filtered);
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     triggerDownload(csv, `Analytics_Snapshot_${timestamp}`);
@@ -221,8 +268,9 @@ const AnalyticsDashboard = () => {
   };
 
   const filteredSessions = getFilteredSessions();
-  const totalPages = Math.ceil(filteredSessions.length / rowsPerPage);
-  const paginatedSessions = filteredSessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const sortedSessions = getSortedSessions(filteredSessions);
+  const totalPages = Math.ceil(sortedSessions.length / rowsPerPage);
+  const paginatedSessions = sortedSessions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   if (loading) return <div className={styles.container}>Loading...</div>;
 
@@ -321,8 +369,29 @@ const AnalyticsDashboard = () => {
                 <th className={styles.tableHeaderCell}>State</th>
                 <th className={styles.tableHeaderCell}>Website</th>
                 <th className={styles.tableHeaderCell}>Status</th>
-                <th className={styles.tableHeaderCell}>Started</th>
-                <th className={styles.tableHeaderCell}>Duration</th>
+                
+                {/* Sortable Columns */}
+                <th 
+                    className={styles.tableHeaderCell} 
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => handleSort('startedAt')}
+                >
+                    Started {getSortIndicator('startedAt')}
+                </th>
+                <th 
+                    className={styles.tableHeaderCell}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => handleSort('lastActivity')}
+                >
+                    Last Activity {getSortIndicator('lastActivity')}
+                </th>
+                <th 
+                    className={styles.tableHeaderCell}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => handleSort('durationSeconds')}
+                >
+                    Duration {getSortIndicator('durationSeconds')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -351,12 +420,13 @@ const AnalyticsDashboard = () => {
                   </td>
                   <td className={styles.tableCell}>{getStatusChip(session)}</td>
                   <td className={styles.tableCell}>{formatDateTime(session.startedAt)}</td>
+                  <td className={styles.tableCell}>{formatDateTime(session.lastActivity)}</td>
                   <td className={styles.tableCell}>{formatDuration(session.durationSeconds)}</td>
                 </tr>
               ))}
               {paginatedSessions.length === 0 && (
                 <tr>
-                  <td colSpan="12" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                  <td colSpan="13" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                     No records found matching your criteria.
                   </td>
                 </tr>

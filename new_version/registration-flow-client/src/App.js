@@ -47,6 +47,7 @@ const App = () => {
             <Route path="/register" element={<RegisteringAsComponent />} />
             <Route path="/register/signup" element={<SignUp />} />
             <Route path="/register/verification" element={<VerificationComponent />} />
+            <Route path="/analytics" element={<AnalyticsDashboard />}/>
         </Route>
 
         {/* ✅ REGISTRATION STEPS: Causes, Size, Forms
@@ -68,7 +69,7 @@ const App = () => {
         <Route element={<ProtectedRoute element={<Outlet />} />}> 
             <Route path="/home" element={<HomePage />} />
             <Route path="/profile" element={<UserProfile />} />
-            <Route path="/analytics" element={<AnalyticsDashboard />}/>
+            
         </Route>
 
         {/* Catch-all */}
