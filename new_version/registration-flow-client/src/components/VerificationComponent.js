@@ -85,7 +85,7 @@ const VerificationComponent = () => {
   };
 
   const handleUseDifferentEmail = () => {
-     navigate('/register');
+     navigate('/');
   };
 
   const handlePaste = (event) => {
